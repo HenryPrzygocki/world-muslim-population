@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Interactive map of the share and number of Muslims by country, province, district and city (2026 edition).">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>World Muslim Population</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Sans+Condensed:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Fira+Sans:wght@300;400;500;600;800;900&family=Source+Serif+4:ital,opsz,wght@1,8..60,400&display=swap">
+<style>
+/* Layout: one full-screen map; a slim masthead with search on top, region chips below it,
+   legend docked bottom-left, zoom controls bottom-right, a floating card for whatever is under the pointer. */
+:root {
+  --paper: #FBFAF6;
+  --panel: #FFFFFFEE;
+  --panel-solid: #FFFFFF;
+  --ink: #1E2A30;
+  --ink-2: #4A5A63;
+  --line: #D9DDD8;
+  --accent: #0E5131;
+  --accent-soft: #EAF2EC;
+  --brown: #6B4221;
+  --ocean: #D4E4EC;
+  --grat: #C2D5DF;
+  --coast: #6F93A6;
+  --water-txt: #5A84A0;
+  --nodata: #E6E6E3;
+  --halo: #FBFAF6;
+  --shadow: 0 6px 24px rgba(20, 35, 40, .14), 0 1px 3px rgba(20, 35, 40, .12);
+  --f-display: "Fira Sans", "Segoe UI", system-ui, sans-serif;
+  --f-cond: "Fira Sans Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-serif: "Source Serif 4", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #11171A; --panel: #192226EE; --panel-solid: #192226; --ink: #E7ECEA; --ink-2: #A3B2B8;
+    --line: #2C383D; --accent: #7FC48F; --accent-soft: #1D2E25; --brown: #D9A46A; --ocean: #1A2A33;
+    --grat: #24363F; --coast: #557A8D; --water-txt: #6F95AD; --nodata: #3A4145; --halo: #11171A;
+    --shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 1px 3px rgba(0, 0, 0, .4); color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #11171A; --panel: #192226EE; --panel-solid: #192226; --ink: #E7ECEA; --ink-2: #A3B2B8;
+  --line: #2C383D; --accent: #7FC48F; --accent-soft: #1D2E25; --brown: #D9A46A; --ocean: #1A2A33;
+  --grat: #24363F; --coast: #557A8D; --water-txt: #6F95AD; --nodata: #3A4145; --halo: #11171A;
+  --shadow: 0 6px 24px rgba(0, 0, 0, .45), 0 1px 3px rgba(0, 0, 0, .4); color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-display); overflow: hidden; }
+#app { height: 100%; display: flex; flex-direction: column; }
+.mast {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  padding-block: 10px 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); background: var(--paper); position: relative; z-index: 5;
+}
+.brand { display: flex; flex-direction: column; gap: 1px; min-width: 0; margin-right: auto; }
+.brand h1 { margin: 0; font-weight: 900; font-size: clamp(19px, 2.6vw, 27px); letter-spacing: -.01em; line-height: 1.05; text-transform: uppercase; text-wrap: balance; }
+.brand .sub { font-size: 13px; color: var(--ink-2); font-weight: 400; }
+.brand .sub b { color: var(--accent); font-weight: 600; }
+.search { position: relative; flex: 0 1 360px; min-width: 0; }
+.search input {
+  width: 100%; box-sizing: border-box; font: 400 15px var(--f-display); color: var(--ink);
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px 9px 34px;
+}
+.search input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.search svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); width: 15px; height: 15px; color: var(--ink-2); pointer-events: none; }
+.results {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0; margin: 0; padding: 4px; list-style: none;
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 8px; box-shadow: var(--shadow);
+  max-height: 60vh; overflow-y: auto; z-index: 20;
+}
+.results li { padding: 7px 9px; border-radius: 6px; cursor: pointer; display: flex; gap: 10px; align-items: baseline; }
+.results li[aria-selected="true"], .results li:hover { background: var(--accent-soft); }
+.results .rn { font-weight: 500; font-size: 14px; }
+.results .rk { font-size: 12px; color: var(--ink-2); margin-left: auto; white-space: nowrap; font-family: var(--f-cond); }
+.results .rv { font: 600 12.5px var(--f-cond); color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.chips {
+  display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-block: 8px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-bottom: 1px solid var(--line); background: var(--paper); position: relative; z-index: 4;
+}
+.chips::-webkit-scrollbar { display: none; }
+.chip {
+  font: 500 13px var(--f-cond); letter-spacing: .02em; color: var(--ink); background: transparent; white-space: nowrap;
+  border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chip.on { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+.stage { position: relative; flex: 1; min-height: 0; background: var(--paper); }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+#map { cursor: grab; touch-action: none; }
+#map.drag { cursor: grabbing; }
+#overlay { pointer-events: none; }
+.loading {
+  position: absolute; inset: 0; display: grid; place-items: center; font: 500 15px var(--f-display); color: var(--ink-2);
+  background: var(--paper); z-index: 3;
+}
+.loading .bar { width: 180px; height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 10px; }
+.loading .bar i { display: block; height: 100%; width: 40%; background: var(--accent); animation: slide 1.2s ease-in-out infinite; }
+@keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(260%); } }
+@media (prefers-reduced-motion: reduce) { .loading .bar i { animation: none; width: 100%; } }
+
+/* legend */
+.legend {
+  position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--panel); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 12px 14px; width: 330px; max-width: calc(100% - 24px); box-sizing: border-box; z-index: 6;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.legend h2 { margin: 0; font: 700 11.5px var(--f-display); letter-spacing: .08em; text-transform: uppercase; display: flex; align-items: center; }
+.legend h2 button { margin-left: auto; font: 500 12px var(--f-cond); color: var(--ink-2); background: none; border: 0; cursor: pointer; padding: 2px 4px; letter-spacing: 0; text-transform: none; }
+.legend h2 button:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+.scale svg { display: block; overflow: visible; }
+.scale text { font: 500 10px var(--f-cond); fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.scale text.b { font-weight: 700; fill: var(--ink); }
+.scale text.mn { font-style: italic; fill: var(--brown); font-size: 10.5px; }
+.scale text.mj { font-style: italic; fill: var(--accent); font-size: 10.5px; }
+.scale line.mid { stroke: var(--ink); stroke-width: 1.2; }
+.circles { display: flex; align-items: flex-end; gap: 12px; flex-wrap: wrap; }
+.circles .grp { display: flex; flex-direction: column; gap: 3px; }
+.circles .t { font: 600 11px var(--f-cond); color: var(--ink); letter-spacing: .02em; }
+.circles svg { display: block; overflow: visible; }
+.circles text { font: 500 9.5px var(--f-cond); fill: var(--ink-2); }
+.toggles { display: flex; flex-direction: column; gap: 5px; }
+.toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
+.toggles input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+.legend .note { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); margin: 0; }
+.legend.min .body { display: none; }
+.legend .body { display: flex; flex-direction: column; gap: 10px; }
+
+/* zoom */
+.zoom {
+  position: absolute; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow); overflow: hidden; z-index: 6;
+}
+.zoom button { width: 38px; height: 38px; border: 0; background: transparent; color: var(--ink); font: 500 20px var(--f-display); cursor: pointer; }
+.zoom button + button { border-top: 1px solid var(--line); }
+.zoom button:hover { color: var(--accent); }
+.zoom button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.zoom svg { width: 16px; height: 16px; }
+
+/* info card */
+.card {
+  position: absolute; z-index: 8; width: 280px; max-width: calc(100% - 24px); box-sizing: border-box;
+  background: var(--panel-solid); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+  padding: 12px 14px 12px; pointer-events: none; display: flex; flex-direction: column; gap: 6px;
+}
+.card.pinned { pointer-events: auto; }
+.card .eb { font: 600 10.5px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); }
+.card h3 { margin: 0; font: 700 19px/1.15 var(--f-display); text-wrap: balance; }
+.card .big { display: flex; align-items: center; gap: 9px; font: 700 26px var(--f-cond); font-variant-numeric: tabular-nums; }
+.card .big .sw { width: 18px; height: 18px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); flex: none; }
+.card .big small { font: 400 13px var(--f-display); color: var(--ink-2); }
+.card .kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; font-size: 13px; }
+.card .kv dt { color: var(--ink-2); }
+.card .kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.card .src { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 6px; }
+.card .mem { font: 400 12px/1.4 var(--f-cond); color: var(--ink-2); }
+.card .x { position: absolute; top: 6px; right: 6px; border: 0; background: none; color: var(--ink-2); font-size: 18px; cursor: pointer; width: 28px; height: 28px; border-radius: 6px; }
+.card .x:focus-visible { outline: 2px solid var(--accent); }
+.card.dock {
+  left: max(12px, env(safe-area-inset-left, 0px)) !important; right: max(12px, env(safe-area-inset-right, 0px)); width: auto; top: auto !important;
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important; pointer-events: auto;
+}
+.detail { position: absolute; top: 10px; right: max(12px, env(safe-area-inset-right, 0px)); z-index: 5; font: 500 12px var(--f-cond); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; }
+.hint { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 5; font: 400 12px var(--f-cond); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 4px 12px; white-space: nowrap; pointer-events: none; transition: opacity .6s; }
+
+@media (max-width: 720px) {
+  .mast { gap: 8px; }
+  .brand .sub { display: none; }
+  .search { flex: 1 1 100%; }
+  .legend { width: auto; right: max(62px, calc(env(safe-area-inset-right, 0px) + 62px)); padding: 10px 12px; }
+  .hint { display: none; }
+}
+</style>
+</head>
+<body>
+
+
+<div id="app">
+  <header class="mast">
+    <div class="brand">
+      <h1>World Muslim Population</h1>
+      <div class="sub"><b>2026 edition</b> · share and number of Muslims by country, province, district and city</div>
+    </div>
+    <div class="search" role="combobox" aria-expanded="false" aria-owns="results" aria-haspopup="listbox">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="7" cy="7" r="5.2"/><path d="M11 11l3.6 3.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search a place — e.g. Malappuram, Tatarstan, Foz do Iguaçu" aria-label="Search a place" aria-controls="results">
+      <ul class="results" id="results" role="listbox" hidden></ul>
+    </div>
+  </header>
+  <nav class="chips" id="chips" aria-label="Jump to a region"></nav>
+  <main class="stage" id="stage">
+    <canvas id="map" aria-label="Interactive map of the share of Muslims in each country and subnational unit"></canvas>
+    <canvas id="overlay" aria-hidden="true"></canvas>
+    <div class="detail" id="detail" hidden>Loading full detail…</div>
+    <div class="hint" id="hint">Scroll or pinch to zoom · drag to pan · hover or tap any place</div>
+    <div class="loading" id="loading"><div>Loading map data<div class="bar"><i></i></div></div></div>
+    <aside class="legend" id="legend" aria-label="Legend">
+      <h2>Share of population that is Muslim <button id="legendToggle" aria-expanded="true">Hide</button></h2>
+      <div class="body">
+        <div class="scale" id="scale"></div>
+        <div class="circles" id="circles"></div>
+        <div class="toggles">
+          <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
+          <label><input type="checkbox" id="tMet" checked> U.S. metro areas (2020 Religion Census)</label>
+          <label><input type="checkbox" id="tProv" checked> Province lines in large countries</label>
+        </div>
+        <p class="note">Labels show share and, where known, number of Muslims (“0.5% · 24k”); ≈ marks share × population. Sources: Pew Research Center 2020 baseline, national censuses and registers — see each place’s card.</p>
+      </div>
+    </aside>
+    <div class="zoom">
+      <button id="zin" aria-label="Zoom in">+</button>
+      <button id="zout" aria-label="Zoom out">−</button>
+      <button id="zhome" aria-label="Show the whole world"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c2.2 2 2.2 10.4 0 12.4M8 1.8c-2.2 2-2.2 10.4 0 12.4"/></svg></button>
+    </div>
+    <div class="card" id="card" hidden></div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+<script>
+(() => {
+'use strict';
+// ------------------------------------------------------------------ classes (same as the poster)
+const BREAKS = [0, 1, 5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100.0001];
+const LABELS = ['<1', '1–5', '5–10', '10–20', '20–30', '30–40', '40–50', '50–60', '60–70', '70–80', '80–90', '90–100'];
+const COLORS = ['#F6F2EA', '#EEDFBF', '#E3C58C', '#D3A35C', '#BB8038', '#96602A', '#6B4221',
+                '#C2DE8F', '#93C66E', '#5FA759', '#2F8346', '#0E5131'];
+const klass = p => { if (p == null || p !== p) return -1; for (let i = 0; i < 12; i++) if (p >= BREAKS[i] && p < BREAKS[i + 1]) return i; return 11; };
+const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
+const DARK = COLORS.map(c => lum(c) < .18);
+
+const REGIONS = [
+  ['world', 'World', null],
+  ['samerica', 'Southern South America', [-66.8, -36.4, -39, -14.6]],
+  ['latam', 'Latin America & Caribbean', [-118, -45, -33, 30]],
+  ['weurope', 'Western Europe', [-10.6, 35.4, 17.6, 59.4]],
+  ['uk', 'United Kingdom', [-8.3, 49.8, 2.0, 58.8]],
+  ['london', 'London', [-0.55, 51.27, 0.35, 51.71]],
+  ['balkans', 'Balkans', [13.4, 39.25, 29.9, 46.75]],
+  ['caucasus', 'Caucasus', [36.6, 38.25, 51.2, 45.75]],
+  ['volga', 'Volga–Ural', [40, 50, 62, 58.5]],
+  ['mena', 'Middle East & N. Africa', [-17, 12, 63, 42]],
+  ['wafrica', 'West Africa', [-18, 3.5, 16, 21]],
+  ['eafrica', 'East Africa', [27, -16, 52, 16]],
+  ['southasia', 'South Asia', [60, 5, 98, 37.5]],
+  ['seasia', 'Southeast Asia', [92, -11.5, 141, 21]],
+  ['china', 'China & Central Asia', [46, 17, 125, 54]],
+  ['usa', 'United States', [-125, 24.5, -66.5, 49.5]],
+];
+const OCEANS = [['NORTH PACIFIC OCEAN', -150, 27], ['NORTH PACIFIC OCEAN', 152, 30], ['SOUTH PACIFIC OCEAN', -125, -32],
+  ['NORTH ATLANTIC OCEAN', -42, 33], ['SOUTH ATLANTIC OCEAN', -17, -26], ['INDIAN OCEAN', 80, -25],
+  ['ARCTIC OCEAN', -20, 84.5], ['SOUTHERN OCEAN', 40, -61]];
+const SEAS = [['Mediterranean Sea', 18, 34.6], ['Black Sea', 34.5, 43.3], ['Caspian Sea', 50.8, 41.6], ['Red Sea', 38.5, 20.5],
+  ['Arabian Sea', 64, 15], ['Bay of Bengal', 88, 15], ['Persian Gulf', 51.5, 27.3], ['Caribbean Sea', -75, 15],
+  ['Gulf of Mexico', -90, 25], ['North Sea', 3, 56], ['Baltic Sea', 19, 57.5], ['South China Sea', 114, 13],
+  ['Java Sea', 110, -5], ['Gulf of Guinea', 3, 1.5], ['Adriatic Sea', 15.3, 43], ['Aegean Sea', 25, 38.8]];
+const FULLNAME = { PSX: 'Palestine', KOS: 'Kosovo' };
+
+// ------------------------------------------------------------------ DOM & canvases
+const $ = id => document.getElementById(id);
+const stage = $('stage'), cv = $('map'), ov = $('overlay');
+const ctx = cv.getContext('2d'), octx = ov.getContext('2d');
+const hit = document.createElement('canvas').getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+let T = {};
+const readTheme = () => { for (const k of ['paper', 'ink', 'ink-2', 'ocean', 'grat', 'coast', 'water-txt', 'nodata', 'halo', 'accent', 'brown']) T[k] = css('--' + k); };
+
+// ------------------------------------------------------------------ state
+const proj = d3.geoEqualEarth().rotate([-11, 0]).precision(0.15);
+proj.fitWidth(1000, { type: 'Sphere' });
+const R_PX = proj.scale();                        // base px per unit-sphere radian
+const PXKM0 = R_PX / 6371;                        // base px per km (approx.)
+const gpath = d3.geoPath(proj);
+let t = d3.zoomIdentity, minK = 1;
+let D = null;                                     // all prepared data
+let hover = null, pinned = null;
+const show = { com: true, met: true, prov: true };
+
+function p2d(geo) { const p = new Path2D(); gpath.context(p)(geo); return p; }
+
+// ------------------------------------------------------------------ data
+// a light version of the geometry draws the world view at once; the detailed one loads behind it
+const getJSON = u => fetch(u).then(r => { if (!r.ok) throw new Error(u + ' ' + r.status); return r.json(); });
+Promise.all([getJSON('map_lo.json'), getJSON('extra.json'), document.fonts ? document.fonts.ready : Promise.resolve()])
+  .then(([lo, extra]) => {
+    prepare(lo, extra); boot();
+    $('detail').hidden = false;
+    return getJSON('map.json').then(hi => new Promise(res => setTimeout(() => { addDetail(hi); res(); }, 30)));
+  })
+  .then(() => { $('detail').hidden = true; schedule(); })
+  .catch(e => { const L = $('loading'); L.hidden = false; L.textContent = 'The map data could not be loaded (' + e.message + '). Reload the page to try again.'; });
+
+const SB = gpath.bounds({ type: 'Sphere' });
+const TX = 18, TY = 9, TW = (SB[1][0] - SB[0][0]) / TX, TH = (SB[1][1] - SB[0][1]) / TY;
+function tilesOf(b) {
+  const out = [];
+  const i0 = Math.max(0, Math.floor((b[0][0] - SB[0][0]) / TW)), i1 = Math.min(TX - 1, Math.floor((b[1][0] - SB[0][0]) / TW));
+  const j0 = Math.max(0, Math.floor((b[0][1] - SB[0][1]) / TH)), j1 = Math.min(TY - 1, Math.floor((b[1][1] - SB[0][1]) / TH));
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) out.push(i * TY + j);
+  return out;
+}
+function tiledFill(items, slot) {        // tile -> array of Path2D per slot (class 0..11, 12 = no data)
+  const T = new Map();
+  for (const it of items) { if (!isFinite(it.b[0][0])) continue; const s_ = slot(it);
+    for (const key of tilesOf(it.b)) { let m = T.get(key); if (!m) T.set(key, m = []); (m[s_] || (m[s_] = new Path2D())).addPath(it.path); } }
+  return T;
+}
+function tiledLines(geo) {
+  const T = new Map(); if (!geo) return T;
+  const lines = geo.type === 'MultiLineString' ? geo.coordinates : geo.type === 'LineString' ? [geo.coordinates] : [];
+  for (const c of lines) { const f = { type: 'LineString', coordinates: c }, b = gpath.bounds(f); if (!isFinite(b[0][0])) continue; const p = p2d(f);
+    for (const key of tilesOf(b)) { let q = T.get(key); if (!q) T.set(key, q = new Path2D()); q.addPath(p); } }
+  return T;
+}
+function buildGeom(topo) {
+  const o = topo.objects;
+  // a ring whose winding flipped during simplification would fill the whole globe: drop it (keeps feature order)
+  const sane = f => { if (f.geometry && d3.geoArea(f) > 2 * Math.PI) f.geometry = null; return f; };
+  const mk = f => { sane(f); const path = p2d(f); return { f, path, b: f.geometry ? gpath.bounds(f) : [[NaN, NaN], [NaN, NaN]] }; };
+  const C = topojson.feature(topo, o.countries).features.map(mk);
+  const U = topojson.feature(topo, o.units).features.map(mk);
+  const lakes = topojson.feature(topo, o.lakes).features.map(mk);
+  const cls = it => { const k = klass(it.f.properties.p); return k < 0 ? 12 : k; };
+  return {
+    C, U,
+    cFill: tiledFill(C, cls), uFill: tiledFill(U, cls), lakes: tiledFill(lakes, () => 0),
+    coast: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a === b)),
+    borders: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a !== b && a.properties.c !== b.properties.c)),
+    unitMesh: tiledLines(topojson.mesh(topo, o.units, (a, b) => a !== b)),
+    prov: tiledLines(topojson.mesh(topo, o.provlines)), disputed: tiledLines(topojson.mesh(topo, o.disputed)),
+  };
+}
+function prepare(topo, X) {
+  const g = buildGeom(topo);
+  const names = {}; X.labels.forEach(l => names[l.c] = l.full);
+  Object.assign(names, FULLNAME);
+  const meta = (gi, kind) => {
+    const pr = gi.f.properties;
+    return { kind, path: gi.path, b: gi.b, n: pr.n, c: pr.c, p: pr.p, m: pr.m, e: pr.e, d: pr.d, s: pr.s,
+             k: klass(pr.p), lx: pr.lx, ly: pr.ly, lr: pr.lr, country: names[pr.c] || pr.c };
+  };
+  const C = g.C.map(x => meta(x, 'country')), U = g.U.map(x => meta(x, 'unit'));
+  D = { X, C, U, names, lo: g, hi: null, sphere: p2d({ type: 'Sphere' }), grat: p2d(d3.geoGraticule().step([15, 15])()),
+        subIso: new Set(U.map(u => u.c)) };
+  U.forEach(u => { if (u.lx != null) { const q = proj([u.lx, u.ly]); u.ax = q[0]; u.ay = q[1]; } });
+  D.labels = X.labels.map(l => { const q = proj([l.x, l.y]); return Object.assign({}, l, { ax: q[0], ay: q[1], k: klass(l.p) }); });
+  const pts = arr => arr.map(c => { const q = proj([c.x, c.y]); return Object.assign({}, c, { ax: q[0], ay: q[1] }); });
+  D.comW = pts(X.comW); D.comR = pts(X.comR); D.metros = pts(X.metros);
+  buildGrid();
+  // search index
+  const fold = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  D.fold = fold;
+  const idx = [];
+  D.labels.forEach(l => idx.push({ t: 'country', name: l.full, sub: 'Country', it: C.find(c => c.c === l.c && c.n === l.full) || C.find(c => c.c === l.c), lab: l }));
+  U.forEach(u => { if (u.n) idx.push({ t: 'unit', name: u.n, sub: u.country, it: u }); });
+  D.comR.forEach(c => idx.push({ t: 'com', name: c.n, sub: c.c + ' · community', it: c, also: c.mem }));
+  D.metros.forEach(m => idx.push({ t: 'metro', name: m.n, sub: 'U.S. metro area', it: m, also: m.full }));
+  idx.forEach(e => { e.f = fold(e.name); e.fa = e.also ? fold(e.also) : ''; });
+  D.idx = idx;
+}
+function buildGrid() {   // spatial grid for hit testing (base coordinates)
+  const G = 12, grid = new Map();
+  const put = it => { if (!isFinite(it.b[0][0])) return;
+    for (let gx = Math.floor(it.b[0][0] / G); gx <= Math.floor(it.b[1][0] / G); gx++)
+      for (let gy = Math.floor(it.b[0][1] / G); gy <= Math.floor(it.b[1][1] / G); gy++) {
+        const key = gx + ',' + gy; let L = grid.get(key); if (!L) grid.set(key, L = []); L.push(it); } };
+  D.U.forEach(put); D.C.forEach(put);
+  D.grid = grid; D.G = G;
+}
+function addDetail(topo) {
+  const g = buildGeom(topo);
+  if (g.C.length !== D.C.length || g.U.length !== D.U.length) return;   // mismatched files: keep the light version
+  g.C.forEach((x, i) => { D.C[i].path = x.path; D.C[i].b = x.b; });
+  g.U.forEach((x, i) => { D.U[i].path = x.path; D.U[i].b = x.b; });
+  D.hi = g; buildGrid();
+}
+
+// ------------------------------------------------------------------ sizing & zoom
+function resize() {
+  const r = stage.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height); DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+  for (const c of [cv, ov]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
+  const sb = gpath.bounds({ type: 'Sphere' });
+  minK = Math.min(W / (sb[1][0] - sb[0][0]), H / (sb[1][1] - sb[0][1])) * 0.98;
+  zoom.scaleExtent([minK * 0.9, 900]).translateExtent([[sb[0][0] - 300, sb[0][1] - 200], [sb[1][0] + 300, sb[1][1] + 200]]);
+}
+const zoom = d3.zoom().on('zoom', e => { t = e.transform; schedule(true); hideHint(); })
+  .on('start', () => cv.classList.add('drag')).on('end', () => { cv.classList.remove('drag'); });
+function fitBounds(b, pad = 0.08, maxK = 240, dur = 900) {
+  const dx = b[1][0] - b[0][0], dy = b[1][1] - b[0][1], cx = (b[0][0] + b[1][0]) / 2, cy = (b[0][1] + b[1][1]) / 2;
+  const k = Math.min(maxK, (1 - 2 * pad) * Math.min(W / Math.max(dx, 1e-6), H / Math.max(dy, 1e-6)));
+  const tr = d3.zoomIdentity.translate(W / 2 - cx * k, H / 2 - cy * k).scale(k);
+  d3.select(cv).transition().duration(matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : dur).call(zoom.transform, tr);
+}
+function bboxLL(bb) {
+  const pts = [];
+  for (let i = 0; i <= 12; i++) { const fx = bb[0] + (bb[2] - bb[0]) * i / 12, fy = bb[1] + (bb[3] - bb[1]) * i / 12;
+    pts.push(proj([fx, bb[1]]), proj([fx, bb[3]]), proj([bb[0], fy]), proj([bb[2], fy])); }
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  return [[Math.min(...xs), Math.min(...ys)], [Math.max(...xs), Math.max(...ys)]];
+}
+function goRegion(key, dur) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.k === key));
+  const r = REGIONS.find(r => r[0] === key);
+  if ((!r || !r[2]) && W / H < 0.8) fitBounds(bboxLL([-15, -36, 78, 62]), 0.0, 999, dur);   // portrait phones: Europe, Africa, the Middle East
+  else if (!r || !r[2]) fitBounds(gpath.bounds({ type: 'Sphere' }), 0.01, 999, dur);
+  else fitBounds(bboxLL(r[2]), 0.02, 999, dur);
+}
+
+// ------------------------------------------------------------------ drawing
+let raf = 0;
+// While the map is moving, the last full frame is stretched (cheap); the full vector frame follows when it settles,
+// and again whenever the stretched frame gets too blurry during long animated moves.
+const snap = document.createElement('canvas'), sctx = snap.getContext('2d');
+let snapT = null, lastFull = 0, moving = false, idleT = 0;
+function schedule(fromZoom) {
+  if (fromZoom) { moving = true; clearTimeout(idleT); idleT = setTimeout(() => { moving = false; schedule(); }, 140); }
+  if (!raf) raf = requestAnimationFrame(() => {
+    raf = 0;
+    const fresh = snapT && Math.abs(Math.log2(t.k / snapT.k)) < 1.2 && performance.now() - lastFull < 450;
+    if (moving && fresh) drawFast(); else drawFull();
+    drawOverlay();
+  });
+}
+function drawFull() {
+  draw(); lastFull = performance.now();
+  if (snap.width !== cv.width || snap.height !== cv.height) { snap.width = cv.width; snap.height = cv.height; }
+  sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.clearRect(0, 0, snap.width, snap.height); sctx.drawImage(cv, 0, 0);
+  snapT = { x: t.x, y: t.y, k: t.k };
+}
+function drawFast() {
+  const s_ = t.k / snapT.k;
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = T.paper; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(s_, 0, 0, s_, DPR * (t.x - snapT.x * s_), DPR * (t.y - snapT.y * s_));
+  ctx.imageSmoothingQuality = 'low'; ctx.drawImage(snap, 0, 0);
+}
+const kk = () => t.k;
+function setT(c) { c.setTransform(DPR * t.k, 0, 0, DPR * t.k, DPR * t.x, DPR * t.y); }
+
+function draw() {
+  if (!D) return;
+  const k = t.k;
+  const G = (D.hi && k > 3.2) ? D.hi : D.lo;
+  // tiles in view
+  const vx0 = -t.x / k, vy0 = -t.y / k, vx1 = (W - t.x) / k, vy1 = (H - t.y) / k;
+  const vis = tilesOf([[vx0, vy0], [vx1, vy1]]);
+  const each = (T, f) => { for (const key of vis) { const v = T.get(key); if (v) f(v); } };
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = T.paper; ctx.fillRect(0, 0, cv.width, cv.height);
+  setT(ctx);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  ctx.fillStyle = T.ocean; ctx.fill(D.sphere);
+  ctx.strokeStyle = T.grat; ctx.lineWidth = 0.7 / k; ctx.stroke(D.grat);
+  // national values underneath everything (also a safety net), then subnational units
+  for (const F of [G.cFill, G.uFill]) {
+    for (let i = 0; i < 13; i++) {
+      const col = i === 12 ? T.nodata : COLORS[i];
+      ctx.fillStyle = col;
+      each(F, m => { if (m[i]) ctx.fill(m[i]); });
+    }
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = Math.min(1.2, 0.35 + k * 0.02) / k; each(G.unitMesh, p => ctx.stroke(p));
+  if (show.prov) { ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.strokeStyle = 'rgba(110,110,100,.55)'; ctx.lineWidth = 0.6 / k; each(G.prov, p => ctx.stroke(p)); ctx.restore(); }
+  ctx.fillStyle = T.ocean; ctx.strokeStyle = T.coast; ctx.lineWidth = 0.5 / k; each(G.lakes, m => { ctx.fill(m[0]); ctx.stroke(m[0]); });
+  ctx.strokeStyle = T.coast; ctx.lineWidth = 0.7 / k; each(G.coast, p => ctx.stroke(p));
+  const bw = Math.min(1.6, 0.7 + k * 0.03);
+  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = (bw + Math.min(1.6, 0.4 + zAbs() * 0.9)) / k; each(G.borders, p => ctx.stroke(p));
+  ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw / k; each(G.borders, p => ctx.stroke(p));
+  ctx.save(); ctx.setLineDash([4 / k, 3 / k]); ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each(G.disputed, p => ctx.stroke(p)); ctx.restore();
+  ctx.strokeStyle = T.coast; ctx.lineWidth = 1.2 / k; ctx.stroke(D.sphere);
+  // symbols and labels in screen space
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  labels(ctx);
+  clearTimeout(lcT); lcT = setTimeout(legendCircles, 120);
+}
+let lcT = 0;
+
+// screen-space collision grid
+class Boxes {
+  constructor() { this.g = new Map(); this.c = 48; }
+  cells(b, f) { const c = this.c; for (let i = Math.floor(b[0] / c); i <= Math.floor(b[2] / c); i++) for (let j = Math.floor(b[1] / c); j <= Math.floor(b[3] / c); j++) f(i + ',' + j); }
+  hit(b, ign) { let h = false; this.cells(b, key => { if (h) return; const L = this.g.get(key); if (L) for (const a of L) { if (a.tag !== undefined && a.tag === ign) continue; if (b[0] < a.b[2] && b[2] > a.b[0] && b[1] < a.b[3] && b[3] > a.b[1]) { h = true; return; } } }); return h; }
+  add(b, tag) { const a = { b, tag }; this.cells(b, key => { if (!this.g.has(key)) this.g.set(key, []); this.g.get(key).push(a); }); }
+}
+const WCACHE = new Map();
+function tw(s, font) { // width at 100px
+  const key = font + '|' + s; let w = WCACHE.get(key);
+  if (w === undefined) { hit.font = font.replace('$', '100px'); w = hit.measureText(s).width / 100; WCACHE.set(key, w); }
+  return w;
+}
+const F_NAME = '400 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const F_VAL = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const F_CTRY = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const F_SEA = 'italic 400 $ "Source Serif 4", Georgia, serif';
+const F_COM = '500 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const F_COMB = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const font = (f, px) => f.replace('$', px.toFixed(2) + 'px');
+
+function fmtP(p) {
+  if (p <= 0) return '0%'; if (p < 0.1) return '<0.1%'; if (p < 1) return p.toFixed(1) + '%';
+  if (p >= 99.5) return '>99%'; if (p < 10) return (+p.toFixed(1)) + '%'; return Math.round(p) + '%';
+}
+function fmtN(n, est) {
+  if (n == null) return ''; let s;
+  if (n < 100) s = String(Math.round(n)); else if (n < 1000) s = String(Math.round(n / 10) * 10);
+  else if (n < 9950) s = (n / 1000).toFixed(1) + 'k'; else if (n < 999500) s = Math.round(n / 1000) + 'k';
+  else if (n < 9.95e6) s = (n / 1e6).toFixed(1) + 'M'; else s = Math.round(n / 1e6) + 'M';
+  return (est ? '≈' : '') + s;
+}
+const valLine = (p, m, e) => (m != null && p < 50) ? fmtP(p) + ' · ' + fmtN(m, e) : fmtP(p);
+const scr = (x, y) => [t.x + x * t.k, t.y + y * t.k];
+const pxkm = () => PXKM0 * t.k;
+const zAbs = () => t.k * 1000 / 1400;
+const comR = (n) => 0.05 * Math.sqrt(n) * Math.sqrt(Math.min(Math.max(zAbs(), 0.2), 64));
+const metR = (n) => 0.0115 * Math.sqrt(n) * Math.sqrt(Math.min(Math.max(zAbs(), 0.2), 64));
+
+function text(c, s, x, y, f, px, col, align = 'center', base = 'middle', halo = null, ls = 0) {
+  c.font = font(f, px); c.textAlign = align; c.textBaseline = base;
+  if ('letterSpacing' in c) c.letterSpacing = ls ? ls + 'px' : '0px';
+  if (halo) { c.strokeStyle = halo; c.lineWidth = Math.max(2.5, px * 0.28); c.lineJoin = 'round'; c.strokeText(s, x, y); }
+  c.fillStyle = col; c.fillText(s, x, y);
+}
+
+let LAST = { circles: [] };
+function labels(c) {
+  const k = t.k, z = zAbs(), pk = pxkm(), box = new Boxes();
+  const inView = (x, y, m = 80) => x > -m && y > -m && x < W + m && y < H + m;
+  const free = b => b[0] >= 2 && b[1] >= 2 && b[2] <= W - 2 && b[3] <= H - 2 && !box.hit(b);
+  const circles = [];
+  // ---- oceans & seas (behind, but placed first so land labels avoid them)
+  if (z < 7 && z > 0.6) for (const [n, lo, la] of OCEANS) {
+    const q = proj([lo, la]); const [x, y] = scr(q[0], q[1]); if (!inView(x, y, 300)) continue;
+    const px = Math.min(17, 10 + z * 1.6), w = tw(n, F_SEA) * px + n.length * 2.2;
+    const b = [x - w / 2, y - px * .6, x + w / 2, y + px * .6]; if (!free(b)) continue; box.add(b);
+    text(c, n, x, y, F_SEA, px, T['water-txt'], 'center', 'middle', null, 2.2);
+  }
+  if (z > 1.6 && z < 40) for (const [n, lo, la] of SEAS) {
+    const q = proj([lo, la]); const [x, y] = scr(q[0], q[1]); if (!inView(x, y)) continue;
+    const px = Math.min(15, 9 + z * 0.5), w = tw(n, F_SEA) * px;
+    const b = [x - w / 2, y - px * .6, x + w / 2, y + px * .6]; if (!free(b)) continue; box.add(b);
+    text(c, n, x, y, F_SEA, px, T['water-txt']);
+  }
+  // ---- country labels: measure and reserve space first, draw after the circles
+  const placeCountries = (list, alpha) => {
+    const out = [];
+    for (const { l, x, y, px } of list) {
+      const ls = px >= 13 ? px * 0.14 : 0;
+      const w = tw(l.n, F_CTRY) * px + ls * l.n.length;
+      const vl = (!l.sub && l.p != null && px >= 9.5) ? valLine(l.p, l.m, false) : '';
+      const vpx = Math.max(9.5, Math.min(15, px * 0.62));
+      const vw = vl ? tw(vl, F_VAL) * vpx : 0;
+      const h = px * 0.95 + (vl ? vpx * 1.25 : 0);
+      const b = [x - Math.max(w, vw) / 2 - 2, y - px * 0.55, x + Math.max(w, vw) / 2 + 2, y - px * 0.55 + h + 2];
+      if (!free(b)) continue; box.add(b);
+      out.push(() => {
+        const dark = l.k >= 0 && DARK[l.k] && !l.sub;
+        c.globalAlpha = alpha;
+        const col = dark ? 'rgba(255,255,255,.93)' : '#1E2A30', halo = dark ? null : 'rgba(251,250,246,.8)';
+        text(c, l.n, x, y, F_CTRY, px, col, 'center', 'middle', halo, ls);
+        if (vl) text(c, vl, x, y + px * 0.55 + vpx * 0.6, F_VAL, vpx, dark ? 'rgba(255,255,255,.85)' : '#3A4A52', 'center', 'middle', halo);
+        c.globalAlpha = 1;
+      });
+    }
+    return out;
+  };
+  const early = [], late = [];
+  for (const l of D.labels) {
+    const [x, y] = scr(l.ax, l.ay); if (!inView(x, y, 200)) continue;
+    let px = Math.min(26, 0.21 * Math.sqrt(l.a) * pk);
+    if (l.sub) px *= 0.82;
+    if (px < 8.5) continue;
+    (l.sub && z >= 3 ? late : early).push({ l, x, y, px });
+  }
+  early.sort((a, b) => b.l.a - a.l.a); late.sort((a, b) => b.l.a - a.l.a);
+  const countryDraws = placeCountries(early, 1);
+  // ---- community circles (Latin America & Caribbean) and U.S. metros
+  const drawCircles = (arr, rf, style) => {
+    for (const it of arr) {
+      const [x, y] = scr(it.ax, it.ay); if (!inView(x, y, 120)) continue;
+      if (it.b === 'unsized') {
+        const s = Math.min(9, 4 + z * 0.25);
+        c.fillStyle = '#FBFAF6'; c.strokeStyle = COLORS[6]; c.lineWidth = 1.2;
+        c.fillRect(x - s / 2, y - s / 2, s, s); c.strokeRect(x - s / 2, y - s / 2, s, s);
+        c.fillStyle = COLORS[6]; c.beginPath(); c.arc(x, y, s * 0.2, 0, 7); c.fill();
+        circles.push({ it, x, y, r: s * 0.7, kind: style }); continue;
+      }
+      const r = Math.max(1.6, rf(it.m));
+      c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2);
+      c.fillStyle = style === 'met' ? 'rgba(47,131,70,.32)' : 'rgba(187,128,56,.5)'; c.fill();
+      c.lineWidth = r > 4 ? 1.2 : 0.9; c.strokeStyle = style === 'met' ? '#1F6B3A' : COLORS[6];
+      if (it.b === 'estimate') c.setLineDash([3, 2]); c.stroke(); c.setLineDash([]);
+      if (r < 3) { c.beginPath(); c.arc(x, y, Math.max(0.9, r * .38), 0, 7); c.fillStyle = style === 'met' ? '#1F6B3A' : COLORS[6]; c.fill(); }
+      circles.push({ it, x, y, r, kind: style });
+      if (r >= 5) { const s = r * 0.72; box.add([x - s, y - s, x + s, y + s], it); }
+    }
+  };
+  if (show.com) drawCircles(z < 7 ? D.comW : D.comR, comR, 'com');
+  if (show.met && z > 1.8) drawCircles(D.metros, metR, 'met');
+  LAST.circles = circles;
+  countryDraws.forEach(f => f());
+  // ---- circle labels (bigger first; small places only once there is room)
+  const minLab = z < 0.6 ? 50000 : z < 1.6 ? 4000 : z < 3 ? 700 : z < 6 ? 120 : 0;
+  const lab = circles.slice().sort((a, b) => ((b.it.b === 'unsized' ? 30000 : b.it.m) - (a.it.b === 'unsized' ? 30000 : a.it.m)));
+  for (const cc of lab) {
+    const it = cc.it, big = it.b === 'unsized' ? (it.m > 1e5 ? 1e5 : 2500) : it.m;
+    if (big < minLab) continue;
+    const px = Math.max(10, Math.min(14.5, 9.5 + 1.6 * Math.log10(Math.max(big, 50) / 300) + z * 0.04));
+    const s = it.b === 'unsized' ? it.n : it.n + '  ' + (cc.kind === 'met' ? fmtN(it.m) : it.m.toLocaleString('en-US'));
+    const f = (big >= 3000) ? F_COMB : F_COM;
+    const w = tw(s, f) * px, off = cc.r + 3;
+    const cands = [[cc.x + off, cc.y, 'left'], [cc.x - off, cc.y, 'right'], [cc.x - w / 2, cc.y - off - px * 0.55, 'left'], [cc.x - w / 2, cc.y + off + px * 0.55, 'left']];
+    let done = false;
+    for (const [x, y, al] of cands) {
+      const x0 = al === 'left' ? x : x - w; const b = [x0 - 1, y - px * 0.58, x0 + w + 1, y + px * 0.58];
+      if (b[0] < 2 || b[2] > W - 2 || b[1] < 2 || b[3] > H - 2 || box.hit(b, it)) continue;
+      box.add(b, it); text(c, s, x, y, f, px, '#1E2A30', al, 'middle', 'rgba(251,250,246,.9)'); done = true; break;
+    }
+    if (!done && cc.kind === 'com' && big >= 5000 && z >= 3 && inView(cc.x, cc.y, 0)) {
+      const [x, y] = cands[0]; box.add([x, y - px * .58, x + w, y + px * .58], it);
+      text(c, s, x, y, f, px, '#1E2A30', 'left', 'middle', 'rgba(251,250,246,.9)');
+    }
+  }
+  // ---- unit labels
+  const ul = [];
+  for (const u of D.U) {
+    if (u.d || u.ax === undefined || !u.n) continue;
+    if (u.p < 1 && u.m == null) continue;
+    const rpx = u.lr * pk; if (rpx < 11) continue;
+    const [x, y] = scr(u.ax, u.ay); if (!inView(x, y, 40)) continue;
+    ul.push({ u, x, y, rpx });
+  }
+  ul.sort((a, b) => b.rpx - a.rpx);
+  for (const { u, x, y, rpx } of ul) {
+    const vl = valLine(u.p, u.m, u.e);
+    const w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
+    const px = Math.min(15, 1.35 * rpx / Math.sqrt((w1 / 2) ** 2 + 1.1 ** 2));
+    if (px < 9) continue;
+    const w = w1 * px;
+    const b = [x - w / 2 - 1, y - px * 1.05, x + w / 2 + 1, y + px * 1.05];
+    if (!free(b)) continue; box.add(b);
+    const dark = u.k >= 0 && DARK[u.k];
+    const col = dark ? 'rgba(255,255,255,.92)' : 'rgba(27,31,34,.86)';
+    text(c, u.n, x, y - px * 0.5, F_NAME, px, col);
+    text(c, vl, x, y + px * 0.55, F_VAL, px * 0.95, col);
+  }
+  // ---- names of countries with subnational data, where room is left
+  placeCountries(late, 0.75).forEach(f => f());
+}
+
+// ------------------------------------------------------------------ hover / pick
+function pick(mx, my) {
+  // circles first (screen space)
+  let best = null;
+  for (const cc of LAST.circles) { const d = Math.hypot(mx - cc.x, my - cc.y); if (d <= Math.max(cc.r, 5) && (!best || cc.r < best.r)) best = cc; }
+  if (best) return { kind: best.kind, it: best.it };
+  const bx = (mx - t.x) / t.k, by = (my - t.y) / t.k;
+  const L = D.grid.get(Math.floor(bx / D.G) + ',' + Math.floor(by / D.G)); if (!L) return null;
+  let found = null;
+  for (const it of L) {
+    if (bx < it.b[0][0] || bx > it.b[1][0] || by < it.b[0][1] || by > it.b[1][1]) continue;
+    if (hit.isPointInPath(it.path, bx, by)) { if (it.kind === 'unit') return { kind: 'unit', it }; if (!found) found = { kind: 'country', it }; }
+  }
+  return found;
+}
+function drawOverlay() {
+  octx.setTransform(1, 0, 0, 1, 0, 0); octx.clearRect(0, 0, ov.width, ov.height);
+  const sel = pinned || hover; if (!sel || !D) return;
+  if (sel.kind === 'unit' || sel.kind === 'country') {
+    setT(octx); octx.lineJoin = 'round';
+    octx.strokeStyle = 'rgba(255,255,255,.95)'; octx.lineWidth = 4.5 / t.k; octx.stroke(sel.it.path);
+    octx.strokeStyle = '#1E2A30'; octx.lineWidth = 2 / t.k; octx.stroke(sel.it.path);
+  } else {
+    const [x, y] = scr(sel.it.ax, sel.it.ay);
+    const r = sel.it.b === 'unsized' ? 7 : Math.max(3, (sel.kind === 'met' ? metR : comR)(sel.it.m)) + 2;
+    octx.setTransform(DPR, 0, 0, DPR, 0, 0); octx.beginPath(); octx.arc(x, y, r, 0, 7);
+    octx.lineWidth = 2.2; octx.strokeStyle = '#1E2A30'; octx.stroke();
+  }
+}
+
+const card = $('card');
+function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+function longN(n, est) {
+  if (n == null) return null;
+  if (est) { const p = Math.pow(10, Math.max(0, Math.floor(Math.log10(n)) - 2)); return '≈ ' + (Math.round(n / p) * p).toLocaleString('en-US'); }
+  return Math.round(n).toLocaleString('en-US');
+}
+function cardHTML(sel) {
+  const X = D.X, it = sel.it;
+  const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : T.nodata}"></span>`;
+  if (sel.kind === 'unit' || sel.kind === 'country') {
+    const isU = sel.kind === 'unit';
+    const name = isU ? (it.n || 'Rest of ' + it.country) : it.n;
+    const src = X.sources[it.s] || '';
+    const yr = isU ? (X.years[it.c] || '') : '2020';
+    const sub = isU ? it.country : (D.subIso.has(it.c) && it.c !== 'ROU' ? 'Country · national value; zoom in for provinces' : 'Country');
+    const share = it.p == null ? 'No data' : fmtP(it.p);
+    let kv = '';
+    if (it.m != null) kv += `<dt>Muslims</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span style="font-weight:400;color:var(--ink-2)">(share × population)</span>' : ''}</dd>`;
+    if (isU && it.d) kv += `<dt>Note</dt><dd style="font-weight:400">No separate figure; fallback value shared by the area</dd>`;
+    return `<div class="eb">${esc(sub)}</div><h3>${esc(name)}</h3>
+      <div class="big">${sw(it.k)}${share}<small>of residents</small></div>
+      ${kv ? `<dl class="kv">${kv}</dl>` : ''}
+      <div class="src">${esc(src.replace(/^ESTIMATE ?—? ?/, 'Modelled estimate — '))}${yr ? ' · ' + esc(yr) : ''}</div>`;
+  }
+  if (sel.kind === 'met') {
+    return `<div class="eb">U.S. metropolitan area</div><h3>${esc(it.full)}</h3>
+      <div class="big">${it.m.toLocaleString('en-US')}<small>Muslim adherents</small></div>
+      <dl class="kv"><dt>Mosques counted</dt><dd>${it.k}</dd></dl>
+      <div class="src">2020 U.S. Religion Census (ASARB), Muslim estimate — a congregation-based count, via ARDA</div>`;
+  }
+  const basis = it.b === 'census' ? (it.c === 'Chile' ? 'Census count, INE Chile 2024 (persons 15+)' : 'Census count, IBGE Brazil 2010')
+    : it.b === 'unsized' ? 'Documented community; no reliable count (Argentina has no census religion data)'
+    : 'Estimate: Pew 2020 national total shared among cities with documented communities';
+  const mem = it.k > 1 ? `<div class="mem">Includes ${esc(it.mem)}</div>` : '';
+  const note = /Ciudad del Este/.test(it.mem) ? '<div class="mem">Paraguay’s census counted 486 Muslims in Alto Paraná; community leaders estimate ≈7,000 in Ciudad del Este.</div>' : '';
+  return `<div class="eb">${esc(it.c)} · Muslim community</div><h3>${esc(it.n)}</h3>
+    ${it.b === 'unsized' ? '' : `<div class="big">${it.m.toLocaleString('en-US')}<small>Muslims</small></div>`}
+    ${mem}${note}<div class="src">${basis}</div>`;
+}
+let touchMode = false;
+function showCard(sel, mx, my) {
+  if (!sel) { if (!pinned) card.hidden = true; return; }
+  card.innerHTML = (pinned ? '<button class="x" aria-label="Close">×</button>' : '') + cardHTML(sel);
+  card.hidden = false;
+  card.classList.toggle('pinned', !!pinned);
+  const dock = touchMode || W < 720 || mx == null;
+  card.classList.toggle('dock', dock && !!pinned || (dock && touchMode));
+  if (!card.classList.contains('dock')) {
+    const cw = card.offsetWidth, ch = card.offsetHeight;
+    let x = mx + 18, y = my + 18;
+    if (x + cw > W - 8) x = mx - cw - 18; if (y + ch > H - 8) y = Math.max(8, my - ch - 18);
+    card.style.left = Math.max(8, x) + 'px'; card.style.top = y + 'px';
+  }
+  const xb = card.querySelector('.x'); if (xb) xb.onclick = () => { pinned = null; card.hidden = true; drawOverlay(); };
+}
+function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it; }
+cv.addEventListener('pointermove', e => {
+  if (!D || e.buttons) return; touchMode = e.pointerType !== 'mouse';
+  if (touchMode) return;
+  const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const s = pick(mx, my);
+  if (!sameSel(s, hover)) { hover = s; drawOverlay(); }
+  if (!pinned) showCard(s, mx, my);
+});
+cv.addEventListener('pointerleave', () => { hover = null; drawOverlay(); if (!pinned) card.hidden = true; });
+let downAt = null;
+cv.addEventListener('pointerdown', e => { downAt = [e.clientX, e.clientY]; touchMode = e.pointerType !== 'mouse'; });
+cv.addEventListener('click', e => {
+  if (!D || !downAt || Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5) return;
+  const r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const s = pick(mx, my);
+  if (!s || sameSel(s, pinned)) { pinned = null; card.hidden = true; drawOverlay(); return; }
+  pinned = s; hover = null; drawOverlay(); showCard(s, mx, my);
+});
+addEventListener('keydown', e => { if (e.key === 'Escape') { pinned = null; card.hidden = true; drawOverlay(); closeResults(); } });
+
+// ------------------------------------------------------------------ search
+const q = $('q'), res = $('results');
+let hits = [], cur = -1;
+function closeResults() { res.hidden = true; q.parentElement.setAttribute('aria-expanded', 'false'); cur = -1; }
+q.addEventListener('input', () => {
+  const s = D ? D.fold(q.value.trim()) : ''; if (s.length < 2) { closeResults(); return; }
+  const sc = [];
+  for (const e of D.idx) {
+    let v = -1;
+    if (e.f === s) v = 0; else if (e.f.startsWith(s)) v = 1; else if (e.f.includes(' ' + s)) v = 2; else if (e.f.includes(s)) v = 3;
+    else if (e.fa && e.fa.includes(s)) v = 4;
+    if (v >= 0) sc.push([v + (e.t === 'country' ? -0.5 : 0), e]);
+  }
+  sc.sort((a, b) => a[0] - b[0] || a[1].name.length - b[1].name.length);
+  hits = sc.slice(0, 9).map(x => x[1]);
+  if (!hits.length) { res.innerHTML = '<li aria-disabled="true"><span class="rn">No match</span></li>'; res.hidden = false; return; }
+  res.innerHTML = hits.map((h, i) => {
+    const it = h.it; let v = '';
+    if (h.t === 'unit' || h.t === 'country') v = it && it.p != null ? fmtP(it.p) : '';
+    else v = it.m ? fmtN(it.m) : '';
+    const sub = h.t === 'com' && h.fa && !h.f.includes(D.fold(q.value.trim())) ? 'in ' + h.name : h.sub;
+    return `<li role="option" id="r${i}" data-i="${i}"><span class="rn">${esc(h.name)}</span><span class="rv">${esc(v)}</span><span class="rk">${esc(sub)}</span></li>`;
+  }).join('');
+  res.hidden = false; q.parentElement.setAttribute('aria-expanded', 'true'); cur = -1;
+});
+q.addEventListener('keydown', e => {
+  if (res.hidden) return;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); cur = (cur + (e.key === 'ArrowDown' ? 1 : -1) + hits.length) % hits.length;
+    [...res.children].forEach((li, i) => li.setAttribute('aria-selected', i === cur)); }
+  if (e.key === 'Enter') { e.preventDefault(); choose(hits[cur < 0 ? 0 : cur]); }
+});
+res.addEventListener('mousedown', e => { const li = e.target.closest('li[data-i]'); if (li) { e.preventDefault(); choose(hits[+li.dataset.i]); } });
+q.addEventListener('blur', () => setTimeout(closeResults, 120));
+function choose(h) {
+  if (!h) return; closeResults(); q.value = h.name; q.blur();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
+  let sel;
+  if (h.t === 'unit' || h.t === 'country') {
+    const it = h.it; sel = { kind: h.t, it };
+    let b = it.b;
+    if (h.t === 'country') { // frame the main landmass, not overseas territories
+      const parts = D.C.filter(c => c.c === it.c && c.n === it.n);
+      b = parts.length ? parts.map(p => p.b).reduce((a, x) => [[Math.min(a[0][0], x[0][0]), Math.min(a[0][1], x[0][1])], [Math.max(a[1][0], x[1][0]), Math.max(a[1][1], x[1][1])]]) : b;
+      if (h.lab) { const w = b[1][0] - b[0][0]; if (w > 300) { const r = Math.sqrt(h.lab.a) * PXKM0 * 0.9; b = [[h.lab.ax - r, h.lab.ay - r], [h.lab.ax + r, h.lab.ay + r]]; } }
+    }
+    fitBounds(b, 0.18, 400);
+  } else {
+    const it = h.it; sel = { kind: h.t === 'metro' ? 'met' : 'com', it };
+    const r = 4; fitBounds([[it.ax - r, it.ay - r], [it.ax + r, it.ay + r]], 0.1, 120);
+  }
+  pinned = sel; hover = null;
+  setTimeout(() => { drawOverlay(); const [x, y] = sel.it.ax !== undefined ? scr(sel.it.ax, sel.it.ay) : [W / 2, H / 2]; showCard(sel, Math.min(W - 300, x), Math.min(H - 200, y)); }, 950);
+}
+
+// ------------------------------------------------------------------ legend
+function buildLegend() {
+  const sw = 23, gap = 9, h = 13; let x = 0, svg = '', xs = [];
+  COLORS.forEach((c, i) => { if (i === 7) x += gap; xs.push(x);
+    svg += `<rect x="${x}" y="16" width="${sw - 1.5}" height="${h}" rx="2" fill="${c}" ${i === 0 ? 'stroke="rgba(0,0,0,.15)" stroke-width="1"' : ''}><title>${LABELS[i]}%</title></rect>`; x += sw; });
+  const tick = (tx, v, bold) => `<text x="${tx}" y="${16 + h + 12}" text-anchor="middle" class="${bold ? 'b' : ''}">${v}</text>`;
+  [1, 5, 10, 20, 30, 40].forEach((v, i) => svg += tick(xs[i + 1] - 0.75, v));
+  svg += tick(xs[7] - gap / 2 - 0.75, '50%', true);
+  [60, 70, 80, 90].forEach((v, i) => svg += tick(xs[i + 8] - 0.75, v));
+  svg += `<line x1="${xs[7] - gap / 2 - 0.75}" x2="${xs[7] - gap / 2 - 0.75}" y1="9" y2="${16 + h + 2}" class="mid"/>`;
+  svg += `<text x="0" y="9" class="mn">Muslim minority</text><text x="${x}" y="9" text-anchor="end" class="mj">Muslim majority</text>`;
+  $('scale').innerHTML = `<svg viewBox="-2 0 ${x + 4} ${16 + h + 16}" width="100%" role="img" aria-label="Colour classes from under 1% to 90–100%">${svg}</svg>`;
+}
+function legendCircles() {
+  if (!D) return;
+  const el = $('circles'); let h = '';
+  const grp = (title, vals, rf, fill, stroke) => {
+    const rs = vals.map(v => Math.max(1.6, rf(v))); const rmax = Math.min(34, Math.max(...rs));
+    let x = 4, svg = '';
+    vals.forEach((v, i) => { const r = Math.min(34, rs[i]); x += Math.max(r, 12);
+      svg += `<circle cx="${x}" cy="${rmax * 2 - r + 2}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="1"/><text x="${x}" y="${rmax * 2 + 14}" text-anchor="middle">${fmtN(v)}</text>`;
+      x += Math.max(r, 12) + 6; });
+    return `<div class="grp"><span class="t">${title}</span><svg width="${x}" height="${rmax * 2 + 18}" role="img" aria-label="${title} circle sizes">${svg}</svg></div>`;
+  };
+  const vis = kind => LAST.circles.some(cc => cc.kind === kind && cc.x > 0 && cc.y > 0 && cc.x < W && cc.y < H);
+  if (show.com && vis('com')) h += grp('Muslims per city (Latin America)', [100, 1000, 10000], comR, 'rgba(187,128,56,.5)', COLORS[6]);
+  if (show.met && vis('met')) h += grp('Adherents per U.S. metro', [10000, 100000, 500000], metR, 'rgba(47,131,70,.32)', '#1F6B3A');
+  el.innerHTML = h; el.hidden = !h;
+}
+$('legendToggle').onclick = () => { const L = $('legend'); const m = L.classList.toggle('min'); $('legendToggle').textContent = m ? 'Show' : 'Hide'; $('legendToggle').setAttribute('aria-expanded', !m); try { localStorage.setItem('wmp-legend', m ? 'min' : ''); } catch (e) {} };
+try { if (localStorage.getItem('wmp-legend') === 'min' || innerWidth < 720) { $('legend').classList.add('min'); $('legendToggle').textContent = 'Show'; $('legendToggle').setAttribute('aria-expanded', 'false'); } } catch (e) {}
+for (const [id, key] of [['tCom', 'com'], ['tMet', 'met'], ['tProv', 'prov']]) $(id).addEventListener('change', e => { show[key] = e.target.checked; schedule(); legendCircles(); });
+$('zin').onclick = () => d3.select(cv).transition().duration(350).call(zoom.scaleBy, 2);
+$('zout').onclick = () => d3.select(cv).transition().duration(350).call(zoom.scaleBy, 0.5);
+$('zhome').onclick = () => goRegion('world');
+let hinted = false; function hideHint() { if (hinted) return; hinted = true; setTimeout(() => { $('hint').style.opacity = 0; }, 1800); }
+
+// ------------------------------------------------------------------ boot
+function boot() {
+  readTheme(); buildLegend();
+  $('chips').innerHTML = REGIONS.map(r => `<button class="chip" data-k="${r[0]}">${r[1]}</button>`).join('');
+  $('chips').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { pinned = null; card.hidden = true; drawOverlay(); goRegion(b.dataset.k); try { history.replaceState(null, '', '#' + b.dataset.k); } catch (_) {} } });
+  resize();
+  d3.select(cv).call(zoom).on('dblclick.zoom', null);
+  const h = (location.hash || '').slice(1);
+  goRegion(REGIONS.some(r => r[0] === h) ? h : 'world', 0);
+  $('loading').hidden = true;
+  legendCircles();
+  new ResizeObserver(() => { const k0 = t.k / minK; resize(); schedule(); }).observe(stage);
+  const retheme = () => { readTheme(); schedule(); };
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
+  new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (document.fonts) document.fonts.ready.then(() => { WCACHE.clear(); schedule(); });
+}
+})();
+</script>
+
+</body>
+</html>
