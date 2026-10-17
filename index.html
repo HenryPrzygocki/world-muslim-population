@@ -126,6 +126,12 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .circles .t { font: 600 11px var(--f-cond); color: var(--ink); letter-spacing: .02em; }
 .circles svg { display: block; overflow: visible; }
 .circles text { font: 500 9.5px var(--f-cond); fill: var(--ink-2); }
+.keys { display: flex; flex-direction: column; gap: 4px; font: 400 12.5px var(--f-cond); color: var(--ink); }
+.keys > span { display: flex; align-items: center; gap: 8px; }
+.keys i { flex: none; width: 26px; height: 12px; border-radius: 2px; background: #EEDFBF; }
+.keys .k-hatch { background: repeating-linear-gradient(135deg, rgba(122,31,31,.55) 0 1.3px, #F6F2EA 1.3px 6px); outline: 1.4px dashed #7A1F1F; outline-offset: -1px; }
+.keys .k-dash { background: #F6F2EA; outline: 1.4px dashed #2E3236; outline-offset: -1px; }
+.keys .k-kri { background: #0E5131; outline: 1.6px dashed #fff; outline-offset: -3px; }
 .toggles { display: flex; flex-direction: column; gap: 5px; }
 .toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
 .toggles input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
@@ -207,6 +213,11 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
       <div class="body">
         <div class="scale" id="scale"></div>
         <div class="circles" id="circles"></div>
+        <div class="keys">
+          <span><i class="k-hatch"></i><span>Russian-occupied, internationally recognised as Ukraine</span></span>
+          <span><i class="k-dash"></i><span>Territory of disputed status, e.g. <em>Taiwan</em>, <em>Kosovo</em>, <em>Falklands (Malvinas)</em></span></span>
+          <span><i class="k-kri"></i><span>Autonomous region (Kurdistan Region of Iraq)</span></span>
+        </div>
         <div class="toggles">
           <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
           <label><input type="checkbox" id="tMet" checked> U.S. metro areas (2020 Religion Census)</label>
@@ -263,7 +274,8 @@ const SEAS = [['Mediterranean Sea', 18, 34.6], ['Black Sea', 34.5, 43.3], ['Casp
   ['Arabian Sea', 64, 15], ['Bay of Bengal', 88, 15], ['Persian Gulf', 51.5, 27.3], ['Caribbean Sea', -75, 15],
   ['Gulf of Mexico', -90, 25], ['North Sea', 3, 56], ['Baltic Sea', 19, 57.5], ['South China Sea', 114, 13],
   ['Java Sea', 110, -5], ['Gulf of Guinea', 3, 1.5], ['Adriatic Sea', 15.3, 43], ['Aegean Sea', 25, 38.8]];
-const FULLNAME = { PSX: 'Palestine', KOS: 'Kosovo' };
+const FULLNAME = { PSX: 'Palestine', KOS: 'Kosovo', UAOCC: 'Ukraine · under Russian occupation' };
+const DISP = new Set(['TWN', 'KOS', 'SOL', 'CYN', 'SAH', 'FLK']), SAR = new Set(['HKG', 'MAC']);
 
 // ------------------------------------------------------------------ DOM & canvases
 const $ = id => document.getElementById(id);
@@ -330,12 +342,20 @@ function buildGeom(topo) {
   const C = topojson.feature(topo, o.countries).features.map(mk);
   const U = topojson.feature(topo, o.units).features.map(mk);
   const lakes = topojson.feature(topo, o.lakes).features.map(mk);
+  const occ = topojson.feature(topo, o.occupied).features.map(mk);
+  const kri = topojson.feature(topo, o.kri).features.map(mk);
+  const cc = (a, b) => a.properties.c !== b.properties.c;
   const cls = it => { const k = klass(it.f.properties.p); return k < 0 ? 12 : k; };
   return {
     C, U,
     cFill: tiledFill(C, cls), uFill: tiledFill(U, cls), lakes: tiledFill(lakes, () => 0),
     coast: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a === b)),
-    borders: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a !== b && a.properties.c !== b.properties.c)),
+    borders: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a !== b && cc(a, b) && !DISP.has(a.properties.c) && !DISP.has(b.properties.c) && !SAR.has(a.properties.c) && !SAR.has(b.properties.c))),
+    statLines: tiledLines(topojson.mesh(topo, o.countries, (a, b) => (a !== b && cc(a, b) && (DISP.has(a.properties.c) || DISP.has(b.properties.c))) || (a === b && (a.properties.c === 'TWN' || a.properties.c === 'FLK')))),
+    sarLines: tiledLines(topojson.mesh(topo, o.countries, (a, b) => a !== b && cc(a, b) && (SAR.has(a.properties.c) || SAR.has(b.properties.c)))),
+    occFill: tiledFill(occ, () => 0), occLine: tiledLines(topojson.mesh(topo, o.occupied)),
+    kriLine: tiledLines(topojson.mesh(topo, o.kri)),
+    occPath: occ.length ? occ[0].path : null, kriPath: kri.length ? kri[0].path : null,
     unitMesh: tiledLines(topojson.mesh(topo, o.units, (a, b) => a !== b)),
     prov: tiledLines(topojson.mesh(topo, o.provlines)), disputed: tiledLines(topojson.mesh(topo, o.disputed)),
   };
@@ -477,6 +497,17 @@ function draw() {
   ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = (bw + Math.min(1.6, 0.4 + zAbs() * 0.9)) / k; each(G.borders, p => ctx.stroke(p));
   ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw / k; each(G.borders, p => ctx.stroke(p));
   ctx.save(); ctx.setLineDash([4 / k, 3 / k]); ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each(G.disputed, p => ctx.stroke(p)); ctx.restore();
+  // territories of disputed status: dashed outline; China's SARs: light administrative line
+  ctx.save(); ctx.setLineDash([5 / k, 4 / k]);
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = (bw + 1.2) / k; each(G.statLines, p => ctx.stroke(p));
+  ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each(G.statLines, p => ctx.stroke(p)); ctx.restore();
+  ctx.strokeStyle = 'rgba(70,70,64,.7)'; ctx.lineWidth = 0.8 / k; each(G.sarLines, p => ctx.stroke(p));
+  // Russian-occupied Ukraine: hatching + dashed line of control
+  HATCH.setTransform(new DOMMatrix().scale(1 / k));
+  ctx.fillStyle = HATCH; each(G.occFill, m => ctx.fill(m[0]));
+  ctx.save(); ctx.setLineDash([5 / k, 3 / k]); ctx.strokeStyle = '#7A1F1F'; ctx.lineWidth = Math.min(1.8, 0.9 + k * 0.03) / k; each(G.occLine, p => ctx.stroke(p)); ctx.restore();
+  // Kurdistan Region of Iraq: dashed outline
+  ctx.save(); ctx.setLineDash([2.5 / k, 2 / k]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = Math.min(1.8, 0.9 + k * 0.03) / k; each(G.kriLine, p => ctx.stroke(p)); ctx.restore();
   ctx.strokeStyle = T.coast; ctx.lineWidth = 1.2 / k; ctx.stroke(D.sphere);
   // symbols and labels in screen space
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -484,6 +515,9 @@ function draw() {
   clearTimeout(lcT); lcT = setTimeout(legendCircles, 120);
 }
 let lcT = 0;
+const HATCH = (() => { const c = document.createElement('canvas'); c.width = c.height = 9; const x = c.getContext('2d');
+  x.strokeStyle = 'rgba(122,31,31,.55)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(-1, 10); x.lineTo(10, -1); x.moveTo(-1, 1); x.lineTo(1, -1); x.moveTo(8, 10); x.lineTo(10, 8); x.stroke();
+  return ctx.createPattern(c, 'repeat'); })();
 
 // screen-space collision grid
 class Boxes {
@@ -501,6 +535,7 @@ function tw(s, font) { // width at 100px
 const F_NAME = '400 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
 const F_VAL = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
 const F_CTRY = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
+const F_CTRY_I = 'italic 500 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
 const F_SEA = 'italic 400 $ "Source Serif 4", Georgia, serif';
 const F_COM = '500 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
 const F_COMB = '600 $ "Fira Sans Condensed", "Arial Narrow", sans-serif';
@@ -550,12 +585,22 @@ function labels(c) {
     const b = [x - w / 2, y - px * .6, x + w / 2, y + px * .6]; if (!free(b)) continue; box.add(b);
     text(c, n, x, y, F_SEA, px, T['water-txt']);
   }
+  // ---- Kurdistan: the Kurdish-majority region (name only) and the autonomous Kurdistan Region of Iraq
+  const regionLabels = [];
+  for (const [n, lo, la, zmin, zmax, size, sp] of [['KURDISTAN', 41.6, 38.3, 1.2, 9, 1, 3], ['Kurdistan Region', 44.4, 36.25, 2.6, 60, 0.9, 0]]) {
+    if (z < zmin || z > zmax) continue;
+    const q = proj([lo, la]); const [x, y] = scr(q[0], q[1]); if (!inView(x, y)) continue;
+    const px = Math.min(15, (9 + z * 0.8) * size), w = tw(n, F_CTRY_I) * px + sp * n.length;
+    const b = [x - w / 2, y - px * .6, x + w / 2, y + px * .6]; if (!free(b)) continue; box.add(b);
+    regionLabels.push(() => text(c, n, x, y, F_CTRY_I, px, 'rgba(255,255,255,.95)', 'center', 'middle', 'rgba(14,81,49,.6)', sp));
+  }
   // ---- country labels: measure and reserve space first, draw after the circles
   const placeCountries = (list, alpha) => {
     const out = [];
     for (const { l, x, y, px } of list) {
-      const ls = px >= 13 ? px * 0.14 : 0;
-      const w = tw(l.n, F_CTRY) * px + ls * l.n.length;
+      const st = l.st, fC = st ? F_CTRY_I : F_CTRY;
+      const ls = (!st && px >= 13) ? px * 0.14 : 0;
+      const w = tw(l.n, fC) * px + ls * l.n.length;
       const vl = (!l.sub && l.p != null && px >= 9.5) ? valLine(l.p, l.m, false) : '';
       const vpx = Math.max(9.5, Math.min(15, px * 0.62));
       const vw = vl ? tw(vl, F_VAL) * vpx : 0;
@@ -566,7 +611,7 @@ function labels(c) {
         const dark = l.k >= 0 && DARK[l.k] && !l.sub;
         c.globalAlpha = alpha;
         const col = dark ? 'rgba(255,255,255,.93)' : '#1E2A30', halo = dark ? null : 'rgba(251,250,246,.8)';
-        text(c, l.n, x, y, F_CTRY, px, col, 'center', 'middle', halo, ls);
+        text(c, l.n, x, y, fC, px, col, 'center', 'middle', halo, ls);
         if (vl) text(c, vl, x, y + px * 0.55 + vpx * 0.6, F_VAL, vpx, dark ? 'rgba(255,255,255,.85)' : '#3A4A52', 'center', 'middle', halo);
         c.globalAlpha = 1;
       });
@@ -578,6 +623,7 @@ function labels(c) {
     const [x, y] = scr(l.ax, l.ay); if (!inView(x, y, 200)) continue;
     let px = Math.min(26, 0.21 * Math.sqrt(l.a) * pk);
     if (l.sub) px *= 0.82;
+    if (l.st) px = Math.max(px * 0.9, Math.min(13, 9 + zAbs()));   // small territories stay findable
     if (px < 8.5) continue;
     (l.sub && z >= 3 ? late : early).push({ l, x, y, px });
   }
@@ -608,6 +654,7 @@ function labels(c) {
   if (show.met && z > 1.8) drawCircles(D.metros, metR, 'met');
   LAST.circles = circles;
   countryDraws.forEach(f => f());
+  regionLabels.forEach(f => f());
   // ---- circle labels (bigger first; small places only once there is room)
   const minLab = z < 0.6 ? 50000 : z < 1.6 ? 4000 : z < 3 ? 700 : z < 6 ? 120 : 0;
   const lab = circles.slice().sort((a, b) => ((b.it.b === 'unsized' ? 30000 : b.it.m) - (a.it.b === 'unsized' ? 30000 : a.it.m)));
@@ -668,7 +715,12 @@ function pick(mx, my) {
   let found = null;
   for (const it of L) {
     if (bx < it.b[0][0] || bx > it.b[1][0] || by < it.b[0][1] || by > it.b[1][1]) continue;
-    if (hit.isPointInPath(it.path, bx, by)) { if (it.kind === 'unit') return { kind: 'unit', it }; if (!found) found = { kind: 'country', it }; }
+    if (hit.isPointInPath(it.path, bx, by)) { if (it.kind === 'unit') { found = { kind: 'unit', it }; break; } if (!found) found = { kind: 'country', it }; }
+  }
+  if (found) {
+    const G = D.hi || D.lo;
+    found.occ = !!(G.occPath && hit.isPointInPath(G.occPath, bx, by));
+    found.kri = !!(G.kriPath && hit.isPointInPath(G.kriPath, bx, by));
   }
   return found;
 }
@@ -699,17 +751,25 @@ function cardHTML(sel) {
   const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : T.nodata}"></span>`;
   if (sel.kind === 'unit' || sel.kind === 'country') {
     const isU = sel.kind === 'unit';
-    const name = isU ? (it.n || 'Rest of ' + it.country) : it.n;
-    const src = X.sources[it.s] || '';
+    const lab = !isU && D.labels.find(l => l.c === it.c);
+    const name = isU ? (it.n || 'Rest of ' + it.country) : (lab && lab.st ? lab.n : it.n);
+    const src = X.sources[it.s] || 'Estimate (no published figure; negligible Muslim population)';
     const yr = isU ? (X.years[it.c] || '') : '2020';
-    const sub = isU ? it.country : (D.subIso.has(it.c) && it.c !== 'ROU' ? 'Country · national value; zoom in for provinces' : 'Country');
+    const st = X.status && X.status[it.c];
+    const sub = isU ? it.country : st === 'disputed' ? 'Territory of disputed status' : st === 'sar' ? 'Special Administrative Region of China' : st === 'dep' ? 'Overseas or constituent territory'
+      : sel.occ ? 'Ukraine · Russian-occupied area' : (D.subIso.has(it.c) && it.c !== 'ROU' ? 'Country · national value; zoom in for provinces' : 'Country');
     const share = it.p == null ? 'No data' : fmtP(it.p);
     let kv = '';
     if (it.m != null) kv += `<dt>Muslims</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span style="font-weight:400;color:var(--ink-2)">(share × population)</span>' : ''}</dd>`;
     if (isU && it.d) kv += `<dt>Note</dt><dd style="font-weight:400">No separate figure; fallback value shared by the area</dd>`;
+    const notes = [];
+    if (X.notes[it.c]) notes.push(X.notes[it.c]);
+    if (sel.occ && it.c !== 'UAOCC') notes.push(X.notes.OCC);
+    if (sel.kri) notes.push(X.notes.KRI);
+    var noteHTML = notes.map(n => `<div class="mem">${esc(n)}</div>`).join('');
     return `<div class="eb">${esc(sub)}</div><h3>${esc(name)}</h3>
       <div class="big">${sw(it.k)}${share}<small>of residents</small></div>
-      ${kv ? `<dl class="kv">${kv}</dl>` : ''}
+      ${kv ? `<dl class="kv">${kv}</dl>` : ''}${noteHTML}
       <div class="src">${esc(src.replace(/^ESTIMATE ?—? ?/, 'Modelled estimate — '))}${yr ? ' · ' + esc(yr) : ''}</div>`;
   }
   if (sel.kind === 'met') {
@@ -743,7 +803,7 @@ function showCard(sel, mx, my) {
   }
   const xb = card.querySelector('.x'); if (xb) xb.onclick = () => { pinned = null; card.hidden = true; drawOverlay(); };
 }
-function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it; }
+function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it && a.occ === b.occ && a.kri === b.kri; }
 cv.addEventListener('pointermove', e => {
   if (!D || e.buttons) return; touchMode = e.pointerType !== 'mouse';
   if (touchMode) return;
