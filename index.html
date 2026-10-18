@@ -682,11 +682,14 @@ function labels(c) {
   for (const u of D.U) {
     if (u.d || u.ax === undefined || !u.n) continue;
     if (u.p < 1 && u.m == null) continue;
+    if (u.m != null && u.m < 10) continue;               // essentially no Muslims: card only
     const rpx = u.lr * pk; if (rpx < 11) continue;
     const [x, y] = scr(u.ax, u.ay); if (!inView(x, y, 40)) continue;
-    ul.push({ u, x, y, rpx });
+    // importance: number of Muslims where known, else the share; big empty units yield to populous ones
+    const imp = u.m != null ? Math.min(1, Math.log10(u.m + 1) / 5) : Math.min(1, 0.4 + u.p / 50);
+    ul.push({ u, x, y, rpx, key: rpx * (0.3 + 0.7 * imp) });
   }
-  ul.sort((a, b) => b.rpx - a.rpx);
+  ul.sort((a, b) => b.key - a.key);
   for (const { u, x, y, rpx } of ul) {
     const vl = valLine(u.p, u.m, u.e);
     const w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
