@@ -14,3 +14,4 @@ web/test/
 web/ux/
 web/site/*.json
 .DS_Store
+web/site/units.csv
