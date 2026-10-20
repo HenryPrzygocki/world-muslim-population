@@ -319,6 +319,7 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
 'use strict';
 const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
 const UPDATED = '20 October 2026';
+const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // inside the claude.ai viewer: no shareable URL, downloads via capability
 
 // ------------------------------------------------------------------ colour classes
 // Browns for Muslim minorities, greens for majorities. The greens lean slightly toward emerald and the steps are spaced
@@ -1022,7 +1023,7 @@ function pin(sel, opts = {}) {
   pinned = sel; hover = null; hideTip();
   if (!sel) { panel.hidden = true; stage.classList.remove('sheet'); drawOverlay(); urlSoon(); return; }
   panel.innerHTML = `<div class="handle" aria-hidden="true"></div><button class="x" aria-label="Close">×</button>${cardHTML(sel, true)}
-    <div class="acts"><button data-act="zoom">Zoom to</button><button data-act="link">Copy link</button></div>`;
+    <div class="acts"><button data-act="zoom">Zoom to</button>${IN_ARTIFACT ? '' : '<button data-act="link">Copy link</button>'}</div>`;
   panel.hidden = false; stage.classList.add('sheet'); panel.scrollTop = 0;
   $('live').textContent = plainText(sel);
   drawOverlay(); if (!opts.noUrl) urlSoon(opts.push);
@@ -1326,12 +1327,23 @@ function aboutHTML() {
     <li>Concept after Edin Radončić, “World Muslim Population” (2015). Fonts: Fira Sans and Source Serif (SIL Open Font License).</li></ul>
     <h3>Data &amp; sharing</h3>
     <p>Last updated ${UPDATED}. The table of every mapped area — name, province, share, number, data basis and source — can be downloaded below.
-    The address bar always holds a link to the current view and selected place.</p>
-    <div class="dl"><a class="iconbtn" href="${FILES.csv}" download="World_Muslim_Population_2026_areas.csv">Download all areas (CSV)</a>
-    <button class="iconbtn" id="abCopy">Copy link to this view</button></div>`;
+    ${IN_ARTIFACT ? '' : 'The address bar always holds a link to the current view and selected place.'}</p>
+    <div class="dl"><a class="iconbtn" id="abCsv" href="${FILES.csv}" download="World_Muslim_Population_2026_areas.csv">Download all areas (CSV)</a>
+    ${IN_ARTIFACT ? '' : '<button class="iconbtn" id="abCopy">Copy link to this view</button>'}</div><p id="abMsg" class="mem" style="margin-top:6px"></p>`;
 }
 const about = $('about');
-function openAbout() { if (!D) return; $('abBody').innerHTML = aboutHTML(); $('abCopy').onclick = e => copyLink(e.target); about.showModal(); }
+function openAbout() {
+  if (!D) return; $('abBody').innerHTML = aboutHTML();
+  if ($('abCopy')) $('abCopy').onclick = e => copyLink(e.target);
+  if (IN_ARTIFACT) $('abCsv').onclick = async e => {     // the artifact viewer only saves files through its downloads capability
+    e.preventDefault(); const msg = $('abMsg');
+    try { const dl = await window.claude.use('downloads'); if (!dl) { msg.textContent = 'Downloads are not available in this view.'; return; }
+      const data = await fetch(FILES.csv).then(r => r.text());
+      await dl.save({ filename: 'World_Muslim_Population_2026_areas.csv', data }); msg.textContent = '';
+    } catch (err) { msg.textContent = err && err.code === 'declined' ? '' : 'The file could not be saved here (' + ((err && err.code) || 'error') + ').'; }
+  };
+  about.showModal();
+}
 document.addEventListener('click', e => { if (e.target.closest('[data-about]')) openAbout(); });
 $('aboutBtn').onclick = openAbout;
 $('abClose').onclick = () => about.close();
