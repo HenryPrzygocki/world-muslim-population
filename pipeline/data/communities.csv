@@ -1,0 +1,236 @@
+name,country,lat,lon,muslims,basis,label,pos
+Buenos Aires,Argentina,-34.6,-58.38,272949,unsized,1,left
+Trinidad & Tobago,Trinidad and Tobago,10.45,-61.33,80927,estimate,1,right
+Suriname,Suriname,5.75,-55.4,80153,estimate,1,right
+Guyana,Guyana,6.55,-58.0,52526,estimate,1,left
+Córdoba,Argentina,-31.42,-64.18,29395,unsized,1,right
+San Miguel de Tucumán,Argentina,-26.82,-65.22,25195,unsized,1,right
+Rosario,Argentina,-32.95,-60.65,16797,unsized,1,right
+Mendoza,Argentina,-32.89,-68.84,16797,unsized,1,right
+Salta,Argentina,-24.79,-65.41,12598,unsized,1,right
+Santiago,Chile,-33.45,-70.67,4428,census,1,right
+São Paulo,Brazil,-23.5329,-46.6395,8277,census,1,right
+Caracas,Venezuela,10.48,-66.9,6281,estimate,1,above
+Lima,Peru,-12.05,-77.04,6026,estimate,1,right
+Foz do Iguaçu,Brazil,-25.5427,-54.5827,5599,census,1,below
+Havana,Cuba,23.11,-82.37,5364,estimate,1,right
+Isla Margarita,Venezuela,10.96,-63.85,3489,estimate,1,right
+Mexico City,Mexico,19.43,-99.13,2790,estimate,1,right
+San Juan,Puerto Rico,18.43,-66.06,2485,estimate,1,right
+Cayenne,French Guiana,4.93,-52.33,2122,estimate,1,right
+Santo Domingo,Dominican Republic,18.49,-69.93,1912,estimate,1,right
+Bridgetown,Barbados,13.1,-59.61,1793,estimate,1,right
+Panama City,Panama,8.98,-79.52,1710,estimate,1,below
+Quito,Ecuador,-0.18,-78.47,1591,estimate,1,right
+Iquique,Chile,-20.21,-70.15,753,census,1,right
+Montevideo,Uruguay,-34.9,-56.19,1518,estimate,1,right
+Curitiba,Brazil,-25.4195,-49.2646,1307,census,1,above
+São Bernardo do Campo,Brazil,-23.6914,-46.5646,1292,census,1,below
+Guayaquil,Ecuador,-2.19,-79.89,1273,estimate,1,right
+Chuy,Uruguay,-33.7,-53.46,1214,estimate,1,right
+Valencia,Venezuela,10.16,-68.0,1117,estimate,1,below
+San José,Costa Rica,9.93,-84.08,1014,estimate,1,right
+Punto Fijo,Venezuela,11.7,-70.2,977,estimate,1,above
+Brasília,Brazil,-15.7795,-47.9297,972,census,1,right
+Rio de Janeiro,Brazil,-22.9129,-43.2003,964,census,1,right
+Maicao,Colombia,11.38,-72.24,895,estimate,1,right
+Maracaibo,Venezuela,10.65,-71.64,698,estimate,1,left
+San Cristóbal de las Casas,Mexico,16.74,-92.64,638,estimate,1,right
+Santa Cruz de la Sierra,Bolivia,-17.78,-63.18,579,estimate,1,right
+Guarulhos,Brazil,-23.4538,-46.5333,571,census,1,above
+Tacna,Peru,-18.01,-70.25,567,estimate,1,right
+Ciudad del Este,Paraguay,-25.51,-54.61,561,estimate,1,left
+Monterrey,Mexico,25.69,-100.32,558,estimate,1,right
+Coquimbo,Chile,-29.95,-71.34,519,unsized,1,right
+Bogotá,Colombia,4.71,-74.07,497,estimate,1,right
+Porto Alegre,Brazil,-30.0318,-51.2065,497,census,1,right
+Belize City,Belize,17.5,-88.2,493,estimate,1,right
+Guadalajara,Mexico,20.66,-103.35,478,estimate,1,left
+Colón,Panama,9.36,-79.9,456,estimate,1,above
+Guatemala City,Guatemala,14.63,-90.51,423,estimate,1,right
+Torreón,Mexico,25.54,-103.41,399,estimate,1,left
+Paranaguá,Brazil,-25.5161,-48.5225,374,census,1,right
+Kingston,Jamaica,18.0,-76.79,362,estimate,1,right
+Manaus,Brazil,-3.11866,-60.0212,359,census,1,right
+La Paz,Bolivia,-16.5,-68.15,347,estimate,1,right
+Cuiabá,Brazil,-15.601,-56.0974,345,census,1,right
+Tijuana,Mexico,32.51,-117.04,319,estimate,1,right
+Sant'Ana do Livramento,Brazil,-30.8773,-55.5392,311,census,1,left
+Nassau,Bahamas,25.05,-77.35,306,estimate,1,right
+Santos,Brazil,-23.9535,-46.335,300,census,0,below
+Guarujá,Brazil,-23.9888,-46.258,300,census,0,right
+Jundiaí,Brazil,-23.1852,-46.8974,298,census,0,above
+Mogi das Cruzes,Brazil,-23.5208,-46.1854,278,census,0,right
+Campo Grande,Brazil,-20.4486,-54.6295,273,census,0,right
+Managua,Nicaragua,12.13,-86.25,271,estimate,0,right
+Corumbá,Brazil,-19.0077,-57.651,255,census,0,right
+São José dos Campos,Brazil,-23.1896,-45.8841,253,census,0,right
+Uruguaiana,Brazil,-29.7614,-57.0853,236,census,0,left
+Londrina,Brazil,-23.304,-51.1691,228,census,1,above
+Florianópolis,Brazil,-27.5945,-48.5477,227,census,0,right
+Belo Horizonte,Brazil,-19.9102,-43.9266,224,census,0,right
+Chuí,Brazil,-33.6866,-53.4594,223,census,1,left
+Ribeirão Preto,Brazil,-21.1699,-47.8099,216,census,0,right
+Salvador,Brazil,-12.9718,-38.5011,215,census,0,right
+Maringá,Brazil,-23.4205,-51.9333,214,census,1,left
+Canoas,Brazil,-29.9128,-51.1857,207,census,0,right
+Pelotas,Brazil,-31.7649,-52.3371,207,census,0,right
+Barranquilla,Colombia,10.96,-74.8,199,estimate,0,left
+San Salvador,El Salvador,13.69,-89.19,196,estimate,0,right
+Ponta Porã,Brazil,-22.5296,-55.7203,181,census,0,right
+Diadema,Brazil,-23.6813,-46.6205,178,census,0,right
+Campinas,Brazil,-22.9053,-47.0659,176,census,0,above
+Barretos,Brazil,-20.5531,-48.5698,175,census,0,right
+Osasco,Brazil,-23.5324,-46.7916,173,census,0,right
+Dois Vizinhos,Brazil,-25.7407,-53.057,170,census,0,right
+Port-au-Prince,Haiti,18.54,-72.34,167,estimate,0,right
+Montenegro,Brazil,-29.6824,-51.4679,161,census,0,right
+San Andrés,Colombia,12.58,-81.7,159,estimate,0,right
+Passo Fundo,Brazil,-28.2576,-52.4091,159,census,0,right
+Porto Velho,Brazil,-8.76077,-63.8999,156,census,0,right
+Asunción,Paraguay,-25.28,-57.63,150,estimate,0,left
+San Pedro Sula,Honduras,15.5,-88.03,140,estimate,0,above
+Jataí,Brazil,-17.8784,-51.7204,131,census,0,right
+Cubatão,Brazil,-23.8911,-46.424,130,census,0,right
+Fortaleza,Brazil,-3.71664,-38.5423,130,census,0,right
+Suzano,Brazil,-23.5448,-46.3112,123,census,0,right
+Boa Vista,Brazil,2.82384,-60.6753,114,census,0,right
+Uberlândia,Brazil,-18.9141,-48.2749,112,census,0,right
+Tegucigalpa,Honduras,14.07,-87.19,112,estimate,0,below
+Cachoeira do Sul,Brazil,-30.033,-52.8928,112,census,0,right
+Taubaté,Brazil,-23.0104,-45.5593,107,census,0,right
+Anápolis,Brazil,-16.3281,-48.953,105,census,0,right
+Trindade,Brazil,-16.6517,-49.4927,105,census,0,right
+Balneário Camboriú,Brazil,-26.9926,-48.6352,101,census,0,right
+Praia Grande,Brazil,-24.0084,-46.4121,101,census,0,right
+Buenaventura,Colombia,3.88,-77.03,99,estimate,0,right
+Goiânia,Brazil,-16.6864,-49.2643,98,census,0,right
+Pirenópolis,Brazil,-15.8507,-48.9584,97,census,0,right
+Santo André,Brazil,-23.6737,-46.5432,94,census,0,right
+Macapá,Brazil,0.034934,-51.0694,91,census,0,right
+São Gabriel,Brazil,-30.3337,-54.3217,91,census,0,right
+Cruz Alta,Brazil,-28.645,-53.6048,88,census,0,right
+Quaraí,Brazil,-30.384,-56.4483,87,census,0,right
+Marília,Brazil,-22.2171,-49.9501,79,census,0,right
+São Vicente,Brazil,-23.9574,-46.3883,79,census,0,right
+Cascavel,Brazil,-24.9573,-53.459,79,census,1,left
+Belém,Brazil,-1.4554,-48.4898,78,census,0,right
+Ferraz de Vasconcelos,Brazil,-23.5411,-46.371,77,census,0,right
+Caxias do Sul,Brazil,-29.1629,-51.1792,77,census,0,right
+Paranavaí,Brazil,-23.0816,-52.4617,76,census,0,right
+Porto Ferreira,Brazil,-21.8498,-47.487,75,census,0,right
+Varginha,Brazil,-21.5556,-45.4364,73,census,0,right
+Sorocaba,Brazil,-23.4969,-47.4451,72,census,0,right
+Niterói,Brazil,-22.8832,-43.1034,71,census,0,right
+Recife,Brazil,-8.04666,-34.8771,69,census,0,right
+São Luís,Brazil,-2.53874,-44.2825,64,census,0,right
+Carapicuíba,Brazil,-23.5235,-46.8407,64,census,0,right
+São José dos Pinhais,Brazil,-25.5313,-49.2031,64,census,0,right
+Araçuaí,Brazil,-16.8523,-42.0637,63,census,0,right
+Juiz de Fora,Brazil,-21.7595,-43.3398,62,census,0,right
+Americana,Brazil,-22.7374,-47.3331,62,census,0,right
+São Caetano do Sul,Brazil,-23.6229,-46.5548,62,census,0,right
+Santa Vitória do Palmar,Brazil,-33.525,-53.3717,62,census,0,right
+São João de Meriti,Brazil,-22.8058,-43.3729,60,census,0,right
+Colina,Brazil,-20.7114,-48.5387,60,census,0,right
+Nova Iguaçu,Brazil,-22.7556,-43.4603,58,census,0,right
+Capão da Canoa,Brazil,-29.7642,-50.0282,57,census,0,right
+Imperatriz,Brazil,-5.51847,-47.4777,56,census,0,right
+João Pessoa,Brazil,-7.11509,-34.8641,56,census,0,right
+Tupanciretã,Brazil,-29.0858,-53.8445,56,census,0,right
+São Leopoldo,Brazil,-29.7545,-51.1498,54,census,0,right
+Itatiba,Brazil,-23.0035,-46.8464,52,census,0,right
+Rio Grande,Brazil,-32.0349,-52.1071,52,census,0,right
+Itaquaquecetuba,Brazil,-23.4835,-46.3457,50,census,0,right
+Dionísio Cerqueira,Brazil,-26.2648,-53.6351,50,census,0,right
+Barra do Quaraí,Brazil,-30.2029,-57.5497,50,census,0,right
+São Borja,Brazil,-28.6578,-56.0036,49,census,0,right
+Porteirinha,Brazil,-15.7404,-43.0281,48,census,0,right
+Francisco Beltrão,Brazil,-26.0817,-53.0535,48,census,0,right
+Cachoeirinha,Brazil,-29.9472,-51.1016,48,census,0,right
+Vacaria,Brazil,-28.5079,-50.9418,48,census,0,right
+Taboão da Serra,Brazil,-23.6019,-46.7526,47,census,0,right
+Rondonópolis,Brazil,-16.4673,-54.6372,47,census,0,right
+Araguari,Brazil,-18.6456,-48.1934,46,census,0,right
+Lages,Brazil,-27.815,-50.3259,46,census,0,right
+Araraquara,Brazil,-21.7845,-48.178,45,census,0,right
+Bebedouro,Brazil,-20.9491,-48.4791,45,census,0,right
+Barueri,Brazil,-23.5057,-46.879,44,census,0,right
+Tabatinga,Brazil,-4.2416,-69.9383,43,census,0,right
+Ubatã,Brazil,-14.2063,-39.5207,43,census,0,right
+Santo Ângelo,Brazil,-28.3001,-54.2668,43,census,0,right
+Lavras,Brazil,-21.248,-45.0009,42,census,0,right
+Jacareí,Brazil,-23.2983,-45.9658,42,census,0,right
+Teresina,Brazil,-5.09194,-42.8034,41,census,0,right
+Natal,Brazil,-5.79357,-35.1986,41,census,0,right
+Araçatuba,Brazil,-21.2076,-50.4401,41,census,0,right
+Umuarama,Brazil,-23.7656,-53.3201,41,census,0,right
+Porto Xavier,Brazil,-27.9082,-55.1379,41,census,0,right
+Barra do Garças,Brazil,-15.8804,-52.264,40,census,0,right
+Bocaiúva,Brazil,-17.1135,-43.8104,39,census,0,right
+Guaíra,Brazil,-20.3196,-48.312,39,census,0,right
+Ponta Grossa,Brazil,-25.0916,-50.1668,39,census,1,left
+Videira,Brazil,-27.0086,-51.1543,39,census,0,right
+Paranaíba,Brazil,-19.6746,-51.1909,39,census,0,right
+Cambé,Brazil,-23.2766,-51.2798,37,census,0,right
+Santa Maria,Brazil,-29.6868,-53.8149,37,census,0,right
+Arapongas,Brazil,-23.4153,-51.4259,36,census,0,right
+Barreiras,Brazil,-12.1439,-44.9968,35,census,0,right
+São Pedro,Brazil,-22.5483,-47.9096,35,census,0,right
+Ibiporã,Brazil,-23.2659,-51.0522,35,census,0,right
+Ipumirim,Brazil,-27.0772,-52.1289,35,census,0,right
+Mirandópolis,Brazil,-21.1313,-51.1035,34,census,0,right
+Caiapônia,Brazil,-16.9539,-51.8091,34,census,0,right
+Barra Mansa,Brazil,-22.5481,-44.1752,33,census,0,right
+Guaíra,Brazil,-24.085,-54.2573,33,census,0,right
+Caçador,Brazil,-26.7757,-51.012,33,census,0,right
+Nova Andradina,Brazil,-22.238,-53.3437,32,census,0,right
+Cabo Frio,Brazil,-22.8894,-42.0286,31,census,0,right
+Santa Cruz do Rio Pardo,Brazil,-22.8988,-49.6354,31,census,0,right
+Terra Rica,Brazil,-22.7111,-52.6188,31,census,0,right
+Criciúma,Brazil,-28.6723,-49.3729,31,census,0,right
+Nerópolis,Brazil,-16.4047,-49.2227,31,census,0,right
+Horizontina,Brazil,-27.6282,-54.3053,30,census,0,right
+Capelinha,Brazil,-17.6888,-42.5147,29,census,0,right
+Uberaba,Brazil,-19.7472,-47.9381,29,census,0,right
+São Carlos,Brazil,-22.0174,-47.886,29,census,0,right
+Ivaiporã,Brazil,-24.2485,-51.6754,29,census,0,right
+Rosário do Sul,Brazil,-30.2515,-54.9221,29,census,0,right
+Fátima do Sul,Brazil,-22.3789,-54.5131,29,census,0,right
+Lauro de Freitas,Brazil,-12.8978,-38.321,28,census,0,right
+Caetité,Brazil,-14.0684,-42.4861,27,census,0,right
+Carambeí,Brazil,-24.9152,-50.0986,27,census,0,right
+União da Vitória,Brazil,-26.2273,-51.0873,27,census,0,right
+Chapecó,Brazil,-27.1004,-52.6152,27,census,0,right
+Aceguá,Brazil,-31.8665,-54.1615,27,census,0,right
+Guarapari,Brazil,-20.6772,-40.5093,26,census,0,right
+Cruzeiro,Brazil,-22.5728,-44.969,26,census,0,right
+Curitibanos,Brazil,-27.2824,-50.5816,25,census,0,right
+São Francisco do Sul,Brazil,-26.2579,-48.6344,25,census,0,right
+Tubarão,Brazil,-28.4713,-49.0144,25,census,0,right
+Ibirubá,Brazil,-28.6302,-53.0961,24,census,0,right
+Primavera do Leste,Brazil,-15.544,-54.2811,24,census,0,right
+Abreu e Lima,Brazil,-7.90072,-34.8984,23,census,0,right
+Porto Seguro,Brazil,-16.4435,-39.0643,23,census,0,right
+Itajaí,Brazil,-26.9101,-48.6705,23,census,0,right
+São José,Brazil,-27.6136,-48.6366,23,census,0,right
+Jaciara,Brazil,-15.9548,-54.9733,23,census,0,right
+Caraguatatuba,Brazil,-23.6125,-45.4125,22,census,0,right
+Guararapes,Brazil,-21.2544,-50.6453,22,census,0,right
+Guarapuava,Brazil,-25.3902,-51.4623,22,census,1,below
+Pinhais,Brazil,-25.4429,-49.1927,22,census,0,right
+Três Corações,Brazil,-21.6921,-45.2511,21,census,0,right
+São Gonçalo,Brazil,-22.8268,-43.0634,21,census,0,right
+Campo Limpo Paulista,Brazil,-23.2078,-46.7889,21,census,0,right
+Capivari,Brazil,-22.9951,-47.5071,21,census,0,right
+Rio Branco,Brazil,-9.97499,-67.8243,20,census,0,right
+Nova Friburgo,Brazil,-22.2932,-42.5377,20,census,0,right
+Embu das Artes,Brazil,-23.6437,-46.8579,20,census,0,right
+Franca,Brazil,-20.5352,-47.4039,20,census,0,right
+Itapecerica da Serra,Brazil,-23.7161,-46.8572,20,census,0,right
+Assaí,Brazil,-23.3697,-50.8459,20,census,0,right
+Willemstad,Curaçao,12.11,-68.93,919,estimate,1,right
+Pointe-à-Pitre,Guadeloupe,16.24,-61.53,1507,estimate,1,right
+Fort-de-France,Martinique,14.61,-61.07,774,estimate,1,right
+Oranjestad,Aruba,12.52,-70.03,363,estimate,1,left
+St. George's,Grenada,12.05,-61.75,459,estimate,1,right

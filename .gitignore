@@ -1,0 +1,16 @@
+# large or regenerated pipeline files
+pipeline/raw/ne_*
+pipeline/raw/gb/
+pipeline/raw/gbr/*
+!pipeline/raw/gbr/geogLA2021UK.json
+pipeline/data/*.gpkg
+pipeline/data/*.pkl
+pipeline/out/
+__pycache__/
+# web build products and tooling
+web/node_modules/
+web/build/
+web/test/
+web/ux/
+web/site/*.json
+.DS_Store

@@ -1,0 +1,547 @@
+10050;Albury;328;56093
+10180;Armidale Regional;370;29124
+10250;Ballina;66;46296
+10300;Balranald;8;2208
+10470;Bathurst Regional;283;43567
+10500;Bayside (NSW);15275;175184
+10550;Bega Valley;56;35942
+10600;Bellingen;15;13253
+10650;Berrigan;17;8665
+10750;Blacktown;31759;396776
+10800;Bland;10;5547
+10850;Blayney;20;7497
+10900;Blue Mountains;242;78121
+10950;Bogan;12;2467
+11150;Bourke;9;2340
+11200;Brewarrina;3;1356
+11250;Broken Hill;55;17588
+11300;Burwood;778;40217
+11350;Byron;70;36116
+11400;Cabonne;22;13766
+11450;Camden;5745;119325
+11500;Campbelltown (NSW);20408;176519
+11520;Canada Bay;1792;89177
+11570;Canterbury-Bankstown;87423;371006
+11600;Carrathool;28;2866
+11650;Central Coast (NSW);1500;346596
+11700;Central Darling;0;1725
+11720;Cessnock;112;63632
+11730;Clarence Valley;87;54115
+11750;Cobar;12;4059
+11800;Coffs Harbour;428;78759
+12000;Coolamon;8;4385
+12150;Coonamble;9;3732
+12160;Cootamundra-Gundagai Regional;11;11403
+12350;Cowra;25;12724
+12380;Cumberland;53608;235439
+12390;Dubbo Regional;534;54922
+12700;Dungog;5;9541
+12730;Edward River;6;8456
+12750;Eurobodalla;83;40593
+12850;Fairfield;13190;208475
+12870;Federation;25;12899
+12900;Forbes;6;9319
+12930;Georges River;6964;152274
+12950;Gilgandra;6;4295
+13010;Glen Innes Severn;19;8931
+13310;Goulburn Mulwaree;207;32053
+13340;Greater Hume Shire;16;11157
+13450;Griffith;732;27086
+13550;Gunnedah;13;12929
+13660;Gwydir;7;4910
+13800;Hawkesbury;371;67207
+13850;Hay;9;2882
+13910;Hilltops;527;19254
+14000;Hornsby;2972;151811
+14100;Hunters Hill;176;13559
+14170;Inner West;2497;182818
+14220;Inverell;23;17853
+14300;Junee;24;6415
+14350;Kempsey;37;30688
+14400;Kiama;50;23074
+14500;Ku-ring-gai;1251;124076
+14550;Kyogle;12;9359
+14600;Lachlan;15;6094
+14650;Lake Macquarie;814;213845
+14700;Lane Cove;582;39438
+14750;Leeton;101;11452
+14850;Lismore;141;44334
+14870;Lithgow;71;20842
+14900;Liverpool;35297;233446
+14920;Liverpool Plains;4;7551
+14950;Lockhart;0;3319
+15050;Maitland;537;90226
+15240;Mid-Coast;211;96579
+15270;Mid-Western Regional;48;25713
+15300;Moree Plains;31;12751
+15350;Mosman;154;28329
+15520;Murray River;31;12850
+15560;Murrumbidgee;12;3353
+15650;Muswellbrook;59;16357
+15700;Nambucca Valley;24;20407
+15750;Narrabri;25;12703
+15800;Narrandera;24;5698
+15850;Narromine;0;6360
+15900;Newcastle;2830;168873
+15950;North Sydney;565;68950
+15990;Northern Beaches;1308;263554
+16100;Oberon;28;5580
+16150;Orange;278;43512
+16200;Parkes;31;14361
+16260;Parramatta;14205;256729
+16350;Penrith;6656;217664
+16380;Port Macquarie-Hastings;207;86762
+16400;Port Stephens;196;75276
+16490;Queanbeyan-Palerang Regional;861;63304
+16550;Randwick;1888;134252
+16610;Richmond Valley;23;23565
+16700;Ryde;4052;129123
+16900;Shellharbour;890;76271
+16950;Shoalhaven;311;108531
+17000;Singleton;60;24577
+17040;Snowy Monaro Regional;100;21666
+17080;Snowy Valleys;30;14891
+17100;Strathfield;2904;45593
+17150;Sutherland Shire;2068;230211
+17200;Sydney;3483;211632
+17310;Tamworth Regional;323;63070
+17350;Temora;0;6034
+17400;Tenterfield;8;6810
+17420;The Hills Shire;8504;191876
+17550;Tweed;105;97392
+17620;Upper Hunter Shire;42;14229
+17640;Upper Lachlan Shire;11;8514
+17650;Uralla;15;5971
+17750;Wagga Wagga;653;67609
+17850;Walcha;0;3016
+17900;Walgett;17;5253
+17950;Warren;20;2550
+18020;Warrumbungle Shire;13;9225
+18050;Waverley;315;68605
+18100;Weddin;4;3608
+18200;Wentworth;21;7453
+18250;Willoughby;979;75613
+18350;Wingecarribee;232;52709
+18400;Wollondilly;406;53961
+18450;Wollongong;5604;214564
+18500;Woollahra;260;53496
+18710;Yass Valley;59;17281
+19399;Unincorporated NSW;0;1016
+20110;Alpine;33;13235
+20260;Ararat;79;11880
+20570;Ballarat;765;113763
+20660;Banyule;3045;126236
+20740;Bass Coast;72;40789
+20830;Baw Baw;192;57626
+20910;Bayside (Vic.);675;101306
+21010;Benalla;56;14528
+21110;Boroondara;1885;167900
+21180;Brimbank;13031;194618
+21270;Buloke;11;6178
+21370;Campaspe;135;38735
+21450;Cardinia;3119;118194
+21610;Casey;38427;365239
+21670;Central Goldfields;10;13483
+21750;Colac Otway;91;22423
+21830;Corangamite;26;16115
+21890;Darebin;6129;148570
+22110;East Gippsland;114;48715
+22170;Frankston;1173;139281
+22250;Gannawarra;12;10683
+22310;Glen Eira;1200;148908
+22410;Glenelg;22;20152
+22490;Golden Plains;50;24985
+22620;Greater Bendigo;759;121470
+22670;Greater Dandenong;22522;158208
+22750;Greater Geelong;4020;271057
+22830;Greater Shepparton;4350;68409
+22910;Hepburn;40;16604
+22980;Hindmarsh;15;5698
+23110;Hobsons Bay;4656;91322
+23190;Horsham;76;20429
+23270;Hume;46196;243901
+23350;Indigo;14;17368
+23430;Kingston (Vic.);2301;158129
+23670;Knox;2457;159103
+23810;Latrobe (Vic.);581;77318
+23940;Loddon;24;7759
+24130;Macedon Ranges;170;51458
+24210;Manningham;4247;124700
+24250;Mansfield;24;10178
+24330;Maribyrnong;3370;85209
+24410;Maroondah;1020;115043
+24600;Melbourne;5800;149615
+24650;Melton;11419;178960
+24780;Mildura;1171;56972
+24850;Mitchell;801;49460
+24900;Moira;216;30522
+24970;Monash;5230;190397
+25060;Moonee Valley;4189;121851
+25150;Moorabool;233;37632
+25250;Moreland;16748;171357
+25340;Mornington Peninsula;304;168948
+25430;Mount Alexander;31;20253
+25490;Moyne;15;17374
+25620;Murrindindi;30;15197
+25710;Nillumbik;479;62895
+25810;Northern Grampians;42;11948
+25900;Port Phillip;1365;101942
+25990;Pyrenees;7;7671
+26080;Queenscliffe;6;3276
+26170;South Gippsland;7;30577
+26260;Southern Grampians;31;16588
+26350;Stonnington;1248;104703
+26430;Strathbogie;32;11455
+26490;Surf Coast;57;37694
+26610;Swan Hill;635;21403
+26670;Towong;17;6223
+26700;Wangaratta;72;29808
+26730;Warrnambool;118;35406
+26810;Wellington;143;45639
+26890;West Wimmera;19;4006
+26980;Whitehorse;2702;169346
+27070;Whittlesea;20731;229396
+27170;Wodonga;161;43253
+27260;Wyndham;28941;292011
+27350;Yarra;2188;90114
+27450;Yarra Ranges;418;156068
+27630;Yarriambiack;31;6556
+29399;Unincorporated Vic;0;955
+30250;Aurukun;0;1101
+30300;Balonne;5;4320
+30370;Banana;53;14513
+30410;Barcaldine;0;2849
+30450;Barcoo;0;308
+30760;Blackall Tambo;0;1905
+30900;Boulia;6;458
+31000;Brisbane;28193;1242825
+31750;Bulloo;0;337
+31820;Bundaberg;428;99215
+31900;Burdekin;27;16692
+31950;Burke;4;419
+32080;Cairns;766;166943
+32250;Carpentaria;5;2090
+32260;Cassowary Coast;37;29157
+32270;Central Highlands (Qld);79;27836
+32310;Charters Towers;11;11794
+32330;Cherbourg;0;1194
+32450;Cloncurry;3;3644
+32500;Cook;5;4511
+32600;Croydon;0;266
+32750;Diamantina;8;266
+32770;Doomadgee;0;1387
+32810;Douglas;18;12337
+33100;Etheridge;0;714
+33200;Flinders (Qld);9;1500
+33220;Fraser Coast;267;111032
+33360;Gladstone;275;63515
+33430;Gold Coast;6088;625087
+33610;Goondiwindi;12;10310
+33620;Gympie;75;53242
+33800;Hinchinbrook;3;10920
+33830;Hope Vale;0;976
+33960;Ipswich;2290;229208
+33980;Isaac;78;22046
+34420;Kowanyama;0;1079
+34530;Livingstone;26;39398
+34570;Lockhart River;0;640
+34580;Lockyer Valley;457;41101
+34590;Logan;13561;345098
+34710;Longreach;3;3647
+34770;Mackay;382;121691
+34800;McKinlay;0;836
+34830;Mapoon;0;432
+34860;Maranoa;50;12825
+34880;Mareeba;190;22858
+35010;Moreton Bay;1852;476340
+35250;Mornington;0;1025
+35300;Mount Isa;88;18727
+35600;Murweh;5;3971
+35670;Napranum;0;883
+35740;Noosa;64;56298
+35760;North Burnett;40;10068
+35780;Northern Peninsula Area;0;2781
+35790;Palm Island;4;2098
+35800;Paroo;0;1679
+36070;Pormpuraaw;0;611
+36150;Quilpie;0;698
+36250;Redland;593;159222
+36300;Richmond;0;761
+36370;Rockhampton;423;81968
+36510;Scenic Rim;54;42984
+36580;Somerset;58;25057
+36630;South Burnett;50;32996
+36660;Southern Downs;51;36290
+36720;Sunshine Coast;841;342541
+36820;Tablelands;31;26244
+36910;Toowoomba;1463;173204
+36950;Torres;14;3421
+36960;Torres Strait Island;0;4124
+37010;Townsville;1044;192768
+37300;Weipa;7;4100
+37310;Western Downs;80;33843
+37340;Whitsunday;109;37152
+37400;Winton;7;1129
+37550;Woorabinda;0;1019
+37570;Wujal Wujal;0;276
+37600;Yarrabah;0;2505
+40070;Adelaide;642;25026
+40120;Adelaide Hills;76;40879
+40150;Adelaide Plains;15;9835
+40220;Alexandrina;19;28730
+40250;Anangu Pitjantjatjara Yunkunytjatjara;3;2333
+40310;Barossa;14;25066
+40430;Barunga West;0;2619
+40520;Berri Barmera;24;10484
+40700;Burnside;934;46030
+40910;Campbelltown (SA);1250;54800
+41010;Ceduna;3;3505
+41060;Charles Sturt;3202;121840
+41140;Clare and Gilbert Valleys;16;9187
+41190;Cleve;0;1742
+41330;Coober Pedy;17;1566
+41560;Copper Coast;17;15050
+41750;Elliston;0;1014
+41830;Flinders Ranges;5;1646
+41960;Franklin Harbour;4;1293
+42030;Gawler;49;24988
+42110;Goyder;8;4060
+42250;Grant;0;8636
+42600;Holdfast Bay;269;37543
+42750;Kangaroo Island;7;4894
+43080;Karoonda East Murray;0;1007
+43220;Kimba;0;1037
+43360;Kingston (SA);0;2326
+43650;Light;23;15792
+43710;Lower Eyre Peninsula;4;5910
+43790;Loxton Waikerie;55;11666
+44000;Maralinga Tjarutja;0;96
+44060;Marion;2183;94721
+44210;Mid Murray;10;9164
+44340;Mitcham;798;67617
+44550;Mount Barker;101;39217
+44620;Mount Gambier;111;26878
+44830;Mount Remarkable;3;2862
+45040;Murray Bridge;168;21644
+45090;Naracoorte Lucindale;308;8686
+45120;Northern Areas;7;4559
+45290;Norwood Payneham and St Peters;647;37487
+45340;Onkaparinga;1156;175204
+45400;Orroroo Carrieton;7;874
+45540;Peterborough;0;1638
+45680;Playford;3691;99190
+45890;Port Adelaide Enfield;7918;132400
+46090;Port Augusta;50;13829
+46300;Port Lincoln;23;14404
+46450;Port Pirie;91;17282
+46510;Prospect;565;22272
+46670;Renmark Paringa;191;9783
+46860;Robe;0;1542
+46970;Roxby Downs;30;3976
+47140;Salisbury;11007;145806
+47290;Southern Mallee;20;1979
+47490;Streaky Bay;6;2165
+47630;Tatiara;220;6891
+47700;Tea Tree Gully;1793;101174
+47800;Coorong;3;5463
+47910;Tumby Bay;0;2817
+47980;Unley;436;38641
+48050;Victor Harbor;26;16139
+48130;Wakefield;14;6780
+48260;Walkerville;173;8023
+48340;Wattle Range;25;11888
+48410;West Torrens;1682;61699
+48540;Whyalla;105;21244
+48640;Wudinna;0;1136
+48750;Yankalilla;0;5834
+48830;Yorke Peninsula;5;11598
+49399;Unincorporated SA;5;3006
+50080;Albany;95;38763
+50210;Armadale;2713;94184
+50250;Ashburton;56;7391
+50280;Augusta Margaret River;38;16791
+50350;Bassendean;170;15932
+50420;Bayswater;2196;69283
+50490;Belmont;3358;42257
+50560;Beverley;0;1694
+50630;Boddington;0;1705
+50770;Boyup Brook;0;1834
+50840;Bridgetown-Greenbushes;5;5238
+50910;Brookton;0;929
+50980;Broome;82;16959
+51080;Broomehill-Tambellup;3;1046
+51120;Bruce Rock;0;979
+51190;Bunbury;235;32987
+51260;Busselton;191;40640
+51310;Cambridge;181;28876
+51330;Canning;6832;95860
+51400;Capel;151;18175
+51470;Carnamah;0;552
+51540;Carnarvon;44;5251
+51610;Chapman Valley;5;1556
+51680;Chittering;16;5930
+51710;Christmas Island;374;1692
+51750;Claremont;68;11284
+51820;Cockburn;1748;118091
+51860;Cocos Islands;389;593
+51890;Collie;18;8812
+51960;Coolgardie;10;3478
+52030;Coorow;7;1055
+52100;Corrigin;0;1007
+52170;Cottesloe;18;7970
+52240;Cranbrook;3;1100
+52310;Cuballing;0;902
+52380;Cue;0;215
+52450;Cunderdin;0;1302
+52520;Dalwallinu;0;1379
+52590;Dandaragan;10;3355
+52660;Dardanup;129;14686
+52730;Denmark;12;6310
+52800;Derby-West Kimberley;28;7075
+52870;Donnybrook-Balingup;29;6155
+52940;Dowerin;0;715
+53010;Dumbleyung;0;681
+53080;Dundas;0;677
+53150;East Fremantle;17;7819
+53220;East Pilbara;95;9760
+53290;Esperance;18;13883
+53360;Exmouth;4;3085
+53430;Fremantle;194;31930
+53570;Gingin;15;5576
+53640;Gnowangerup;3;1215
+53710;Goomalling;0;955
+53780;Gosnells;13744;126376
+53800;Greater Geraldton;563;39489
+53920;Halls Creek;9;3574
+53990;Harvey;154;28567
+54060;Irwin;9;3680
+54130;Jerramungup;0;1160
+54170;Joondalup;1420;160003
+54200;Kalamunda;1240;58762
+54280;Kalgoorlie-Boulder;274;29306
+54310;Karratha;222;22199
+54340;Katanning;342;4057
+54410;Kellerberrin;0;1138
+54480;Kent;0;491
+54550;Kojonup;0;1901
+54620;Kondinin;3;847
+54690;Koorda;0;361
+54760;Kulin;0;769
+54830;Kwinana;724;45867
+54900;Lake Grace;3;1265
+54970;Laverton;7;1333
+55040;Leonora;19;1588
+55110;Mandurah;363;90306
+55180;Manjimup;88;9093
+55250;Meekatharra;3;1200
+55320;Melville;1401;103523
+55390;Menzies;0;524
+55460;Merredin;11;3119
+55530;Mingenew;0;407
+55600;Moora;4;2292
+55670;Morawa;0;660
+55740;Mosman Park;95;9169
+55810;Mount Magnet;0;653
+55880;Mount Marshall;0;459
+55950;Mukinbudin;0;579
+56090;Mundaring;95;39166
+56160;Murchison;0;101
+56230;Murray;35;18068
+56300;Nannup;6;1538
+56370;Narembeen;6;787
+56460;Narrogin;18;4779
+56580;Nedlands;205;22132
+56620;Ngaanyatjarraku;4;1358
+56730;Northam;61;11358
+56790;Northampton;6;3227
+56860;Nungarin;0;255
+56930;Peppermint Grove;25;1597
+57000;Perenjori;0;629
+57080;Perth;1183;28463
+57140;Pingelly;0;1037
+57210;Plantagenet;108;5388
+57280;Port Hedland;483;15684
+57350;Quairading;0;961
+57420;Ravensthorpe;11;2085
+57490;Rockingham;887;135678
+57630;Sandstone;0;109
+57700;Serpentine-Jarrahdale;392;32173
+57770;Shark Bay;0;1031
+57840;South Perth;1070;43405
+57910;Stirling;8339;226369
+57980;Subiaco;205;17267
+58050;Swan;6084;152974
+58190;Tammin;0;386
+58260;Three Springs;0;575
+58330;Toodyay;10;4601
+58400;Trayning;0;298
+58470;Upper Gascoyne;0;170
+58510;Victoria Park;1291;36889
+58540;Victoria Plains;0;802
+58570;Vincent;410;36537
+58610;Wagin;0;1761
+58680;Wandering;0;535
+58760;Wanneroo;6220;209111
+58820;Waroona;14;4234
+58890;West Arthur;0;773
+59030;Westonia;0;248
+59100;Wickepin;0;690
+59170;Williams;0;1021
+59250;Wiluna;0;535
+59310;Wongan-Ballidu;6;1297
+59320;Woodanilling;0;448
+59330;Wyalkatchem;0;470
+59340;Wyndham-East Kimberley;22;7477
+59350;Yalgoo;0;340
+59360;Yilgarn;0;1173
+59370;York;6;3459
+60210;Break O'Day;8;6770
+60410;Brighton;113;18995
+60610;Burnie;126;19918
+60810;Central Coast (Tas.);34;22760
+61010;Central Highlands (Tas.);0;2520
+61210;Circular Head;142;8117
+61410;Clarence;422;61531
+61510;Derwent Valley;23;10942
+61610;Devonport;99;26150
+61810;Dorset;31;6829
+62010;Flinders (Tas.);0;922
+62210;George Town;12;7033
+62410;Glamorgan-Spring Bay;11;5012
+62610;Glenorchy;1246;50411
+62810;Hobart;993;55077
+63010;Huon Valley;22;18259
+63210;Kentish;9;6603
+63410;King Island;9;1617
+63610;Kingborough;261;40082
+63810;Latrobe (Tas.);35;12420
+64010;Launceston;1055;70055
+64210;Meander Valley;63;20709
+64610;Northern Midlands;21;13745
+64810;Sorell;71;16734
+65010;Southern Midlands;3;6662
+65210;Tasman;6;2593
+65410;Waratah-Wynyard;13;14300
+65610;West Coast;15;4263
+65810;West Tamar;104;25145
+70200;Alice Springs;263;25912
+70420;Barkly;36;6316
+70540;Belyuen;0;149
+70620;Central Desert;6;3591
+70700;Coomalie;6;1276
+71000;Darwin;2244;80530
+71150;Darwin Waterfront Precinct;0;293
+71300;East Arnhem;3;8778
+72200;Katherine;73;9643
+72300;Litchfield;86;21411
+72330;MacDonnell;4;5748
+72800;Palmerston;535;37247
+73600;Roper Gulf;8;6486
+74050;Tiwi Islands;3;2348
+74550;Victoria Daly;0;2815
+74560;Wagait;0;423
+74660;West Arnhem;5;6281
+74680;West Daly;4;2973
+79399;Unincorporated NT;60;6802
+89399;Unincorporated ACT;14602;453890
+99399;Unincorp. Other Territories;0;2494

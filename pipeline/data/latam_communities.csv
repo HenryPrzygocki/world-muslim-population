@@ -1,0 +1,67 @@
+name,country,lat,lon,size,label,pos
+São Paulo,Brazil,-23.55,-46.63,major,1,right
+Foz do Iguaçu,Brazil,-25.54,-54.58,major,1,right
+Curitiba,Brazil,-25.43,-49.27,community,1,below
+Paranaguá,Brazil,-25.52,-48.51,community,1,right
+Londrina,Brazil,-23.31,-51.16,community,1,above
+Ponta Grossa,Brazil,-25.09,-50.16,community,0,left
+Maringá,Brazil,-23.42,-51.94,community,0,left
+Santos,Brazil,-23.96,-46.33,community,0,below
+Campinas,Brazil,-22.91,-47.06,community,0,above
+Rio de Janeiro,Brazil,-22.91,-43.17,community,1,right
+Brasília,Brazil,-15.79,-47.88,community,1,right
+Belo Horizonte,Brazil,-19.92,-43.94,community,0,right
+Porto Alegre,Brazil,-30.03,-51.23,community,1,right
+Chuí / Chuy,Brazil–Uruguay,-33.69,-53.46,community,1,right
+Santana do Livramento,Brazil,-30.89,-55.53,community,0,left
+Uruguaiana,Brazil,-29.75,-57.09,community,0,left
+Cuiabá,Brazil,-15.6,-56.1,community,0,right
+Campo Grande,Brazil,-20.44,-54.65,community,0,right
+Corumbá,Brazil,-19.0,-57.65,community,0,right
+Florianópolis,Brazil,-27.6,-48.55,community,0,right
+Recife,Brazil,-8.05,-34.88,community,0,right
+Salvador,Brazil,-12.97,-38.5,community,1,right
+Ciudad del Este,Paraguay,-25.51,-54.61,major,1,left
+Asunción,Paraguay,-25.28,-57.63,community,0,left
+Buenos Aires,Argentina,-34.6,-58.38,major,1,left
+Córdoba,Argentina,-31.42,-64.18,community,0,right
+Rosario,Argentina,-32.95,-60.65,community,0,right
+Mendoza,Argentina,-32.89,-68.84,community,0,right
+San Miguel de Tucumán,Argentina,-26.82,-65.22,community,0,right
+Salta,Argentina,-24.79,-65.41,community,0,right
+Montevideo,Uruguay,-34.9,-56.19,community,1,right
+Santiago,Chile,-33.45,-70.67,community,1,right
+Iquique,Chile,-20.21,-70.15,community,1,right
+Coquimbo,Chile,-29.95,-71.34,community,0,right
+Lima,Peru,-12.05,-77.04,community,1,right
+Tacna,Peru,-18.01,-70.25,community,0,right
+Santa Cruz de la Sierra,Bolivia,-17.78,-63.18,community,0,right
+Quito,Ecuador,-0.18,-78.47,community,0,right
+Guayaquil,Ecuador,-2.19,-79.89,community,0,right
+Bogotá,Colombia,4.71,-74.07,community,1,right
+Maicao,Colombia,11.38,-72.24,major,1,right
+Barranquilla,Colombia,10.96,-74.8,community,0,left
+Buenaventura,Colombia,3.88,-77.03,community,0,right
+San Andrés,Colombia,12.58,-81.7,community,0,right
+Caracas,Venezuela,10.48,-66.9,major,1,above
+Isla Margarita,Venezuela,10.96,-63.85,major,1,right
+Punto Fijo,Venezuela,11.7,-70.2,community,0,above
+Valencia,Venezuela,10.16,-68.0,community,0,below
+Maracaibo,Venezuela,10.65,-71.64,community,0,left
+Panama City,Panama,8.98,-79.52,major,1,below
+Colón,Panama,9.36,-79.9,community,0,above
+San José,Costa Rica,9.93,-84.08,community,0,right
+Managua,Nicaragua,12.13,-86.25,community,0,right
+Tegucigalpa,Honduras,14.07,-87.19,community,0,below
+San Pedro Sula,Honduras,15.5,-88.03,community,0,above
+San Salvador,El Salvador,13.69,-89.19,community,0,right
+Guatemala City,Guatemala,14.63,-90.51,community,0,right
+Mexico City,Mexico,19.43,-99.13,community,1,right
+San Cristóbal de las Casas,Mexico,16.74,-92.64,community,1,right
+Torreón,Mexico,25.54,-103.41,community,0,left
+Monterrey,Mexico,25.69,-100.32,community,0,right
+Guadalajara,Mexico,20.66,-103.35,community,0,left
+Havana,Cuba,23.11,-82.37,community,0,right
+Santo Domingo,Dominican Rep.,18.49,-69.93,community,0,right
+Kingston,Jamaica,18.0,-76.79,community,0,right
+Bridgetown,Barbados,13.1,-59.61,community,0,right
