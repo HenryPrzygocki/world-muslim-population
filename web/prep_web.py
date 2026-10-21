@@ -56,18 +56,14 @@ for r in natc.itertuples():
 g = gpd.GeoDataFrame(recs, crs=4326)
 g.to_file(f'{OUT}/countries.geojson', driver='GeoJSON')
 
-# ---- data basis of each unit: c census/register, e ethnicity-based, m modelled estimate, f fallback value
-ESTIMATE = {'NGA', 'CIV', 'CMR', 'TCD', 'TGO', 'SLE', 'LBR', 'ERI', 'CAF', 'MOZ', 'TZA', 'MDG', 'EGY', 'SEN', 'SUR',
-            'FRA', 'DEU', 'BEL', 'GRC'}
-ETHNIC = {'RUS', 'CHN', 'KGZ', 'MNG', 'KOS', 'UAOCC'}
-GHA_NEW = {'Ahafo', 'Bono', 'Bono East', 'North East', 'Oti', 'Savannah', 'Western North'}
-BEN_CENSUS = {'Alibori', 'Donga', 'Borgou', 'Couffo'}
-def basis(iso, unit, src, dflt):
-    if dflt: return 'f'
-    if 'ESTIMATE' in str(src) or iso in ESTIMATE: return 'm'
+# ---- data basis of each unit: c census/register, s published estimate (non-official body), e ethnicity-based,
+#      n no figure collected. Every value is a published figure or arithmetic on published figures.
+ETHNIC = {'RUS', 'CHN', 'BIH', 'UAOCC'}
+PUBLISHED_EST = {'ESP', 'USA'}
+def basis(iso, unit, src, dflt, pct):
+    if dflt or pct != pct: return 'n'
     if iso in ETHNIC: return 'e'
-    if (iso == 'GHA' and unit in GHA_NEW) or (iso == 'BEN' and unit not in BEN_CENSUS) or \
-       (iso == 'ROU' and unit == 'Tulcea') or (iso == 'MMR' and unit == 'Rakhine'): return 'm'
+    if iso in PUBLISHED_EST: return 's'
     return 'c'
 
 # ---- parent province of each unit (for cards and search), from Natural Earth admin-1
@@ -97,7 +93,7 @@ for r in sub.itertuples():
         hitp = A1p[(A1p.adm0_a3 == r.iso) & A1p.geometry.contains(gpd.points_from_xy([a[0]], [a[1]])[0])]
         if len(hitp) and isinstance(hitp.parent.iloc[0], str) and fold(hitp.parent.iloc[0]) != fold(nm):
             par = hitp.parent.iloc[0]
-    recs.append({'i': len(recs), 'n': nm, 'r': par, 'q': basis(r.iso, nm, r.src, r.dflt), 'c': r.iso, 'p': round(float(r.pct), 2),
+    recs.append({'i': len(recs), 'n': nm, 'r': par, 'q': basis(r.iso, nm, r.src, r.dflt, r.pct), 'c': r.iso, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
                  'm': None if r.muslims != r.muslims else int(round(r.muslims)), 'e': int(bool(r.cnt_est)),
                  'd': int(bool(r.dflt)), 's': sidx(r.src),
                  'lx': a[0] if a else None, 'ly': a[1] if a else None, 'lr': a[2] if a else None,
@@ -158,7 +154,7 @@ for adm, r in natd.iterrows():
 com = load_communities()
 def cl_json(R):
     cl = cluster_communities(com, R)
-    return [{'n': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 3), 'm': int(r.muslims), 'b': r.basis,
+    return [{'n': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 3), 'm': None if r.basis == 'unsized' else int(r.muslims), 'b': r.basis,
              'k': r.n, 'mem': r.members, 'c': r.country} for r in cl.itertuples()]
 us = pd.read_csv(f'{DATA}/usa_metros_arda2020.csv')
 metros = [{'n': r.city, 'full': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 3), 'm': int(r.adherents),
@@ -201,17 +197,16 @@ for r in pp.itertuples():
                    'pop': int(r.pop_max)})
 # national totals as the sum of mapped areas (only where every area has a published count)
 usum = {}
-for iso, grp in ug.groupby('c'):
-    if grp.m.isna().any() or (grp.q == 'm').any() or (grp.p <= 0).any() or (grp.e == 1).any():
+for iso, grp in ug[~ug.c.isin(['ROU'])].groupby('c'):   # partial coverage: no national sum
+    if grp.m.isna().any() or grp.p.isna().any() or (grp.p.fillna(0) <= 0).any() or (grp.e == 1).any():
         continue
     pop = (grp.m / grp.p * 100).sum()
     usum[iso] = {'m': int(grp.m.sum()), 'p': round(float(grp.m.sum() / pop * 100), 2), 'y': year_of.get(iso, '')}
 cn = dict(zip(reg.iso3, reg.notes.fillna('')))
 def rbasis(r):
-    s_, n_ = str(r.source), str(r.notes)
-    if 'ESTIMATE' in s_ or n_.startswith('Estimate'): return 'Modelled estimate'
-    if 'Partly' in n_: return 'Census + estimate'
-    if 'ethnic' in s_.lower(): return 'Census (ethnicity)'
+    if r.iso3 in ('RUS', 'CHN', 'BIH'): return 'Census (ethnicity)'
+    if r.iso3 in ('ESP', 'USA'): return 'Published estimate'
+    if r.iso3 == 'LAT': return 'Census + documented communities'
     return 'Census / register'
 regtab = [{'c': r.iso3, 'name': short.get(r.iso3, {'LAT': 'Latin America & Caribbean (circles)', 'PSE': 'Palestine'}.get(r.iso3, r.iso3)),
            'level': str(r.level), 'source': str(r.source).replace('ESTIMATE — ', '').replace('ESTIMATE ', ''),
@@ -221,12 +216,12 @@ regtab.sort(key=lambda d: d['name'])
 cn_short = lambda iso: short.get(iso, iso)
 csv = ug.drop(columns='geometry').copy()
 csv['country'] = csv.c.map(cn_short); csv['source'] = csv.s.map(lambda i: srcs[i]); csv['year'] = csv.c.map(year_of)
-csv['basis'] = csv.q.map({'c': 'census/register', 'e': 'ethnicity-based', 'm': 'modelled estimate', 'f': 'fallback value'})
+csv['basis'] = csv.q.map({'c': 'census/register', 's': 'published estimate', 'e': 'ethnicity-based', 'n': 'no figure collected'})
 csv['unit'] = csv.n.where(csv.n != '', 'Rest of ' + csv.country)
 csv = csv[['country', 'c', 'unit', 'r', 'p', 'm', 'e', 'basis', 'source', 'year']].rename(columns={
     'c': 'iso3', 'r': 'province', 'p': 'share_muslim_pct', 'm': 'muslims', 'e': 'count_is_share_x_population'})
 csv.sort_values(['country', 'unit']).to_csv(f'{OUT}/units.csv', index=False)
-com_drop = {'Trinidad & Tobago', 'Suriname', 'Guyana'}    # circles that only repeat a national total
+com_drop = {'Trinidad & Tobago', 'Suriname', 'Guyana'}    # markers that only stood for a whole country
 
 extra = {'labels': labels, 'comW': cl_json(45), 'comR': cl_json(12), 'metros': metros, 'sources': srcs,
          'years': year_of, 'regsrc': dict(zip(reg.iso3, reg.source)),

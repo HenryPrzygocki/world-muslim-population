@@ -129,7 +129,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .keys .k-hatch { background: repeating-linear-gradient(135deg, rgba(122,31,31,.6) 0 1.3px, #F6F2EA 1.3px 6px); outline: 1.4px dashed #7A1F1F; outline-offset: -1px; }
 .keys .k-dash { background: #F6F2EA; outline: 1.4px dashed #2E3236; outline-offset: -1px; }
 .keys .k-kri { background: #004A32; outline: 1.6px dashed #fff; outline-offset: -3px; }
-.keys .k-model { background: repeating-linear-gradient(45deg, rgba(30,42,48,.55) 0 1.2px, #D9B280 1.2px 5px); }
+.keys .k-nofig { background: repeating-linear-gradient(45deg, rgba(120,120,112,.6) 0 1px, #E2E2DE 1px 5px); }
 .toggles { display: flex; flex-direction: column; gap: 6px; }
 .toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
 .toggles input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
@@ -164,7 +164,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .card .kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .card .kv dd span { font-weight: 400; color: var(--ink-2); }
 .badge { align-self: flex-start; font: 600 11px var(--f-cond); letter-spacing: .03em; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
-.badge.c { color: var(--accent); } .badge.e { color: #3D6C8F; } .badge.m { color: #A0521C; } .badge.f, .badge.p { color: var(--ink-2); }
+.badge.c, .badge.s { color: var(--accent); } .badge.e { color: #3D6C8F; } .badge.n, .badge.p { color: var(--ink-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.e { color: #8DB8D8; } :root:not([data-theme="light"]) .badge.m { color: #E2A26B; } }
 :root[data-theme="dark"] .badge.e { color: #8DB8D8; } :root[data-theme="dark"] .badge.m { color: #E2A26B; }
 .card .src { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 6px; }
@@ -267,17 +267,16 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
       <div class="lg-body" id="lgBody" hidden>
         <div class="circles" id="circles"></div>
         <div class="keys">
-          <span><i class="k-model"></i><span>Modelled estimate (no recent religion census) — shown when “Mark modelled estimates” is on</span></span>
+          <span><i class="k-nofig"></i><span>No figure collected for this area</span></span>
           <span><i class="k-hatch"></i><span>Russian-occupied, internationally recognised as Ukraine</span></span>
           <span><i class="k-dash"></i><span>Territory of disputed status, e.g. <em>Taiwan</em>, <em>Kosovo</em>, <em>Falklands (Malvinas)</em></span></span>
           <span><i class="k-kri"></i><span>Autonomous region (Kurdistan Region of Iraq)</span></span>
         </div>
         <div class="toggles">
-          <label><input type="checkbox" id="tQual"> Mark modelled estimates</label>
           <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
           <label><input type="checkbox" id="tMet" checked> U.S. metro areas (2020 Religion Census)</label>
         </div>
-        <p class="note">Labels show share and, where known, number of Muslims (“0.5% · 24k”); ≈ marks share × population.
+        <p class="note">Labels show share and, where known, number of Muslims (“0.5% · 24k”). Every figure is published or simple arithmetic on published figures.
           Point at a colour to highlight it on the map. <button data-about>Sources, methods &amp; credits</button></p>
       </div>
     </aside>
@@ -470,7 +469,7 @@ let D = null;                                       // data
 const LOD = { w: null, lo: null, hi: null };
 const loading = {};
 let hover = null, pinned = null, hl = -1, hlPinned = false;
-const show = { com: true, met: true, qual: false };
+const show = { com: true, met: true };
 const scr = (x, y) => [t.x + x * t.k, t.y + y * t.k];
 const zAbs = () => t.k * 1000 / 1400;
 const pxkm = () => PXKM0 * t.k;
@@ -629,9 +628,6 @@ const NOD = (() => { const c = document.createElement('canvas'); c.width = c.hei
 const HATCH = (() => { const c = document.createElement('canvas'); c.width = c.height = 9; const x = c.getContext('2d');
   x.strokeStyle = 'rgba(122,31,31,.6)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(-1, 10); x.lineTo(10, -1); x.moveTo(-1, 1); x.lineTo(1, -1); x.moveTo(8, 10); x.lineTo(10, 8); x.stroke();
   return ctx.createPattern(c, 'repeat'); })();
-const QHATCH = (() => { const c = document.createElement('canvas'); c.width = c.height = 7; const x = c.getContext('2d');
-  x.strokeStyle = 'rgba(25,35,40,.5)'; x.lineWidth = 1.1; x.beginPath(); x.moveTo(-1, -1); x.lineTo(8, 8); x.moveTo(6, -1); x.lineTo(8, 1); x.moveTo(-1, 6); x.lineTo(1, 8); x.stroke();
-  return ctx.createPattern(c, 'repeat'); })();
 
 function viewBox() { return [-t.x / t.k, -t.y / t.k, (W - t.x) / t.k, (H - t.y) / t.k]; }
 const hits = (b, v) => b[0] <= v[2] && b[2] >= v[0] && b[1] <= v[3] && b[3] >= v[1];
@@ -672,7 +668,6 @@ function draw() {
     for (let i = 0; i < 13; i++) { if (!by[i].length) continue; ctx.fillStyle = i === 12 ? NOD : COLORS[i]; if (i === 12) NOD.setTransform(new DOMMatrix().scale(1 / k));
       for (const P of by[i]) ctx.fill(P, 'evenodd'); }
   }
-  if (show.qual) { QHATCH.setTransform(new DOMMatrix().scale(1 / k)); ctx.fillStyle = QHATCH; for (const [it, P] of VU) if (it.q === 'm') ctx.fill(P, 'evenodd'); }
   const each = (name, f) => { for (const p of linesFor(name, want)) f(p); };
   ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = Math.min(1.2, 0.35 + k * 0.02) / k; each('umesh', p => ctx.stroke(p));
   ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.strokeStyle = 'rgba(110,110,100,.55)'; ctx.lineWidth = 0.6 / k; each('prov', p => ctx.stroke(p)); ctx.restore();
@@ -928,8 +923,8 @@ function longN(n, est) { if (n == null) return null;
   return Math.round(n).toLocaleString('en-US'); }
 const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : NODATA}"></span>`;
 function badge(q, yr) {
-  const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), m: 'Modelled estimate',
-               f: 'No separate figure published', p: 'National estimate · Pew 2020' }[q];
+  const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), s: 'Published estimate' + (yr ? ' · ' + yr : ''),
+               e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), n: 'No figure collected', p: 'National estimate · Pew 2020' }[q];
   return `<span class="badge ${q}">${esc(t_)}</span>`;
 }
 function cardHTML(sel, full) {
@@ -946,7 +941,7 @@ function cardHTML(sel, full) {
     let kv = '';
     if (it.m != null) kv += `<dt>Muslims</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span>(share × population)</span>' : ''}</dd>`;
     const notes = [];
-    if (isU && it.d) notes.push('No separate figure is published for these areas; they share a fallback value.');
+    if (isU && it.p == null) { const nl = D.labelOf.get(it.c); notes.push('No figure was collected for ' + (it.n ? 'this area' : 'these areas') + '.' + (nl && nl.p != null ? ` The national figure for ${it.country} is ${fmtP(nl.p)} (Pew 2020).` : '')); }
     if (X.notes[it.c]) notes.push(X.notes[it.c]);
     if (sel.occ && it.c !== 'UAOCC') notes.push(X.notes.OCC);
     if (sel.kri) notes.push(X.notes.KRI);
@@ -958,10 +953,10 @@ function cardHTML(sel, full) {
               : `<div class="sum">Zoom in to see provinces and districts; their values come from national sources (${esc(X.years[it.c] || '')}).</div>`;
     }
     return `<div class="eb">${esc(eb)}</div><h3>${esc(name)}</h3>
-      <div class="big">${sw(it.k)}${fmtP(it.p)}<small>of residents</small></div>
-      ${kv ? `<dl class="kv">${kv}</dl>` : ''}${badge(isU ? it.q : 'p', yr)}${sum}
+      ${it.p == null ? '' : `<div class="big">${sw(it.k)}${fmtP(it.p)}<small>of residents</small></div>`}
+      ${kv ? `<dl class="kv">${kv}</dl>` : ''}${badge(isU ? it.q : (it.p == null ? 'n' : 'p'), yr)}${sum}
       ${notes.map(n => `<div class="mem">${esc(n)}</div>`).join('')}
-      ${full && src ? `<div class="src">Source: ${esc(src.replace(/^ESTIMATE ?—? ?/, 'Modelled — '))}</div>` : ''}`;
+      ${full && src ? `<div class="src">Source: ${esc(src)}</div>` : ''}`;
   }
   if (sel.kind === 'region') {
     const us = D.U.filter(u => u.c === it.c && u.r === it.n);
@@ -980,10 +975,9 @@ function cardHTML(sel, full) {
       ${full ? '<div class="src">Source: 2020 U.S. Religion Census (ASARB), Muslim estimate — a congregation-based count, via ARDA</div>' : ''}`;
   }
   const basis = it.b === 'census' ? (it.c === 'Chile' ? 'Census count, INE Chile 2024 (persons 15+)' : 'Census count, IBGE Brazil 2010')
-    : it.b === 'unsized' ? 'Documented community; no reliable count (Argentina has no census religion data)'
-    : 'Estimate: Pew 2020 national total shared among cities with documented communities';
+    : 'Documented community; no published count for this place' + (it.c === 'Argentina' ? ' (Argentina’s census does not ask religion)' : '');
   const mem = it.k > 1 ? `<div class="mem">Includes ${esc(it.mem)}</div>` : '';
-  const note = /Ciudad del Este/.test(it.mem) ? '<div class="mem">Paraguay’s census counted 486 Muslims in Alto Paraná; community leaders estimate ≈7,000 in Ciudad del Este.</div>' : '';
+  const note = /Ciudad del Este/.test(it.mem) ? '<div class="mem">Paraguay’s 2002 census counted 486 Muslims in Alto Paraná department; community leaders put Ciudad del Este’s Muslim community at about 7,000 (Última Hora, 2026).</div>' : '';
   return `<div class="eb">${esc(it.c)} · Muslim community</div><h3>${esc(it.n)}</h3>
     ${it.b === 'unsized' ? '' : `<div class="big">${it.m.toLocaleString('en-US')}<small>Muslims</small></div>`}
     ${mem}${note}<div class="src">${basis}</div>`;
@@ -1279,11 +1273,11 @@ function legendCircles() {
 }
 $('lgMore').onclick = () => { const b = $('lgBody'), open = b.hidden; b.hidden = !open; $('lgMore').setAttribute('aria-expanded', open);
   try { localStorage.setItem('wmp-legend', open ? 'open' : ''); } catch (_) {} legendCircles(); };
-for (const [id, key] of [['tCom', 'com'], ['tMet', 'met'], ['tQual', 'qual']]) $(id).addEventListener('change', e => { show[key] = e.target.checked; schedule(); legendCircles(); });
+for (const [id, key] of [['tCom', 'com'], ['tMet', 'met']]) $(id).addEventListener('change', e => { show[key] = e.target.checked; schedule(); legendCircles(); });
 
 // ------------------------------------------------------------------ about
 function aboutHTML() {
-  const X = D.X, cls = r => r.basis === 'Modelled estimate' ? 'bm' : r.basis === 'Census (ethnicity)' ? 'be' : 'bc';
+  const X = D.X, cls = r => r.basis === 'Census (ethnicity)' ? 'be' : 'bc';
   const rows = X.reg.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.level)}</td><td>${esc(r.source)}</td><td>${esc(r.year)}</td><td class="${cls(r)}">${esc(r.basis)}</td></tr>`).join('');
   return `<p>The map shows the <b>share of residents who are Muslim</b> — and, where the source gives it, their number — for the smallest areas
     for which a reasonably current figure exists: districts in India, local government areas in Australia, municipalities in the Balkans,
@@ -1291,12 +1285,15 @@ function aboutHTML() {
     <h3>Where the numbers come from</h3>
     <p>Every country starts from the <b>Pew Research Center</b>’s 2020 estimate (“Religious Composition by Country, 2010–2020”, 2025).
     Where a census, population register or official survey publishes religion below the national level, those figures replace the national
-    value — they are not rescaled, so each area reflects the year of its own source. Each place’s card says which kind of figure it is:</p>
-    <ul><li><b>Official census / register</b> — counts or shares published by a statistics office (or the U.S. Religion Census for U.S. states and metros).</li>
-    <li><b>Census, by ethnicity</b> — Russia, China, Kyrgyzstan, Mongolia and Kosovo do not ask religion; the share of traditionally Muslim nationalities is shown, as Pew and the original map do.</li>
-    <li><b>Modelled estimate</b> — no usable religion census (e.g. Nigeria, Tanzania, France, Germany): regional shares follow documented patterns and are tied to the national total. Treat them as ±10 points. Switch on “Mark modelled estimates” in the legend to see where they are.</li>
-    <li><b>No separate figure</b> — areas without a published value share a fallback (e.g. Serbian municipalities with under 1% Muslims).</li></ul>
-    <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as circles sized by the number of Muslims (Brazil 2010 and Chile 2024 census counts; elsewhere Pew’s total shared among documented communities, dashed). U.S. metros show the 2020 U.S. Religion Census, a congregation-based count.</p>
+    value — they are not rescaled, so each area reflects the year of its own source. <b>Every number on this map is a published figure or simple
+    arithmetic on published figures</b> (sums, or a count divided by an official population); nothing is modelled or filled in by judgment.
+    Each place’s card says which kind of figure it is:</p>
+    <ul><li><b>Official census / register</b> — counts or shares published by a statistics office.</li>
+    <li><b>Published estimate</b> — figures from a non-official body: the U.S. Religion Census (congregations, ASARB) and Spain’s Muslim community union (UCIDE).</li>
+    <li><b>Census, by ethnicity</b> — Russia and China do not ask religion; the share of traditionally Muslim nationalities is shown, as Pew and the original map do. Bosnia and Herzegovina’s cantons show the census share of Bosniaks.</li>
+    <li><b>No figure collected</b> — hatched areas inside a country with regional data, where no figure was gathered for this map. Countries without any regional data show their national figure.</li></ul>
+    <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as points: circles sized by the census count
+    (Brazil 2010, Chile 2024), and small squares for documented communities without a published count. U.S. metros show the 2020 U.S. Religion Census.</p>
     <h3>Contested territories</h3>
     <p>Borders follow de facto control, with disputed lines dashed. Territories of disputed status (Taiwan, Kosovo, Somaliland, Northern Cyprus, Western Sahara,
     Falklands/Malvinas) are outlined with a dashed line and named in italics, without taking a side. Crimea and other Russian-occupied areas are shown as part of

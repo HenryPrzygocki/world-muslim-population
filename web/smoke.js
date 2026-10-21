@@ -37,7 +37,7 @@ const EXE = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless
   ok(pb.x === pa.x && pb.y === pa.y && pb.x > 1000, 'pinned panel stays docked top-right while panning');
   await p.screenshot({ path: `${OUT}/s_pinned.png` });
   // legend highlight + about + data-quality toggle
-  await p.click('#lgMore'); await p.click('#tQual'); await p.waitForTimeout(500);
+  await p.click('#lgMore'); await p.waitForTimeout(500);
   await p.hover('#scale rect.sw[data-k="9"]'); await p.waitForTimeout(400); await p.screenshot({ path: `${OUT}/s_highlight.png` });
   await p.click('#aboutBtn'); await p.waitForTimeout(400); ok(await p.$eval('#about', d => d.open), 'About dialog opens'); await p.screenshot({ path: `${OUT}/s_about.png` });
   await p.keyboard.press('Escape'); await p.waitForTimeout(200);

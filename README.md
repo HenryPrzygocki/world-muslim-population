@@ -4,7 +4,9 @@ Interactive map of the share and number of Muslims by country, province, distric
 https://henryprzygocki.github.io/world-muslim-population/
 
 - Search any country, province, district or city; the address bar always links to the current view and selection.
-- Every area's card says where its figure comes from (census / register, ethnicity-based, or modelled estimate).
+- Every number is a published figure or simple arithmetic on published figures; nothing is modelled or filled in by
+  judgment. Areas without a collected figure are hatched. Each card names the source and the kind of figure
+  (census / register, published estimate, ethnicity-based).
 - The full table of mapped areas can be downloaded as CSV from *About & sources*.
 
 Data: Pew Research Center 2020 national baseline plus national censuses and registers (see the site's sources table

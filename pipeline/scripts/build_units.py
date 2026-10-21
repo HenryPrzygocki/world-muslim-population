@@ -43,7 +43,6 @@ nat['Guernsey'] = nat['Jersey']
 extra = {  # territories Pew does not list: only figures with a source; everything else has no value
     'Somaliland': (nat['Somalia'][0], 'Pew Research Center 2020 estimate for Somalia (covers Somaliland)'),
     'Liechtenstein': (5.9, 'Liechtenstein census 2020'), 'Gibraltar': (4.0, 'Gibraltar census 2012'),
-    'Indian Ocean Territories': (30.0, 'ABS 2021 census (Christmas & Cocos Is.)'),
     'Northern Cyprus': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
     'Dhekelia Sovereign Base Area': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
     'Akrotiri Sovereign Base Area': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
@@ -390,9 +389,6 @@ kos_alias = {'Kosovska Mitrovica': 'Mitrovicë', 'Štrpce': 'Shtërpcë', 'Novo 
              'Đakovica': 'Gjakovë', 'Vitina': 'Viti', 'Lipljan': 'Lipjan'}
 add(attach(gbf('BIH-ADM2'), read_sub('BIH'), 'BIH', src=SRC['BIH'], cutoff=0.6,
            aliases={'Bosnian-Podrinje Canton Goražde': 'Bosnian Podrinje', 'Brcko District': 'Brčko'}))
-add(attach(ne1('AUT'), read_sub('AUT'), 'AUT', src=SRC['AUT']))
-nl = attach(ne1('NLD'), read_sub('NLD'), 'NLD', src=SRC['NLD'])
-add(nl)
 # Spain: UCIDE count of Muslims by province (31 Dec 2017) ÷ INE official population (1 Jan 2018)
 ep = read2('ESP_prov')
 ep['muslims'] = ep.ucide; ep['pct'] = ep.ucide / ep.ine_pop_2018 * 100
@@ -416,7 +412,6 @@ cn = sub2.canada(); cn['iso'] = 'CAN'; cn['src'] = SRC['CAN']; cn['level'] = 2
 add(cn)
 au = sub2.australia(); au['iso'] = 'AUS'; au['src'] = SRC['AUS']; au['level'] = 2
 add(au)
-add(attach(gbf('SUR-ADM1'), read_sub('SUR'), 'SUR', src=SRC['SUR']))
 add(attach(gbf('GUY-ADM1'), read2('GUY'), 'GUY', src=SRC['GUY'], cutoff=0.8))
 add(attach(gbf('KHM-ADM1'), read2('KHM'), 'KHM', src=SRC['KHM'], cutoff=0.8,
            aliases={'Bantey Meanchey': 'Banteay Meanchey', 'Ratanakiri Province': 'Ratanakiri'}))
@@ -471,7 +466,7 @@ subs['dflt'] = subs.dflt.fillna(False).astype(bool)
 subs.loc[subs.dflt, 'unit'] = ''          # unmatched units sharing a fallback value: merged, unlabelled
 subs.loc[subs.dflt, 'muslims'] = np.nan
 rows = []
-for k, grp in subs.groupby(['iso', 'unit', 'pct', 'level', 'layer', 'dflt']):
+for k, grp in subs.groupby(['iso', 'unit', 'pct', 'level', 'layer', 'dflt'], dropna=False):
     mu = grp.muslims.dropna()
     rows.append({'iso': k[0], 'unit': k[1], 'pct': k[2], 'level': k[3], 'layer': k[4], 'dflt': k[5],
                  'src': grp.src.iloc[0], 'muslims': mu.iloc[0] if len(mu) else np.nan,

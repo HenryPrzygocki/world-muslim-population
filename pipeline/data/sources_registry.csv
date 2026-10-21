@@ -3,66 +3,38 @@ KEN,county (47),Kenya National Bureau of Statistics — 2019 Population & Housin
 IND,district (640),Census of India 2011 — religion by district (C-1),2011,Muslims / total population
 PHL,province (81 + NCR),Philippine Statistics Authority — 2020 Census of Population and Housing (religious affiliation),2020,Highly urbanized cities merged into their parent provinces; Isabela City into Basilan; SGA into Maguindanao
 MYS,state (13 + 3 FT),Department of Statistics Malaysia — 2020 Population and Housing Census,2020,
-MMR,state/region (15),Myanmar 2014 Population and Housing Census Vol. 2-C; Rakhine adjusted for post-2017 displacement (UNHCR),2014,Rakhine is an estimate
+MMR,state/region (15),Myanmar 2014 Population and Housing Census Vol. 2-C (Rakhine incl. the census estimate for its non-enumerated population),2014,"Since 2017 about 740,000 Rohingya have fled Rakhine to Bangladesh (UNHCR)"
 BGD,district (64),Bangladesh Bureau of Statistics — Population & Housing Census 2022,2022,
-PAK,district,Pakistan Bureau of Statistics — 2017 Census (Hindu incl. scheduled castes by district); Muslim = 100 − Hindu − ~0.6% other; districts not listed default to 2023 provincial shares (>96%),2017,Only districts with ≥1% Hindus differ meaningfully
 LKA,district (25),Department of Census and Statistics Sri Lanka — Census 2024 where religion published; otherwise Census 2012 (via citypopulation.de),2012–2024,
-THA,province (77),Thailand National Statistical Office — 2000 Population and Housing Census (latest census with provincial religion tables),2000,Provinces with no published figure set to 0.1%
+THA,province (provinces without a published figure left blank),Thailand National Statistical Office — 2000 Population and Housing Census (latest census with provincial religion tables),2000,
 IDN,regency / city (497 in 2010; 519 today),"BPS — Sensus Penduduk 2010, population by religion and regency/city (sp2010.bps.go.id); regencies created after 2010 take the value of the regency they were split from",2010,Latest census with a religion tabulation by regency
-RUS,federal subject (85),Rosstat 2021 All-Russian census (2010 where 2021 tables unavailable) — share of traditionally Muslim ethnic groups among residents stating ethnicity; low-share regions estimated,2021,Census does not ask religion; ethnic-heritage method (same convention as Pew/original map)
-CHN,province (+ Xinjiang prefectures and Linxia),National Bureau of Statistics — 2020/2010 census ethnicity (sum of traditionally Muslim nationalities); Xinjiang prefectures composited from 2010 Uyghur shares and 2000 Kazakh shares + approximate Hui,2010–2020,Census does not ask religion; ethnic-heritage method; prefecture values ±5 pts
-ETH,zone (74),Central Statistical Agency — 2007 Population and Housing Census (zone reports); region-level values used where zone values not available,2007,Latest Ethiopian census with religion
-GBR,local authority (331 E&W + 32 SCO + 11 NI),"ONS Census 2021 TS030 (England & Wales, via Nomis); Scotland's Census 2022 (Glasgow, Edinburgh, Aberdeen, Dundee); other Scottish & NI councils approximated from national shares (Scotland 2.2%, NI 0.6%)",2021–2022,
+RUS,federal subject (regions without a collected figure left blank),Rosstat — 2021 All-Russian census (2010 where 2021 tables were unavailable): share of traditionally Muslim nationalities among residents stating their ethnicity,2010–2021,Census does not ask religion; ethnicity-based (Pew convention)
+CHN,province (provinces without a collected census figure left blank),National Bureau of Statistics — 2020 census ethnicity: sum of traditionally Muslim nationalities,2020,Census does not ask religion; ethnicity-based (Pew convention)
+ETH,zone (zones without a collected figure left blank),Central Statistical Agency — 2007 Population and Housing Census (zone reports); region-level values where zone values were not available,2007,
+GBR,"local authority (E&W 331 + Glasgow, Edinburgh, Aberdeen, Dundee)","ONS Census 2021 TS030 (England & Wales, via Nomis); Scotland's Census 2022 (Glasgow, Edinburgh, Aberdeen, Dundee). Other Scottish councils and Northern Ireland: no figure collected",2021–2022,
 BGR,province (28),National Statistical Institute of Bulgaria — 2021 Census (share of total population incl. non-respondents),2021,Lower bound; ~12% did not answer religion
 ALB,county (12),INSTAT — 2023 Population and Housing Census (Sunni + Bektashi),2023,
-MKD,municipality (80),State Statistical Office — 2021 Census (religious affiliation),2021,
-MNE,municipality (25),MONSTAT — 2011 Census by municipality; post-2013 municipalities (Gusinje / Petnjica / Tuzi / Zeta) and their parents re-estimated from 2011 settlement composition,2011,National 2023: 20.0%
-SRB,municipality,Statistical Office of the Republic of Serbia — 2022 Census (religion); municipalities not listed assumed ~0.5%,2022,Excludes Kosovo
-KOS,municipality,Kosovo Agency of Statistics 2011/2024 (Albanian & Bosniak/Turk majorities ~95–99% Muslim) with ethnicity-based estimates for Serb-majority municipalities (northern areas boycotted),2011–2024,Estimates
-GRC,municipality (Thrace) / region,No official religious census — Western Thrace municipal estimates from ethnic (Turkish/Pomak/Roma) composition; rest of Greece regional estimates consistent with Pew 2020 national 5.1%,2020,Estimates
-FRA,region (13),"No official religious census; regional estimates consistent with IFOP 2008–11 departmental pattern, scaled to Pew 2020 national 9.1%",2020,Estimates
-DEU,state (16),"BAMF 'Muslimisches Leben in Deutschland' state distribution of Muslims (2008/2020), adjusted for 2015–16 refugee allocation; consistent with Pew 2020 national 6.5%",2020,Estimates
-NLD,province (12),Statistics Netherlands (CBS) religion survey by province,2015–2019,
-BEL,region (3),Estimates (Hertogen / Pew 2020 national 6.8%),2020,Estimates
-AUT,state (9),Statistik Austria 2021 religious affiliation survey (state estimates),2021,
-CHE,canton (26),Swiss Federal Statistical Office structural survey 2017 (12 cantons); others estimated,2017,
-ESP,province (52),"UCIDE Estudio demográfico 2019 community totals scaled to 2024 national total (2.54M), distributed over provinces by UCIDE provincial counts (31 Dec 2017) ÷ INE 2024 population; Ceuta & Melilla unscaled",2017–2024,Counts approximate
+MKD,municipality (80; Skopje left blank),State Statistical Office — 2021 Census (religious affiliation),2021,
+MNE,municipality (2011 boundaries),"MONSTAT — 2011 Census by municipality (Podgorica incl. Tuzi and Zeta, as in 2011); Plav, Gusinje, Berane and Petnjica left blank",2011,
+SRB,municipality (those collected),Statistical Office of the Republic of Serbia — 2022 Census (religion). Municipalities not collected are left blank,2022,Excludes Kosovo
+ESP,province (52),"UCIDE — Estudio demográfico de la población musulmana: Muslims by province at 31 Dec 2017, divided by INE official population at 1 Jan 2018",2017–2018,Community body estimate (UCIDE)
 USA,state (51) + 383 metropolitan areas,"ASARB — 2020 U.S. Religion Census, Muslim adherents by state and by metropolitan statistical area (via ARDA)",2020,Congregation-based estimate
 CAN,economic region (76),"Statistics Canada — 2021 Census of Population, table 98-10-0353 (religion by economic region, SDMX API)",2021,Muslim / total population in private households
 AUS,local government area (547),"Australian Bureau of Statistics — 2021 Census GCP G14 (religious affiliation by LGA, ABS Data API)",2021,Islam / total persons
 KAZ,region (16),Bureau of National Statistics — 2021 National Census (religion),2021,
-GEO,region (12),Geostat — 2014 General Population Census; Abkhazia from 2011 de facto census (~16% of Abkhaz Muslim),2014,
-KGZ,region (8),National Statistical Committee — 2022 census ethnic composition (traditionally Muslim nationalities),2022,Estimates
-MNG,aimag,National Statistics Office — 2020 census (Kazakh share),2020,Other aimags ~0.1%
+GEO,region (11; Abkhazia left blank),Geostat — 2014 General Population Census (religion by region),2014,
 NPL,province (7),National Statistics Office Nepal — 2021 Census (Muslims by province ÷ provincial population),2021,
 ISR,district (6),Israel Central Bureau of Statistics 2020 — distribution of Muslims by district ÷ district population (Jerusalem incl. East Jerusalem),2020,
-PSE,West Bank / Gaza,Palestinian Central Bureau of Statistics; West Bank share accounts for ~0.5M Israeli settlers,2020,
 MWI,district (28),National Statistical Office Malawi — 2018 Population and Housing Census (cities merged into districts),2018,
 UGA,district,Uganda Bureau of Statistics — 2014 National Population and Housing Census (newer districts take parent-district values),2014,
-NGA,state (37),"ESTIMATE — no census religion data since 1963; state values compiled from pooled survey evidence (DHS/Afrobarometer patterns), north/middle-belt/south gradients; national ≈51–56%",2020,Estimates ±10 pts
-GHA,region (16),Ghana Statistical Service 2010 census Table 4.17 (Northern 60.0%) + 2021 national 19.9%; new 2018 regions estimated,2010–2021,Partly estimated
-CIV,district (14),ESTIMATE consistent with 2021 census national 42.5% and known north–south gradient,2021,Estimates
-BFA,province (45),"INSD — RGPH 2006 regional monographs (religion by province) for Sahel, Nord, Centre-Nord, Plateau-Central, Centre, Hauts-Bassins, Cascades and Sud-Ouest; the other five regions modelled to the 2006 census national total (60.5%)",2006,Partly estimated
-CMR,region (10),ESTIMATE consistent with Pew 2020 national 25.2%,2020,Estimates
-TCD,region,ESTIMATE consistent with 2009 census national ~58%,2009,Estimates
-TGO,region (5),ESTIMATE consistent with Pew 2020 national 16.1%,2020,Estimates
-BEN,department (12),"INSAE 2013 census (Alibori, Donga, Borgou, Couffo); other departments estimated (national 27.7%)",2013,Partly estimated
-SLE,province (4),ESTIMATE consistent with Pew 2020 national 80.1%,2020,Estimates
-LBR,county,ESTIMATE consistent with Pew 2020 national 12.7%,2020,Estimates
-ERI,region (6),ESTIMATE — lowlands vs highlands; Pew 2020 national 51.7%,2020,Estimates
-CAF,prefecture,ESTIMATE — Muslim north-east; Pew 2020 national 6.2%,2020,Estimates
-MOZ,province (11),ESTIMATE consistent with INE 2017 census national 19.1% (Niassa/Cabo Delgado Muslim-majority),2017,Estimates
-TZA,region (31),ESTIMATE — no census religion question since 1967; Zanzibar ≈99%; coastal belt majority Muslim; consistent with Pew 2020 national 29.9%,2020,Estimates
+BFA,province (8 of 13 regions),"INSD — RGPH 2006 regional monographs (religion by province) for Sahel, Nord, Centre-Nord, Plateau-Central, Centre, Hauts-Bassins, Cascades and Sud-Ouest; other regions left blank",2006,
+BEN,department (4 of 12),"INSAE — 2013 census (Alibori, Donga, Borgou, Couffo); other departments left blank",2013,
 ZAF,province (9),Statistics South Africa — Census 2022 (religious affiliation by province),2022,
-MDG,region,ESTIMATE — north-west coast communities; national 1.2%,2020,Estimates
 GNB,region (9),INE Guinea-Bissau — 3rd General Population and Housing Census 2009 (religion by region),2009,
 GIN,region (8),"INS Guinea — 3rd General Population and Housing Census 2014 (RGPH-3), religion by administrative region",2014,
-EGY,governorate,ESTIMATE — Coptic concentrations in Upper Egypt (pattern of 1986/1996 censuses); national 95.2%,1996,Estimates
-SEN,region,ESTIMATE — Christian minority in Casamance/Dakar; national 97.6%,2020,Estimates
-SUR,district (10),ESTIMATE based on 2012 census pattern (national 13.9%),2012,Estimates
-BIH,canton/entity (12),Agency for Statistics of BiH — 2013 Census (Bosniak/Muslim share by canton; Republika Srpska per BHAS figures),2013,
-LAT,Latin America & Caribbean community circles (cities grouped into metro areas),"IBGE 2010 census table 137 (Brazilian municipalities with 20+ Muslims); INE Chile Censo 2024 (Santiago Metropolitan Region 4,428, Iquique 753; persons 15+); other countries: Pew 2020 national totals allocated to documented community cities; Paraguay census 2002 for reference",2010–2024,Partly estimated
-ROU,county (Constanța & Tulcea only),"INS — 2021 Population and Housing Census, religion by county (Constanța 36,725 Muslims); Tulcea estimated from Turkish & Tatar community",2021,Partly estimated
+BIH,canton/entity (12),"Agency for Statistics of BiH — 2013 Census, share of Bosniaks by canton (ethnicity, rounded); religion by canton not collected",2013,Ethnicity-based
+LAT,Latin America & Caribbean community points,IBGE 2010 census table 137 (Brazilian municipalities with 20+ Muslims); INE Chile Censo 2024 (persons 15+). Other places: documented communities without a count,2010–2024,
+ROU,county (Constanța only),"INS — 2021 census, Constanța county: 36,725 Muslims of 656.0 thousand residents",2021,
 HRV,county (21),"Croatian Bureau of Statistics — 2021 Census of Population, Households and Dwellings (religion by county)",2021,
 GUY,region (10),"Guyana Bureau of Statistics — 2012 Population and Housing Census, religion by administrative region",2012,
 KHM,province (25),National Institute of Statistics Cambodia — General Population Census 2019 (religion by province),2019,
