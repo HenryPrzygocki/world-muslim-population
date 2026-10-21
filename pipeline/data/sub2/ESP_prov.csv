@@ -1,53 +1,53 @@
-unit,ccaa,ucide,pop
-Almeria,Andalucía,94393,750000
-Cadiz,Andalucía,23159,1252000
-Cordoba,Andalucía,8803,773000
-Granada,Andalucía,32851,930000
-Huelva,Andalucía,21897,535000
-Jaen,Andalucía,14810,622000
-Malaga,Andalucía,90652,1750000
-Sevilla,Andalucía,28415,1965000
-Huesca,Aragón,12358,226000
-Teruel,Aragón,7530,135000
-Zaragoza,Aragón,34803,985000
-Asturias,Asturias,7929,1009000
-"Balears, Illes",Islas Baleares,54365,1232000
-"Palmas, Las",Canary Is.,52949,1160000
-Santa Cruz de Tenerife,Canary Is.,19895,1078000
-Cantabria,Cantabria,4961,590000
-Avila,Castilla y León,4696,159000
-Burgos,Castilla y León,7426,357000
-Leon,Castilla y León,5772,449000
-Palencia,Castilla y León,2119,159000
-Salamanca,Castilla y León,3588,328000
-Segovia,Castilla y León,4863,156000
-Soria,Castilla y León,2944,89000
-Valladolid,Castilla y León,5705,522000
-Zamora,Castilla y León,1094,167000
-Albacete,Castilla-La Mancha,9051,386000
-Ciudad Real,Castilla-La Mancha,8729,492000
-Cuenca,Castilla-La Mancha,5096,197000
-Guadalajara,Castilla-La Mancha,13150,276000
-Toledo,Castilla-La Mancha,27883,734000
-Barcelona,Cataluña,328840,5878000
-Girona,Cataluña,86104,806000
-Lleida,Cataluña,40986,449000
-Tarragona,Cataluña,66183,846000
-Alicante,Valenciana,94277,1982000
-Castellon,Valenciana,37538,600000
-Valencia,Valenciana,74500,2634000
-Badajoz,Extremadura,6159,667000
-Caceres,Extremadura,13084,386000
-Coruna,Galicia,6735,1128000
-Lugo,Galicia,3451,326000
-Ourense,Galicia,1479,305000
-Pontevedra,Galicia,6225,947000
-Madrid,Madrid,285993,7000000
-Murcia,Murcia,101593,1568000
-Navarra,Foral de Navarra,25264,678000
-Alava,País Vasco,16563,336000
-Gipuzkoa,País Vasco,17982,730000
-Bizkaia,País Vasco,21572,1160000
-"Rioja, La",La Rioja,18340,323000
-Ceuta,Ceuta,36803,83517
-Melilla,Melilla,44743,85170
+unit,ccaa,ucide,ine_pop_2018
+Almeria,Andalucía,94393,709340
+Cadiz,Andalucía,23159,1238714
+Cordoba,Andalucía,8803,785240
+Granada,Andalucía,32851,912075
+Huelva,Andalucía,21897,519932
+Jaen,Andalucía,14810,638099
+Malaga,Andalucía,90652,1641121
+Sevilla,Andalucía,28415,1939887
+Huesca,Aragón,12358,219345
+Teruel,Aragón,7530,134572
+Zaragoza,Aragón,34803,954811
+Asturias,Asturias,7929,1028244
+"Balears, Illes",Islas Baleares,54365,1128908
+"Palmas, Las",Canary Is.,52949,1109175
+Santa Cruz de Tenerife,Canary Is.,19895,1018510
+Cantabria,Cantabria,4961,580229
+Avila,Castilla y León,4696,158498
+Burgos,Castilla y León,7426,357070
+Leon,Castilla y León,5772,463746
+Palencia,Castilla y León,2119,162035
+Salamanca,Castilla y León,3588,331473
+Segovia,Castilla y León,4863,153342
+Soria,Castilla y León,2944,88600
+Valladolid,Castilla y León,5705,519851
+Zamora,Castilla y León,1094,174549
+Albacete,Castilla-La Mancha,9051,388786
+Ciudad Real,Castilla-La Mancha,8729,499100
+Cuenca,Castilla-La Mancha,5096,197222
+Guadalajara,Castilla-La Mancha,13150,254308
+Toledo,Castilla-La Mancha,27883,687391
+Barcelona,Cataluña,328840,5609350
+Girona,Cataluña,86104,761947
+Lleida,Cataluña,40986,432866
+Tarragona,Cataluña,66183,795902
+Alicante,Valenciana,94277,1838819
+Castellon,Valenciana,37538,576898
+Valencia,Valenciana,74500,2547986
+Badajoz,Extremadura,6159,676376
+Caceres,Extremadura,13084,396487
+Coruna,Galicia,6735,1119351
+Lugo,Galicia,3451,331327
+Ourense,Galicia,1479,309293
+Pontevedra,Galicia,6225,941772
+Madrid,Madrid,285993,6578079
+Murcia,Murcia,101593,1478509
+Navarra,Foral de Navarra,25264,647554
+Alava,País Vasco,16563,328868
+Gipuzkoa,País Vasco,17982,720592
+Bizkaia,País Vasco,21572,1149628
+"Rioja, La",La Rioja,18340,315675
+Ceuta,Ceuta,36803,85144
+Melilla,Melilla,44743,86384

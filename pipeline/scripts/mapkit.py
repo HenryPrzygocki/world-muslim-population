@@ -449,7 +449,11 @@ def hav_km(lat1, lon1, lat2, lon2):
 
 
 def load_communities():
-    return pd.read_csv(f'{DATA}/communities.csv')
+    # Only published counts are drawn to size (Brazil 2010 and Chile 2024 censuses). Places whose number was
+    # an allocation of a national total are shown as documented communities without a count.
+    com = pd.read_csv(f'{DATA}/communities.csv')
+    com.loc[com.basis == 'estimate', 'basis'] = 'unsized'
+    return com
 
 
 def cluster_communities(com, R_km, metros=True):
@@ -472,11 +476,17 @@ def cluster_communities(com, R_km, metros=True):
     if metros:
         for mname, members in METROS.items():
             sel = com[(com.cid < 0) & com.name.isin(members)]
+            core = sel[sel.name == METRO_ANCHOR[mname]]
+            if len(core):     # never merge counted and uncounted places into one circle
+                sel = sel[(sel.basis == 'unsized') == (core.iloc[0].basis == 'unsized')]
             if len(sel) >= 1:
                 if len(sel) == 1 and sel.iloc[0]['name'] == METRO_ANCHOR[mname] and ' – ' not in mname:
                     continue      # a lone core city keeps its own name
                 com.loc[sel.index, 'cid'] = 1
-                emit(mname if len(sel) > 1 else sel.iloc[0]['name'], sel, METRO_ANCHOR[mname])
+                nm = mname if len(sel) > 1 else sel.iloc[0]['name']
+                if ' – ' in mname and not all(part in set(sel.name) for part in mname.split(' – ')):
+                    nm = METRO_ANCHOR[mname] + (' area' if len(sel) > 1 else '')   # twin city without its partner's count
+                emit(nm, sel, METRO_ANCHOR[mname])
     rest = com[com.cid < 0].sort_values('muslims', ascending=False)
     used = set()
     idx = list(rest.index)

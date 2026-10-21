@@ -24,7 +24,8 @@ NE1 = NE1[NE1.geometry.notna()].copy()
 # ---------------------------------------------------------------- national baseline
 pew = pd.read_csv(f'{DATA}/pew2020.csv')
 pew['pct'] = pew.muslims_2020 / pew.total_2020 * 100
-pew_alias = {'Cape Verde': 'Cabo Verde', 'Macao': 'Macao S.A.R', 'Palestinian territories': 'Palestine',
+pew_alias = {  # (French overseas departments are matched by their own map units below)
+'Cape Verde': 'Cabo Verde', 'Macao': 'Macao S.A.R', 'Palestinian territories': 'Palestine',
              'Tanzania': 'United Republic of Tanzania', 'Timor-Leste': 'East Timor',
              'United States': 'United States of America', 'U.S. Virgin Islands': 'United States Virgin Islands',
              'Channel Islands': 'Jersey', 'Czech Republic': 'Czechia', 'Hong Kong': 'Hong Kong S.A.R.',
@@ -39,38 +40,34 @@ for _, r in pew.iterrows():
         nat[mm[r.country]] = (r.pct, 'Pew Research Center 2020 estimate')
         natcnt[mm[r.country]] = r.muslims_2020
 nat['Guernsey'] = nat['Jersey']
-extra = {  # territories not separately estimated by Pew
-    'Somaliland': (99.8, 'as Somalia (Pew 2020)'), 'Northern Cyprus': (97.0, 'estimate'),
+extra = {  # territories Pew does not list: only figures with a source; everything else has no value
+    'Somaliland': (nat['Somalia'][0], 'Pew Research Center 2020 estimate for Somalia (covers Somaliland)'),
     'Liechtenstein': (5.9, 'Liechtenstein census 2020'), 'Gibraltar': (4.0, 'Gibraltar census 2012'),
-    'San Marino': (0.1, 'estimate'), 'Monaco': (0.5, 'estimate'), 'Andorra': (1.0, 'estimate'), 'Vatican': (0.0, ''),
-    'Greenland': (0.1, 'estimate'), 'Faroe Islands': (0.1, 'estimate'), 'Aland': (0.3, 'estimate'),
-    'Isle of Man': (0.2, 'estimate'), 'Bermuda': (0.7, 'estimate'), 'Cayman Islands': (0.2, 'estimate'),
-    'Turks and Caicos Islands': (0.1, 'estimate'), 'Anguilla': (0.3, 'estimate'), 'Montserrat': (0.1, 'estimate'),
-    'Antigua and Barbuda': (0.6, 'estimate'), 'Saint Kitts and Nevis': (0.3, 'estimate'), 'Dominica': (0.2, 'estimate'),
-    'Saint Barthelemy': (0.1, 'estimate'), 'Saint Martin': (0.8, 'estimate'), 'Sint Maarten': (0.8, 'estimate'),
-    'Saint Pierre and Miquelon': (0.0, ''), 'Pitcairn Islands': (0.0, ''), 'Falkland Islands': (0.0, ''),
-    'Saint Helena': (0.0, ''), 'Norfolk Island': (0.0, ''), 'Cook Islands': (0.0, ''), 'Niue': (0.0, ''),
-    'Wallis and Futuna': (0.0, ''), 'Tuvalu': (0.0, ''), 'Nauru': (0.0, ''), 'American Samoa': (0.0, ''),
-    'Palau': (0.2, 'estimate'), 'Northern Mariana Islands': (0.2, 'estimate'), 'Marshall Islands': (0.1, 'estimate'),
-    'Baykonur Cosmodrome': (70.0, 'as Kazakhstan (Kyzylorda)'), 'Dhekelia Sovereign Base Area': (3.0, 'as Cyprus (south)'),
-    'Akrotiri Sovereign Base Area': (3.0, 'as Cyprus (south)'), 'US Naval Base Guantanamo Bay': (0.1, ''),
-    'British Virgin Islands': (1.2, 'estimate'),
     'Indian Ocean Territories': (30.0, 'ABS 2021 census (Christmas & Cocos Is.)'),
+    'Northern Cyprus': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
+    'Dhekelia Sovereign Base Area': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
+    'Akrotiri Sovereign Base Area': (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus'),
 }
 nat.update(extra)
-nat['Cyprus'] = (3.0, 'estimate (Republic-controlled area; Pew national incl. north 24.4%)')
+nat['Cyprus'] = (nat['Cyprus'][0], 'Pew Research Center 2020 estimate for the whole island of Cyprus')
 NODATA = {'Antarctica', 'Bir Tawil', 'Brazilian Island', 'Siachen Glacier', 'Spratly Islands', 'Scarborough Reef',
           'Bajo Nuevo Bank (Petrel Is.)', 'Serranilla Bank', 'Clipperton Island', 'Coral Sea Islands',
           'Ashmore and Cartier Islands', 'Southern Patagonian Ice Field', 'Cyprus No Mans Area',
           'Heard Island and McDonald Islands', 'French Southern and Antarctic Lands', 'South Georgia and the Islands',
           'British Indian Ocean Territory', 'United States Minor Outlying Islands'}
 
+GEOU = {}   # map units inside a country that have their own Pew figure, or none
+for _pn, _gu in [('French Guiana', 'French Guiana'), ('Guadeloupe', 'Guadeloupe'), ('Martinique', 'Martinique'),
+                 ('Mayotte', 'Mayotte'), ('Reunion', 'Reunion')]:
+    _r = pew[pew.country == _pn]
+    if len(_r): GEOU[_gu] = (float(_r.pct.iloc[0]), 'Pew Research Center 2020 estimate'); natcnt[_gu] = float(_r.muslims_2020.iloc[0])
+GEOU['Caribbean Netherlands'] = (np.nan, 'no figure')
 base = NE0[['ADMIN', 'ADM0_A3', 'GEOUNIT', 'GU_A3', 'NAME', 'LABELRANK', 'POP_EST', 'geometry']].copy()
 vals, srcs = [], []
 for _, r in base.iterrows():
     if r.ADMIN in NODATA:
         vals.append(np.nan); srcs.append('no permanent population'); continue
-    v = nat.get(r.ADMIN) or nat.get(r.GEOUNIT)
+    v = GEOU.get(r.GEOUNIT) if r.GEOUNIT in GEOU else (nat.get(r.ADMIN) or nat.get(r.GEOUNIT))
     if v is None:
         print('!! no national value for', r.ADMIN, r.GEOUNIT)
         vals.append(np.nan); srcs.append('')
@@ -80,7 +77,7 @@ base['pct'] = vals; base['src'] = srcs
 base['level'] = 0
 base['iso'] = base.ADM0_A3
 base['unit'] = base.GEOUNIT
-base['muslims'] = base.ADMIN.map(natcnt)
+base['muslims'] = [natcnt.get(g_) if g_ in GEOU else natcnt.get(a_) for a_, g_ in zip(base.ADMIN, base.GEOUNIT)]
 
 
 # ---------------------------------------------------------------- helpers
@@ -163,7 +160,9 @@ PARTIAL = {'ROU'}
 
 
 def add(g):
-    g = g[g.pct.notna()].copy()
+    if 'dflt' not in g.columns:
+        g['dflt'] = False
+    g = g[g.pct.notna() | g.dflt.astype(bool)].copy()
     g['geometry'] = g.geometry.apply(make_valid)
     iso = g.iso.iloc[0]
     g['layer'] = LAYER.get(iso, 0); LAYER[iso] = LAYER.get(iso, 0) + 1
@@ -171,7 +170,7 @@ def add(g):
         g['dflt'] = False
     if 'muslims' not in g.columns:
         g['muslims'] = np.nan
-    if iso in POP:                      # approximate counts from share x population
+    if False:                           # (share × population counts removed: populations were not from a cited table)
         pop = POP[iso]
         est = [pop.get(u, np.nan) * p / 100 for u, p in zip(g.unit, g.pct)]
         miss = [u for u in g.unit if u not in pop]
@@ -200,25 +199,24 @@ add(d)
 uk = gpd.read_file(f'{RAW}/gbr/geogLA2021UK.json').set_crs(4326, allow_override=True)
 ew = pd.read_csv(f'{SUB}/GBR_EW.csv'); sn = pd.read_csv(f'{SUB}/GBR_SN.csv')
 lut = dict(zip(ew.code, ew.pct)); lut.update(dict(zip(sn.code, sn.pct)))
-uk['pct'] = [lut.get(cd, 0.5 if cd.startswith('S') else 0.3 if cd.startswith('N') else np.nan) for cd in uk.AREACD]
+uk['pct'] = [lut.get(cd, np.nan) for cd in uk.AREACD]
 uk['dflt'] = [cd not in lut for cd in uk.AREACD]
 ukc = dict(x.split(',') for x in open(f'{SUB}/GBR_EW_counts.txt').read().strip().split(';'))
 ukc = {k: float(v) for k, v in ukc.items()}
 UKPOP = {'S12000049': 622820, 'S12000036': 514990, 'S12000033': 224190, 'S12000042': 148820, 'S12000011': 96580,
          'S12000038': 183810, 'S12000045': 108900, 'S12000029': 327750, 'S12000050': 341370, 'S12000039': 88340,
          'S12000014': 158380, 'S12000030': 92530, 'S12000040': 183820, 'N09000003': 345420}
-for cd, p in lut.items():
-    if cd in UKPOP:
-        ukc[cd] = round(UKPOP[cd] * p / 100, -1)
 uk['muslims'] = [ukc.get(cd, np.nan) for cd in uk.AREACD]
 uk['unit'] = uk.AREANM; uk['iso'] = 'GBR'; uk['src'] = SRC['GBR']; uk['level'] = 2
 add(uk)
 
 # ---------------------------------------------------------------- Russia (federal subjects)
-add(attach(ne1('RUS'), read_sub('RUS'), 'RUS', default=0.9, src=SRC['RUS'], cutoff=0.95))
+_ru = read_sub('RUS'); _ru = _ru[~_ru.basis.str.contains('estimate|~', regex=True)]
+add(attach(ne1('RUS'), _ru, 'RUS', default=None, src=SRC['RUS'], cutoff=0.95))
 
 # ---------------------------------------------------------------- China (provinces + Xinjiang prefectures + Linxia)
-add(attach(ne1('CHN'), read_sub('CHN'), 'CHN', default=0.15, src=SRC['CHN']))
+_cn = read_sub('CHN'); _cn = _cn[~_cn.basis.str.contains('approx', case=False)]
+add(attach(ne1('CHN'), _cn, 'CHN', default=None, src=SRC['CHN']))
 
 
 def decode_echarts(fn):
@@ -268,8 +266,7 @@ cty = cty.loc[j.index].assign(key=j.key.values)
 pref = cty.dissolve(by='key', as_index=False)
 pref['pct'] = pref.key.map(xlut)
 pref['unit'] = pref.key; pref['iso'] = 'CHN'; pref['src'] = SRC['CHN']; pref['level'] = 2
-print('China prefectures:', len(pref), sorted(pref.key))
-add(pref)
+# (Xinjiang prefecture composites removed: they mixed census years with approximate Hui shares)
 
 # ---------------------------------------------------------------- Indonesia (38 provinces)
 ia = gbf('IDN-ADM1'); i2 = gbf('IDN-ADM2')
@@ -324,7 +321,8 @@ lka_alias = {'Ampāra': 'Ampara', 'Anurādhapura': 'Anuradhapura', 'Gālla': 'Ga
              'Nuvara Ĕliya': 'Nuwara Eliya', 'Puttalama': 'Puttalam', 'Pŏḷŏnnaruva': 'Polonnaruwa',
              'Trikuṇāmalaya': 'Trincomalee', 'Vavuniyāva': 'Vavuniya', 'Yāpanaya': 'Jaffna'}
 add(attach(ne1('LKA'), read_sub('LKA'), 'LKA', aliases=lka_alias, src=SRC['LKA']))
-add(attach(ne1('THA'), read_sub('THA'), 'THA', src=SRC['THA'], cutoff=0.95))
+_th = read_sub('THA'); _th = _th[_th.pct != 0.1]
+add(attach(ne1('THA'), _th, 'THA', src=SRC['THA'], cutoff=0.95))
 add(attach(ne1('MYS'), read_sub('MYS'), 'MYS', src=SRC['MYS']))
 mmr = read_sub('MMR')
 g = ne1('MMR')
@@ -334,31 +332,20 @@ add(attach(gbf('BGD-ADM2'), read_sub('BGD'), 'BGD', src=SRC['BGD'], cutoff=0.7,
                     'Nawabganj': 'Chapai Nawabganj', 'Netrakona': 'Netrokona'}))
 pak_alias = {'Karachi': 'Karachi South', 'Nawabshah': 'Shaheed Benazirabad', 'Naushehro Feroze': 'Naushahro Feroze',
              'Jafarabad': 'Jaffarabad', 'Kachhi': 'Kacchi'}
-pk = attach(gbf('PAK-ADM2'), read_sub('PAK'), 'PAK', aliases=pak_alias, src=SRC['PAK'], default=97.8, cutoff=0.9)
-pk.loc[pk.gname == 'Islamabad Capital Territory', 'pct'] = 95.5
-pk.loc[pk.gname == 'Islamabad Capital Territory', 'dflt'] = False
-add(pk)
 add(attach(gbf('NPL-ADM1'), read_sub('NPL'), 'NPL', aliases={'Province 1': 'Koshi', 'Province 2': 'Madhesh',
                                                            'Sudurpaschim': 'Sudurpashchim'}, src=SRC['NPL']))
 
 # ---------------------------------------------------------------- Central Asia, Caucasus, Mongolia, Middle East
 add(attach(ne1('KAZ'), read_sub('KAZ'), 'KAZ', aliases={'Almaty City': 'Almaty (city)'}, src=SRC['KAZ']))
-add(attach(ne1('KGZ'), read_sub('KGZ'), 'KGZ', aliases={'Chuy': 'Chüy'}, src=SRC['KGZ']))
-add(attach(ne1('GEO'), read_sub('GEO'), 'GEO', aliases={'Racha-Lechkhumi-Kvemo Svaneti': 'Racha-Lochkhumi-Kvemo Svaneti'},
+add(attach(ne1('GEO'), read_sub('GEO').query("unit != 'Abkhazia'"), 'GEO', aliases={'Racha-Lechkhumi-Kvemo Svaneti': 'Racha-Lochkhumi-Kvemo Svaneti'},
            src=SRC['GEO']))
-add(attach(ne1('MNG'), read_sub('MNG'), 'MNG', default=0.1, src=SRC['MNG']))
 add(attach(ne1('ISR'), read_sub('ISR'), 'ISR', aliases={'HaDarom': 'Southern', 'HaMerkaz': 'Central',
                                                        'HaZafon': 'Northern'}, src=SRC['ISR']))
-psx = ne1('PSX'); psx['unit'] = psx.gname; psx['pct'] = psx.gname.map({'Gaza Strip': 99.0, 'West Bank': 85.0})
-psx['iso'] = 'PSX'; psx['src'] = SRC['PSE']; psx['level'] = 1
-add(psx)
-add(attach(ne1('EGY'), read_sub('EGY'), 'EGY', default=97.5, src=SRC['EGY']))
 
 # ---------------------------------------------------------------- Africa
 add(attach(gbf('KEN-ADM1'), read_sub('KEN'), 'KEN', src=SRC['KEN'], cutoff=0.8,
            aliases={'Elgeyo-Marakwet': 'ELGEYO/MARAKWET', 'Taita Taveta': 'TAITA/TAVETA', 'Tharaka': 'THARAKA-NITHI'}))
 add(attach(gbf('ETH-ADM2'), read_sub('ETH'), 'ETH', src=SRC['ETH'], cutoff=0.95))
-add(attach(ne1('NGA'), read_sub('NGA'), 'NGA', src=SRC['NGA']))
 uga_parent = {'Agago': 'Pader', 'Alebtong': 'Lira', 'Amolatar': 'Lira', 'Amudat': 'Nakapiripirit', 'Amuria': 'Katakwi',
               'Amuru': 'Gulu', 'Abim': 'Kotido', 'Budaka': 'Pallisa', 'Bududa': 'Mbale', 'Buhweju': 'Bushenyi',
               'Buikwe': 'Mukono', 'Bukedea': 'Kumi', 'Bukomansimbi': 'Masaka', 'Bukwa': 'Kapchorwa',
@@ -374,39 +361,18 @@ uga_parent = {'Agago': 'Pader', 'Alebtong': 'Lira', 'Amolatar': 'Lira', 'Amudat'
               'Kitgum': 'Kitgum'}
 add(attach(ne1('UGA'), read_sub('UGA'), 'UGA', aliases=uga_parent, src=SRC['UGA'], cutoff=0.9))
 tz_alias = {'Kaskazini-Pemba': 'Pemba North', 'Kusini-Pemba': 'Pemba South', 'Kaskazini-Unguja': 'Zanzibar North'}
-add(attach(ne1('TZA'), read_sub('TZA'), 'TZA', aliases=tz_alias, src=SRC['TZA']))
 add(attach(gbf('MWI-ADM2'), read_sub('MWI'), 'MWI', src=SRC['MWI']))
-add(attach(gbf('MOZ-ADM1'), read_sub('MOZ'), 'MOZ', src=SRC['MOZ']))
-add(attach(gbf('GHA-ADM1'), read_sub('GHA'), 'GHA', src=SRC['GHA']))
-add(attach(gbf('CIV-ADM1'), read_sub('CIV'), 'CIV', src=SRC['CIV'], cutoff=0.7,
-           aliases={"District Autonome D'Abidjan": 'Abidjan', 'District Autonome De Yamoussoukro': 'Yamoussoukro'}))
-bf = read2('BFA')
+bf = read2('BFA'); bf = bf[bf.est == 0]
 bfg = attach(gbf('BFA-ADM2'), bf, 'BFA', src=SRC['BFA'], cutoff=0.9)
 est = dict(zip(bf.unit, bf.est)); breg = dict(zip(bf.unit, bf.region))
 m_ = match_names(bfg.gname.tolist(), bf.unit.tolist(), cutoff=0.9, verbose=False)
 bfg['k'] = bfg.gname.map(m_)
-bfg.loc[bfg.k.map(est) == 1, 'unit'] = bfg.k.map(breg)      # modelled regions shown as one unit
-bfg.loc[bfg.k.map(est) == 1, 'src'] = ('ESTIMATE — region not published in accessible RGPH 2006 tables; '
-                                       'modelled to the 2006 census national total (60.5%)')
 add(bfg.drop(columns='k'))
-add(attach(gbf('CMR-ADM1'), read_sub('CMR'), 'CMR', src=SRC['CMR'],
-           aliases={'Far North': 'Extrême-Nord', 'North': 'Nord', 'East': 'Est', 'South': 'Sud', 'West': 'Ouest',
-                    'North-West': 'Nord-Ouest', 'South-West': 'Sud-Ouest'}))
-add(attach(gbf('TCD-ADM1'), read_sub('TCD'), 'TCD', src=SRC['TCD'], default=97.0,
-           aliases={"N'Djamena Region": "Ville de N'Djamena"}))
-add(attach(gbf('TGO-ADM1'), read_sub('TGO'), 'TGO', src=SRC['TGO']))
-add(attach(gbf('BEN-ADM1'), read_sub('BEN'), 'BEN', src=SRC['BEN'], cutoff=0.75,
+add(attach(gbf('BEN-ADM1'), read_sub('BEN').query("basis.str.contains('census')", engine='python'), 'BEN', src=SRC['BEN'], cutoff=0.75,
            aliases={'Atakora': 'Atacora', 'Atlanique': 'Atlantique', 'Kouffo': 'Couffo', 'Oueme': 'Ouémé'}))
-add(attach(ne1('SLE'), read_sub('SLE'), 'SLE', src=SRC['SLE']))
-add(attach(gbf('LBR-ADM1'), read_sub('LBR'), 'LBR', src=SRC['LBR'], default=2.0, aliases={'Gbarpolu': 'Gbapolu'}))
-add(attach(gbf('ERI-ADM1'), read_sub('ERI'), 'ERI', src=SRC['ERI'],
-           aliases={'Northen Red Sea Region': 'Semenawi Keyih Bahri', 'Southern Red Sea Region': 'Debubawi Keyih Bahri'}))
-add(attach(gbf('CAF-ADM1'), read_sub('CAF'), 'CAF', src=SRC['CAF'], default=2.0))
 add(attach(gbf('ZAF-ADM1'), read2('ZAF'), 'ZAF', src=SRC['ZAF'], aliases={'Nothern Cape': 'Northern Cape'}))
-add(attach(ne1('MDG'), read_sub('MDG'), 'MDG', src=SRC['MDG'], default=0.8))
 add(attach(gbf('GNB-ADM1'), read2('GNB'), 'GNB', src=SRC['GNB']))
 add(attach(gbf('GIN-ADM1'), read2('GIN'), 'GIN', src=SRC['GIN']))
-add(attach(ne1('SEN'), read_sub('SEN'), 'SEN', src=SRC['SEN'], default=98.0))
 
 # ---------------------------------------------------------------- Europe
 add(attach(ne1('BGR'), read_sub('BGR'), 'BGR', src=SRC['BGR']))
@@ -415,47 +381,21 @@ mk_alias = {'Drugovo': 'Kičevo', 'Oslomej': 'Kičevo', 'Vraneštica': 'Kičevo'
             'Kavadartsi': 'Kavadarci', 'Strumitsa': 'Strumica', 'Mavrovo and Rostusa': 'Mavrovo and Rostuša',
             'Vrapcište': 'Vrapčište', 'Čučer Sandevo': 'Čučer-Sandevo', 'Centar župa': 'Centar Župa'}
 mk = attach(ne1('MKD'), read_sub('MKD'), 'MKD', aliases=mk_alias, src=SRC['MKD'])
-mk.loc[mk.gname == 'Skopje', 'pct'] = 21.0
-mk.loc[mk.gname == 'Skopje', 'dflt'] = False
 add(mk)
-add(attach(gbf('MNE-ADM1'), read_sub('MNE'), 'MNE', src=SRC['MNE']))
+_me = read_sub('MNE'); _me = _me[~_me.unit.isin(['Plav', 'Gusinje', 'Berane', 'Petnjica', 'Tuzi', 'Zeta'])]
+add(attach(gbf('MNE-ADM1'), _me, 'MNE', src=SRC['MNE'], aliases={'Tuzi': 'Podgorica', 'Zeta': 'Podgorica'}))
 srb = gbf('SRB-ADM2'); srb['gname'] = srb.gname.str.replace(r' (Municipality|City|Municipal\*)$', '', regex=True)
-add(attach(srb, read_sub('SRB'), 'SRB', src=SRC['SRB'], default=0.5, cutoff=0.9))
+add(attach(srb, read_sub('SRB'), 'SRB', src=SRC['SRB'], default=None, cutoff=0.9))
 kos_alias = {'Kosovska Mitrovica': 'Mitrovicë', 'Štrpce': 'Shtërpcë', 'Novo Brdo': 'Novobërdë', 'Klina': 'Klinë',
              'Đakovica': 'Gjakovë', 'Vitina': 'Viti', 'Lipljan': 'Lipjan'}
-add(attach(ne1('KOS'), read_sub('KOS'), 'KOS', aliases=kos_alias, default=98.0, src=SRC['KOS'], cutoff=0.95))
 add(attach(gbf('BIH-ADM2'), read_sub('BIH'), 'BIH', src=SRC['BIH'], cutoff=0.6,
            aliases={'Bosnian-Podrinje Canton Goražde': 'Bosnian Podrinje', 'Brcko District': 'Brčko'}))
-gr = ne1('GRC'); grv = {'Attiki': 7.0, 'Kentriki Makedonia': 3.0, 'Anatoliki Makedonia kai Thraki': 2.0, 'Ayion Oros': 0.0}
-gr['unit'] = gr.gname; gr['dflt'] = ~gr.gname.isin(list(grv)); gr['pct'] = gr.gname.map(grv).fillna(2.5); gr['iso'] = 'GRC'; gr['src'] = SRC['GRC']; gr['level'] = 1
-add(gr)
-add(attach(gbf('GRC-ADM3'), read_sub('GRC'), 'GRC', src=SRC['GRC'], default=None, cutoff=0.9,
-           aliases={'Mykis': 'Myki', 'Arrianon': 'Arriana', 'Iasmou': 'Iasmos', 'Maronias-Sapon': 'Maroneia-Sapes',
-                    'Avdiron': 'Avdira', 'Topirou': 'Topeiros', 'Soufliou': 'Soufli'}))
-add(attach(ne1('DEU'), read_sub('DEU'), 'DEU', src=SRC['DEU']))
 add(attach(ne1('AUT'), read_sub('AUT'), 'AUT', src=SRC['AUT']))
-add(attach(ne1('CHE'), read_sub('CHE'), 'CHE', src=SRC['CHE']))
 nl = attach(ne1('NLD'), read_sub('NLD'), 'NLD', src=SRC['NLD'])
-nl.loc[nl.gname.isin(['Bonaire', 'St. Eustatius', 'Saba']), 'pct'] = 0.5
 add(nl)
-add(attach(ne1('BEL', 'region'), read_sub('BEL'), 'BEL', src=SRC['BEL'],
-           aliases={'Capital Region': 'Brussels', 'Flemish': 'Flanders', 'Walloon': 'Wallonia'}))
-fra = attach(ne1('FRA', 'region'), read_sub('FRA'), 'FRA', src=SRC['FRA'])
-fra.loc[fra.gname == 'Guadeloupe', 'pct'] = 0.37; fra.loc[fra.gname == 'Martinique', 'pct'] = 0.22
-fra.loc[fra.gname == 'Guyane française', 'pct'] = 0.92; fra.loc[fra.gname == 'Mayotte', 'pct'] = 98.8
-fra.loc[fra.gname == 'Réunion', 'pct'] = 4.2
-fra.loc[fra.gname.isin(['Guadeloupe', 'Martinique', 'Guyane française', 'Mayotte', 'Réunion']), 'dflt'] = False
-add(fra)
-# Spain: community totals (UCIDE 2019 scaled to 2024) distributed over provinces by UCIDE's provincial counts
-esp_c = read_sub('ESP')
-_ca = {'Principado de Asturias': 'Asturias', 'Comunidad Foral de Navarra': 'Foral de Navarra',
-       'Comunidad de Madrid': 'Madrid', 'Región de Murcia': 'Murcia', 'Comunidad Valenciana': 'Valenciana'}
-cpct = {_ca.get(u, u): p for u, p in zip(esp_c.unit, esp_c.pct)}
+# Spain: UCIDE count of Muslims by province (31 Dec 2017) ÷ INE official population (1 Jan 2018)
 ep = read2('ESP_prov')
-ccnt = {k: cpct[k] * POP['ESP'][k] / 100 for k in ep.ccaa.unique()}
-ush = ep.groupby('ccaa').ucide.sum()
-ep['muslims'] = [ccnt[c] * u / ush[c] for c, u in zip(ep.ccaa, ep.ucide)]
-ep['pct'] = ep.muslims / ep['pop'] * 100
+ep['muslims'] = ep.ucide; ep['pct'] = ep.ucide / ep.ine_pop_2018 * 100
 ESPN = {'Alava': 'Álava', 'Almeria': 'Almería', 'Avila': 'Ávila', 'Balears, Illes': 'Illes Balears', 'Caceres': 'Cáceres',
         'Cadiz': 'Cádiz', 'Castellon': 'Castellón', 'Cordoba': 'Córdoba', 'Coruna': 'A Coruña', 'Jaen': 'Jaén',
         'Leon': 'León', 'Malaga': 'Málaga', 'Palmas, Las': 'Las Palmas', 'Rioja, La': 'La Rioja'}
@@ -463,12 +403,10 @@ es = gbf('ESP-ADM2')
 es = es.merge(ep[['unit', 'pct', 'muslims']], left_on='gname', right_on='unit', how='left')
 assert es.pct.notna().all(), es.gname[es.pct.isna()].tolist()
 es['unit'] = es.gname.map(lambda n: ESPN.get(n, n))
-for u, pp in zip(es.unit, es.gname.map(dict(zip(ep.unit, ep['pop'])))):
-    POP['ESP'][u] = pp
 es['dflt'] = False; es['iso'] = 'ESP'; es['src'] = SRC['ESP']; es['level'] = 2
 add(es)
 add(attach(gbf('HRV-ADM1'), read2('HRV'), 'HRV', src=SRC['HRV'], aliases={'City of Zagreb': 'Grad Zagreb', 'Zagreb County': 'Zagreb County'}))
-rou = ne1('ROU'); rou['unit'] = rou.gname; rou['pct'] = np.where(rou.gname == 'Constanta', 5.6, np.where(rou.gname == 'Tulcea', 0.8, np.nan))
+rou = ne1('ROU'); rou['unit'] = rou.gname; rou['pct'] = np.where(rou.gname == 'Constanta', 36725 / 656000 * 100, np.nan)   # INS 2021 census: 36,725 Muslims; population 656.0 thousand
 rou['muslims'] = np.where(rou.gname == 'Constanta', 36725, np.nan); rou['iso'] = 'ROU'; rou['src'] = SRC['ROU']; rou['level'] = 1
 add(rou)
 
