@@ -69,7 +69,7 @@ def basis(iso, unit, src, dflt, pct):
 # ---- parent province of each unit (for cards and search), from Natural Earth admin-1
 A1 = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces.geojson')[['adm0_a3', 'name', 'name_en', 'name_alt', 'region', 'geometry']]
 PARENT_FIELD = {'IND': 'name', 'PAK': 'name_en', 'IDN': 'name_en', 'BGD': 'name', 'CAN': 'name', 'AUS': 'name',
-                'CHN': 'name', 'ETH': 'name', 'GRC': 'name', 'ESP': 'region', 'GBR': 'region'}
+                'ETH': 'name', 'GRC': 'name', 'ESP': 'region', 'GBR': 'region'}
 A1p = A1[A1.adm0_a3.isin(list(PARENT_FIELD))].copy()
 A1p['parent'] = [r[PARENT_FIELD[r.adm0_a3]] for _, r in A1p.iterrows()]
 A1p['parent'] = A1p.parent.replace({'Sind': 'Sindh', 'K.P.': 'Khyber Pakhtunkhwa'})
@@ -95,7 +95,7 @@ for r in sub.itertuples():
             par = hitp.parent.iloc[0]
     recs.append({'i': len(recs), 'n': nm, 'r': par, 'q': basis(r.iso, nm, r.src, r.dflt, r.pct), 'c': r.iso, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
                  'm': None if r.muslims != r.muslims else int(round(r.muslims)), 'e': int(bool(r.cnt_est)),
-                 'd': int(bool(r.dflt)), 's': sidx(r.src),
+                 'd': int(bool(r.dflt)), 's': sidx(r.src), 'y': None if r.year != r.year else int(r.year),
                  'lx': a[0] if a else None, 'ly': a[1] if a else None, 'lr': a[2] if a else None,
                  'geometry': geom})
 g = gpd.GeoDataFrame(recs, crs=4326)
@@ -189,13 +189,13 @@ for r in regions:
     others = [fold(x['n']) for x in regions if x is not r] + [fold(a) for x in regions if x is not r for a in x['alt']]
     r['alt'] = [a for a in r['alt'] if not any(o != fold(a) and o.startswith(fold(a)) for o in others)]
 pp = gpd.read_file(f'{RAW}/ne_10m_populated_places_simple.geojson')
-pp = pp[(pp.pop_max >= 750000) | (pp.adm0cap == 1)]
+pp = pp[(pp.pop_max >= 750000) | (pp.adm0cap == 1) | (pp.featurecla.str.contains('Admin-1', na=False) & (pp.pop_max >= 200000))]
 cities = []
 for r in pp.itertuples():
     alt = {r.nameascii} - {r.name}
     if isinstance(r.namealt, str) and r.namealt: alt |= set(r.namealt.split('|'))
     cities.append({'n': r.name, 'alt': sorted(a for a in alt if a)[:4], 'x': round(r.longitude, 3), 'y': round(r.latitude, 3),
-                   'pop': int(r.pop_max)})
+                   'pop': int(r.pop_max), 'c': r.adm0_a3})
 # national totals as the sum of mapped areas (only where every area has a published count)
 usum = {}
 _ann = (ug.c == 'RUS') & ug.n.isin(['Crimea', 'Sevastopol'])     # occupied Ukraine (recoded by prep_status.py)
@@ -218,6 +218,7 @@ regtab.sort(key=lambda d: d['name'])
 cn_short = lambda iso: short.get(iso, iso)
 csv = ug.drop(columns='geometry').copy()
 csv['country'] = csv.c.map(cn_short); csv['source'] = csv.s.map(lambda i: srcs[i]); csv['year'] = csv.c.map(year_of)
+csv['year'] = [str(int(y)) if y == y and y is not None else yr for y, yr in zip(csv.y, csv.year)]
 csv['basis'] = csv.q.map({'c': 'census/register', 's': 'published estimate', 'e': 'ethnicity-based', 'n': 'no figure collected'})
 csv.loc[csv.q == 'n', 'source'] = ''; csv.loc[csv.q == 'n', 'year'] = ''
 csv['unit'] = csv.n.where(csv.n != '', 'Rest of ' + csv.country)

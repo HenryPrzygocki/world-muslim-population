@@ -12,7 +12,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#FBFAF6">
 <style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif}[hidden]{display:none!important}</style>
-<script>window.WMP_FILES = {"w": "map_w.2045342f86.json", "lo": "map_lo.6e5f76493b.json", "hi": "map.6b5f658d5f.json", "extra": "extra.2ad403a2f2.json", "csv": "units.e5ff70dc93.csv"};</script>
+<script>window.WMP_FILES = {"w": "map_w.613a84dc91.json", "lo": "map_lo.fb22da1f31.json", "hi": "map.3eeaf2d89d.json", "extra": "extra.f216f74947.json", "csv": "units.946069f2c9.csv"};</script>
 <title>World Muslim Population</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -434,7 +434,7 @@ const VIEWS = [   // key, label, bbox (lon/lat), shown as a chip
   ['world', 'World', null, 1],
   ['europe', 'Europe', [-10.6, 35.4, 30, 60.5], 1],
   ['mena', 'Middle East & N. Africa', [-17, 12, 63, 42], 1],
-  ['africa', 'Africa', [-18, -35, 52, 24], 1],
+  ['africa', 'Africa', [-18, -35, 52, 37.5], 1],
   ['southasia', 'South Asia', [60, 5, 98, 37.5], 1],
   ['seasia', 'Southeast Asia', [92, -11.5, 141, 21], 1],
   ['china', 'Central Asia & China', [46, 17, 125, 54], 1],
@@ -622,7 +622,7 @@ Promise.all([getJSON(FILES.w), getJSON(FILES.extra), document.fonts ? document.f
 function prepare(L, X) {
   const short = X.short || {};
   const countryName = c => short[c] || c;
-  const mk = (pr, kind) => ({ kind, i: pr.i, n: pr.n, c: pr.c, p: pr.p, m: pr.m, e: pr.e, d: pr.d, s: pr.s, q: pr.q || (kind === 'country' ? 'p' : 'c'),
+  const mk = (pr, kind) => ({ kind, i: pr.i, n: pr.n, c: pr.c, p: pr.p, m: pr.m, e: pr.e, d: pr.d, s: pr.s, y: pr.y, q: pr.q || (kind === 'country' ? 'p' : 'c'),
     r: pr.r, lx: pr.lx, ly: pr.ly, lr: pr.lr, k: klass(pr.p), country: countryName(pr.c), g: {} });
   const C = L.Cprops.map(p => mk(p, 'country')), U = L.Uprops.map(p => mk(p, 'unit'));
   D = { X, C, U, short, countryName, subIso: new Set(U.map(u => u.c)), sphere: new Path2D(gpath({ type: 'Sphere' })),
@@ -990,7 +990,7 @@ function labels(c) {
     text(c, u.n, x, y - px * 0.5, F_NAME, px, col);
     text(c, vl, x, y + px * 0.55, F_VAL, px * 0.95, col);
   }
-  placeCountries(late, 0.75).forEach(f => f());
+  placeCountries(late, 0.86).forEach(f => f());
 }
 
 // ------------------------------------------------------------------ picking & overlay
@@ -1067,7 +1067,7 @@ function cardHTML(sel, full) {
     const st = X.status && X.status[it.c];
     const name = isU ? (it.n || 'Other areas of ' + it.country) : (lab && lab.st ? lab.n : (lab ? lab.short || lab.full : it.n));
     const src = X.sources[it.s] || '';
-    const yr = isU ? (X.years[it.c] || '') : '2020';
+    const yr = isU ? String(it.y || X.years[it.c] || '') : '2020';
     const eb = isU ? [it.r, it.country].filter(Boolean).join(' · ')
       : st === 'disputed' ? 'Territory of disputed status' : st === 'sar' ? 'Special Administrative Region of China' : st === 'dep' ? 'Overseas or constituent territory'
       : sel.occ ? 'Ukraine · Russian-occupied area' : 'Country';
@@ -1215,7 +1215,12 @@ const q = $('q'), res = $('results');
 const fold = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[’'`]/g, '');
 let hitsL = [], cur = -1;
 function buildIndex() {
-  const idx = [], push = (e) => { e.f = fold(e.name); e.fa = (e.alts || []).map(fold); idx.push(e); };
+  const saint = n => { const f = fold(n), o = [];      // "St. Louis" ~ "Saint Louis", "Saint Petersburg" ~ "St Petersburg"
+    if (/^saint /.test(f)) o.push(f.replace(/^saint /, 'st '), f.replace(/^saint /, 'st. '));
+    if (/^st\.? /.test(f)) o.push(f.replace(/^st\.? /, 'saint '), f.replace(/^st\.? /, 'st '));
+    if (/^sankt /.test(f)) o.push(f.replace(/^sankt /, 'saint '), f.replace(/^sankt /, 'st '));
+    return o; };
+  const idx = [], push = (e) => { e.f = fold(e.name); e.fa = [...new Set([...(e.alts || []).map(fold), ...[e.name, ...(e.alts || [])].flatMap(saint)])].filter(a => a !== e.f); idx.push(e); };
   const imp = n => n ? Math.log10(n + 10) : 0;
   for (const l of D.labels) { const it = D.C.find(c => c.c === l.c); if (!it) continue;
     push({ t: 'country', name: l.short || l.full, alts: [l.full, ...(ALIASES[l.c] || [])], sub: l.st === 'disputed' ? 'Territory of disputed status' : 'Country', it, w: 3 + imp(l.m) * 0.3 }); }
@@ -1262,7 +1267,8 @@ q.addEventListener('input', () => {
     const it = e.it; let v = '', sub = e.sub;
     if (e.t === 'unit' || e.t === 'country') v = it.p != null ? fmtP(it.p) : '';
     else if (e.t === 'city') { const tg = cityTarget(it); if (tg) { v = tg.kind === 'region' ? '' : fmtP(tg.it.p);
-      sub = 'City · ' + (tg.kind === 'region' ? tg.it.n + ', ' + D.countryName(tg.it.c) : tg.kind === 'unit' && tg.it.n ? 'in ' + tg.it.n + ', ' + tg.it.country : tg.it.country); } }
+      sub = 'City · ' + (tg.kind === 'region' ? tg.it.n + ', ' + D.countryName(tg.it.c) : tg.kind === 'unit' && tg.it.n ? 'in ' + tg.it.n + ', ' + tg.it.country : tg.it.country); }
+      else if (it.c) sub = 'City · ' + D.countryName(it.c); }
     else if (e.t === 'com' || e.t === 'metro') v = it.m ? fmtN(it.m) : '';
     if (viaAlt && e.t === 'com') sub = 'Part of ' + e.name + ' · ' + it.c;
     return `<li role="option" id="r${i}" data-i="${i}" aria-selected="false"><span class="rn">${esc(e.name)}</span><span class="rv">${esc(v)}</span><span class="rk">${esc(sub)}</span></li>`;
@@ -1284,7 +1290,8 @@ function choose(h) {
   let sel;
   if (h.t === 'unit' || h.t === 'country') sel = { kind: h.t, it: h.it };
   else if (h.t === 'region') sel = { kind: 'region', it: h.it };
-  else if (h.t === 'city') { const tg = cityTarget(h.it); sel = tg ? Object.assign(tg, { city: h.name }) : null;
+  else if (h.t === 'city') { const tg = cityTarget(h.it); sel = tg ? Object.assign({}, tg, { city: h.name }) : null;
+    if (!sel) { const r = 6; pin(null); fitBounds([[h.it.ax - r, h.it.ay - r], [h.it.ax + r, h.it.ay + r]], 0.05, 80); q.value = h.name; return; }
     if (sel && sel.kind === 'country') { const r = 6; fitBounds([[h.it.ax - r, h.it.ay - r], [h.it.ax + r, h.it.ay + r]], 0.05, 80); pin(sel, { push: true }); return; } }
   else sel = { kind: h.t === 'metro' ? 'met' : 'com', it: h.it };
   if (!sel) return;
@@ -1486,7 +1493,7 @@ function tbData() {
     return out;
   }
   return D.U.map(u => ({ kind: 'unit', it: u, name: u.n || 'Other areas of ' + u.country, st: false, ct: u.c === 'UAOCC' ? 'Ukraine (occupied)' : u.country, sub: u.r || '',
-    p: u.p, m: u.m, yr: u.p == null ? '' : (D.X.years[u.c] || ''), q: u.q, k: u.k }));
+    p: u.p, m: u.m, yr: u.p == null ? '' : String(u.y || D.X.years[u.c] || ''), q: u.q, k: u.k }));
 }
 function inView(r) {
   const v = viewBox();

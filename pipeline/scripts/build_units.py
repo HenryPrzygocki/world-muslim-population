@@ -114,6 +114,9 @@ def attach(g, df, iso, aliases=None, default=None, key='unit', label=None, cutof
     g['pct'] = g.pct.astype(float)
     g['dflt'] = [n not in m for n in g.gname]
     g['muslims'] = [cnt.get(m.get(n), np.nan) if n in m else np.nan for n in g.gname]
+    if 'year' in df.columns:
+        yr = dict(zip(df[key].astype(str), df.year))
+        g['year'] = [yr.get(m.get(n), np.nan) if n in m else np.nan for n in g.gname]
     # several geo units matched to one data row (e.g. new districts of an old one): show them as that one unit
     tgt = pd.Series([m.get(n) for n in g.gname], index=g.index)
     multi = tgt.notna() & tgt.duplicated(keep=False)
@@ -186,7 +189,9 @@ def add(g):
         g['cnt_est'] = True
     if 'cnt_est' not in g.columns:
         g['cnt_est'] = False
-    SUBS.append(g[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'geometry']])
+    if 'year' not in g.columns:
+        g['year'] = np.nan                      # per-area source year where it differs from the country's
+    SUBS.append(g[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']])
 
 
 reg = pd.read_csv(f'{DATA}/sources_registry.csv')
@@ -214,6 +219,7 @@ UKPOP = {'S12000049': 622820, 'S12000036': 514990, 'S12000033': 224190, 'S120000
          'S12000014': 158380, 'S12000030': 92530, 'S12000040': 183820, 'N09000003': 345420}
 uk['muslims'] = [ukc.get(cd, np.nan) for cd in uk.AREACD]
 uk['unit'] = uk.AREANM; uk['iso'] = 'GBR'; uk['src'] = SRC['GBR']; uk['level'] = 2
+uk['year'] = [2022 if cd.startswith('S') else 2021 if cd[0] in 'EW' else np.nan for cd in uk.AREACD]
 add(uk)
 
 # ---------------------------------------------------------------- Russia (federal subjects)
@@ -231,6 +237,7 @@ _ci = _g.gname == 'Crimea'
 _g.loc[_ci, 'pct'] = (228830 + 42082 + 3715) / 1819434 * 100; _g.loc[_ci, 'muslims'] = 228830 + 42082 + 3715
 _g.loc[_ci, 'src'] = ('Rosstat — 2014 census of the Crimean Federal District, table 4.6 (Crimean Tatars, Tatars and '
                       'Azerbaijanis, the Muslim nationalities the table lists, ÷ persons who stated a nationality)')
+_g.loc[_ci, 'year'] = 2014
 _g.loc[_g.gname == 'Sevastopol', 'dflt'] = True
 _miss = _g[_g.pct.isna() & ~_g.dflt].gname.tolist()
 assert _miss == [], _miss
@@ -350,7 +357,13 @@ lka_alias = {'Ampāra': 'Ampara', 'Anurādhapura': 'Anuradhapura', 'Gālla': 'Ga
              'Nuvara Ĕliya': 'Nuwara Eliya', 'Puttalama': 'Puttalam', 'Pŏḷŏnnaruva': 'Polonnaruwa',
              'Trikuṇāmalaya': 'Trincomalee', 'Vavuniyāva': 'Vavuniya', 'Yāpanaya': 'Jaffna'}
 add(attach(ne1('LKA'), read_sub('LKA'), 'LKA', aliases=lka_alias, src=SRC['LKA']))
-_th = read_sub('THA'); _th = _th[_th.pct != 0.1]
+# NSO 2010 census (49 provinces with a published religion table) and 2000 census for the others it does not cover;
+# 0.1 rows in THA.csv were placeholders and are not used
+_k = lambda x: ''.join(ch for ch in str(x).lower() if ch.isalnum())
+_t10 = pd.read_csv(f'{S2}/THA_2010.csv'); _t10['pct'] = _t10.pct_published; _t10['year'] = 2010
+_t00 = read_sub('THA'); _t00 = _t00[(_t00.pct != 0.1) & ~_t00.unit.map(_k).isin(set(_t10.unit.map(_k)))].copy()
+_t00['muslims'] = np.nan; _t00['year'] = 2000
+_th = pd.concat([_t10[['unit', 'pct', 'muslims', 'year']], _t00[['unit', 'pct', 'muslims', 'year']]], ignore_index=True)
 add(attach(ne1('THA'), _th, 'THA', src=SRC['THA'], cutoff=0.95))
 add(attach(ne1('MYS'), read_sub('MYS'), 'MYS', src=SRC['MYS']))
 mmr = read_sub('MMR')
@@ -472,11 +485,11 @@ for iso, g in subs.groupby('iso'):
             rr = gpd.GeoDataFrame(geometry=list(getattr(resid, 'geoms', [resid])), crs=4326)
             rr = rr[rr.geometry.area > 1e-9]
             if len(rr):
-                near = gpd.sjoin_nearest(rr.to_crs(3857), pg[['pct', 'unit', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'geometry']].to_crs(3857),
+                near = gpd.sjoin_nearest(rr.to_crs(3857), pg[['pct', 'unit', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']].to_crs(3857),
                                          how='left').to_crs(4326)
                 near = near[~near.index.duplicated()]
                 near['iso'] = iso
-                pg = pd.concat([pg, near[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'geometry']]], ignore_index=True)
+                pg = pd.concat([pg, near[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']]], ignore_index=True)
     out.append(pg)
 subs = gpd.GeoDataFrame(pd.concat(out, ignore_index=True), crs=4326)
 subs = subs[~subs.geometry.is_empty]
@@ -501,7 +514,7 @@ for k, grp in subs.groupby(['iso', 'unit', 'pct', 'level', 'layer', 'dflt'], dro
     mu = grp.muslims.dropna()
     rows.append({'iso': k[0], 'unit': k[1], 'pct': k[2], 'level': k[3], 'layer': k[4], 'dflt': k[5],
                  'src': grp.src.iloc[0], 'muslims': mu.iloc[0] if len(mu) else np.nan,
-                 'cnt_est': bool(grp.cnt_est.fillna(False).any()),
+                 'cnt_est': bool(grp.cnt_est.fillna(False).any()), 'year': grp.year.dropna().iloc[0] if grp.year.notna().any() else np.nan,
                  'geometry': safe_union(grp.geometry.values)})
 subs = gpd.GeoDataFrame(rows, crs=4326)
 # keep only polygonal parts
