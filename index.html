@@ -517,16 +517,27 @@ function bboxOfRings(A, rings) {
     if (b[a * 4] < x0) x0 = b[a * 4]; if (b[a * 4 + 1] < y0) y0 = b[a * 4 + 1]; if (b[a * 4 + 2] > x1) x1 = b[a * 4 + 2]; if (b[a * 4 + 3] > y1) y1 = b[a * 4 + 3]; }
   return [x0, y0, x1, y1];
 }
+// Outlines are drawn as smooth curves through the source points (quadratic B-spline: straight to the middle of the first
+// segment, curves through each inner point to the next midpoint, straight to the end). Arc ends stay fixed and the curve
+// is the same in both directions, so neighbouring fills and the border lines between them still coincide exactly.
+function emitArc(P, A, ai, move) {
+  const rev = ai < 0, a = rev ? ~ai : ai, s = A.st[a], L = A.ln[a], xy = A.xy;
+  const ix = k => 2 * (rev ? s + L - 1 - k : s + k);
+  let i = ix(0), x0 = xy[i], y0 = xy[i + 1];
+  if (move) P.moveTo(x0, y0);
+  if (L < 3) { if (L === 2) { i = ix(1); P.lineTo(xy[i], xy[i + 1]); } return; }
+  i = ix(1); let x1 = xy[i], y1 = xy[i + 1];
+  P.lineTo((x0 + x1) / 2, (y0 + y1) / 2);
+  for (let k = 1; k < L - 1; k++) { i = ix(k + 1); const x2 = xy[i], y2 = xy[i + 1];
+    P.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2); x1 = x2; y1 = y2; }
+  P.lineTo(x1, y1);
+}
 function addRing(P, A, ring, close) {
   let first = true;
-  for (const ai of ring) {
-    const rev = ai < 0, a = rev ? ~ai : ai, s = A.st[a], L = A.ln[a], xy = A.xy;
-    for (let k = first ? 0 : 1; k < L; k++) { const j = rev ? s + L - 1 - k : s + k;
-      if (first) { P.moveTo(xy[2 * j], xy[2 * j + 1]); first = false; } else P.lineTo(xy[2 * j], xy[2 * j + 1]); }
-  }
+  for (const ai of ring) { emitArc(P, A, ai, first); first = false; }
   if (close) P.closePath();
 }
-function addArc(P, A, a) { const s = A.st[a], L = A.ln[a], xy = A.xy; P.moveTo(xy[2 * s], xy[2 * s + 1]); for (let k = 1; k < L; k++) P.lineTo(xy[2 * (s + k)], xy[2 * (s + k) + 1]); }
+function addArc(P, A, a) { emitArc(P, A, a, true); }
 const tileKey = (x, y) => Math.floor(x / TILE) + ',' + Math.floor(y / TILE);
 function tileIndex(items) {     // items: {bb}; one tile per item by bbox centre; tile extent grows to cover its items
   const T = new Map();
