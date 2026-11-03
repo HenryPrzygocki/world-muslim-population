@@ -27,7 +27,7 @@ def proj_geom(g):
         return shapely.multilinestrings([l for p in parts for l in getattr(p, 'geoms', [p]) if l.geom_type == 'LineString'])
     return g
 
-for name in ['countries', 'units', 'lakes', 'provlines', 'disputed', 'occupied', 'kri']:
+for name in ['countries', 'units', 'lakes', 'disputed', 'occupied', 'kri']:
     g = gpd.read_file(f'{B}/{name}.geojson')
     g['geometry'] = [proj_geom(x) for x in g.geometry]
     g.to_file(f'{B}/p/{name}.geojson', driver='GeoJSON')

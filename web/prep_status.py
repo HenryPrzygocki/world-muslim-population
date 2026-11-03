@@ -1,7 +1,7 @@
 """Neutral treatment of contested territories for the web map:
 - Crimea & Sevastopol returned to de jure Ukraine; Russian-occupied area (DeepState, 2026-10-17) as its own layer
 - Kurdistan Region of Iraq as an outlined autonomous region
-- territories of disputed status (Taiwan, Kosovo, Somaliland, N. Cyprus, W. Sahara) and China's SARs flagged"""
+- territories of disputed status (Taiwan, Kosovo, Somaliland, W. Sahara) and China's SARs flagged"""
 import json, warnings
 warnings.filterwarnings('ignore')
 import geopandas as gpd, pandas as pd
@@ -38,7 +38,6 @@ STATUS = {
     'KOS': ('disputed', 'Kosovo', 'Declared independence from Serbia in 2008; recognised by about half of UN members, '
             'not by Serbia.'),
     'SOL': ('disputed', 'Somaliland', 'Self-governing since 1991; internationally regarded as part of Somalia.'),
-    'CYN': ('disputed', 'Northern Cyprus', 'Recognised only by Turkey; internationally regarded as part of Cyprus.'),
     'SAH': ('disputed', 'Western Sahara', 'Non-self-governing territory (UN list); mostly administered by Morocco, '
             'claimed by the Sahrawi Arab Democratic Republic.'),
     'FLK': ('disputed', 'Falkland Islands (Malvinas)', 'British Overseas Territory; claimed by Argentina as the Islas Malvinas.'),
@@ -63,6 +62,9 @@ X['notes']['UAOCC'] = ('Internationally recognised as part of Ukraine; annexed a
                        'Crimea’s value is from Russia’s 2014 census of the peninsula: Crimean Tatars, Tatars and Azerbaijanis '
                        'as a share of residents who stated a nationality.')
 X['years']['UAOCC'] = '2014'
+X['notes']['CYP'] = ('Pew’s estimate covers the whole island (1.3 million people): the Republic of Cyprus, the north '
+                     '(administered by Turkish Cypriots, recognised only by Turkey) and the UK Sovereign Base Areas, so the '
+                     'island is shown as one area. The dashed line is the de facto line north of the UN buffer zone.')
 X['notes']['OCC'] = ('Under Russian military occupation (Crimea and parts of Donetsk and Luhansk since 2014, more since '
                      '2022); internationally recognised as part of Ukraine. Line of control: DeepState map, 17 Oct 2026.')
 X['notes']['KRI'] = ('Kurdistan Region — the autonomous region of Iraq (Erbil, Duhok, Sulaymaniyah, Halabja). '

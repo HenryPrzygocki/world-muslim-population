@@ -16,6 +16,19 @@ EE = '+proj=eqearth +lon_0=11 +datum=WGS84 +units=m +no_defs'
 
 nat = gpd.read_file(f'{DATA}/units_national.gpkg')
 sub = gpd.read_file(f'{DATA}/units_sub.gpkg')
+# Cyprus is one island with one figure: Pew's 2020 estimate covers the whole island (population 1.30 million: the Republic,
+# the Turkish Cypriot-administered north, the UN buffer zone and the UK Sovereign Base Areas). It is drawn as one area with
+# that figure, and the de facto line (northern edge of the buffer zone) is kept as a dashed line.
+CY_PARTS = ['CYN', 'CNM', 'ESB', 'WSB']
+_cyn = unary_union([make_valid(q) for q in nat[nat.ADM0_A3 == 'CYN'].geometry])
+_cyrest = unary_union([make_valid(q) for q in nat[nat.ADM0_A3.isin(['CYP', 'CNM', 'ESB', 'WSB'])].geometry])
+CY_LINE = _cyn.boundary.intersection(_cyrest.buffer(0.0008))
+_cy = nat.ADM0_A3 == 'CYP'
+assert _cy.sum() == 1 and nat.loc[_cy, 'muslims'].notna().all()
+_cyx = nat.ADM0_A3.isin(CY_PARTS)
+for col in ['ADMIN', 'pct', 'muslims', 'src']:
+    nat.loc[_cyx, col] = nat.loc[_cy, col].iloc[0]
+nat.loc[_cyx, 'ADM0_A3'] = 'CYP'
 reg = pd.read_csv(f'{DATA}/sources_registry.csv')
 
 # ---- sources table
@@ -121,6 +134,7 @@ a1 = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces_lines.geojson')
 a1 = a1[a1.ADM0_A3.isin(big)][['geometry']]
 a1.to_file(f'{OUT}/provlines.geojson', driver='GeoJSON')
 dl = gpd.read_file(f'{RAW}/ne_10m_admin_0_boundary_lines_disputed_areas.geojson')[['geometry']]
+dl = pd.concat([dl, gpd.GeoDataFrame(geometry=[CY_LINE], crs=4326)], ignore_index=True)
 dl.to_file(f'{OUT}/disputed.geojson', driver='GeoJSON')
 lk = gpd.read_file(f'{RAW}/ne_10m_lakes.geojson')
 lk = lk[lk.scalerank <= 5][['geometry']]
@@ -166,7 +180,7 @@ metros = [{'n': r.city, 'full': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 
 # ---- short country names, search regions (provinces), cities, country totals, sources table, CSV
 cs = gpd.read_file(f'{RAW}/ne_10m_admin_0_countries.geojson', ignore_geometry=True)
 short = dict(zip(cs.ADM0_A3, cs.NAME_LONG))
-short.update({'PSX': 'Palestine', 'KOS': 'Kosovo', 'SOL': 'Somaliland', 'CYN': 'Northern Cyprus', 'TWN': 'Taiwan',
+short.update({'PSX': 'Palestine', 'KOS': 'Kosovo', 'SOL': 'Somaliland', 'TWN': 'Taiwan',
               'SAH': 'Western Sahara', 'USA': 'United States', 'GBR': 'United Kingdom', 'COD': 'DR Congo',
               'COG': 'Republic of the Congo', 'CIV': "Côte d'Ivoire", 'CZE': 'Czechia', 'MKD': 'North Macedonia',
               'SWZ': 'Eswatini', 'TLS': 'Timor-Leste', 'CPV': 'Cabo Verde', 'BHS': 'The Bahamas', 'GMB': 'The Gambia',

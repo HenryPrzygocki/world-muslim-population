@@ -400,7 +400,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
 <script>
 (() => {
 'use strict';
-const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
+const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', x: 'map_x.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
 const UPDATED = '3 November 2026';
 const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // inside the claude.ai viewer: no shareable URL, downloads via capability
 
@@ -444,12 +444,12 @@ const SEAS = [['Mediterranean Sea', 18, 34.6], ['Black Sea', 34.5, 43.3], ['Casp
   ['Arabian Sea', 64, 15], ['Bay of Bengal', 88, 15], ['Persian Gulf', 51.5, 27.3], ['Caribbean Sea', -75, 15],
   ['Gulf of Mexico', -90, 25], ['North Sea', 3, 56], ['Baltic Sea', 19, 57.5], ['South China Sea', 114, 13],
   ['Java Sea', 110, -5], ['Gulf of Guinea', 3, 1.5], ['Adriatic Sea', 15.3, 43], ['Aegean Sea', 25, 38.8]];
-const DISP = new Set(['TWN', 'KOS', 'SOL', 'CYN', 'SAH', 'FLK']), SAR = new Set(['HKG', 'MAC']);
+const DISP = new Set(['TWN', 'KOS', 'SOL', 'SAH', 'FLK']), SAR = new Set(['HKG', 'MAC']);
 const ETHNIC_C = new Set(['RUS', 'CHN', 'BIH']);      // census without a religion question: ethnicity-based figures
 const ALIASES = { USA: ['USA', 'US', 'America', 'United States of America'], GBR: ['UK', 'Britain', 'Great Britain'], TUR: ['Türkiye', 'Turkiye'],
   ARE: ['UAE', 'Emirates'], COD: ['DRC', 'Congo-Kinshasa', 'Zaire'], COG: ['Congo-Brazzaville'], CIV: ['Ivory Coast'], MMR: ['Burma'],
   CZE: ['Czech Republic'], SWZ: ['Swaziland'], NLD: ['Holland'], KOR: ['Korea'], PSX: ['Palestinian territories', 'Gaza', 'West Bank'],
-  MKD: ['Macedonia'], TLS: ['East Timor'], CPV: ['Cape Verde'], RUS: ['Russian Federation'], IRN: ['Persia'], LKA: ['Ceylon'],
+  MKD: ['Macedonia'], CYP: ['Northern Cyprus', 'North Cyprus', 'TRNC', 'Akrotiri', 'Dhekelia'], TLS: ['East Timor'], CPV: ['Cape Verde'], RUS: ['Russian Federation'], IRN: ['Persia'], LKA: ['Ceylon'],
   BIH: ['Bosnia'], SAU: ['KSA'], VAT: ['Holy See'], SYR: ['Syrian Arab Republic'], TWN: ['Republic of China'], CHN: ["People's Republic of China", 'PRC'],
   SAH: ['Sahrawi'], FLK: ['Malvinas'], KOS: ['Kosova'], BRN: ['Brunei Darussalam'], LAO: ["Lao PDR"], VNM: ['Viet Nam'] };
 
@@ -543,7 +543,7 @@ function buildLOD(topo, key) {
   const lineArcs = (obj) => { const s = new Set(); obj.geometries.forEach(g => { for (const r of ringsOf(g)) for (const ai of r) s.add(ai < 0 ? ~ai : ai); }); return [...s]; };
   const lines = (arcs) => ({ tiles: tileIndex(arcs.map(a => ({ a, bb: [A.bb[a * 4], A.bb[a * 4 + 1], A.bb[a * 4 + 2], A.bb[a * 4 + 3]] }))), arcs, paths: new Map() });
   L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), umesh: lines(umesh),
-    prov: lines(lineArcs(O.provlines)), disputed: lines(lineArcs(O.disputed)), occLine: lines(lineArcs(O.occupied)), kriLine: lines(lineArcs(O.kri)) };
+    disputed: lines(lineArcs(O.disputed)), occLine: lines(lineArcs(O.occupied)), kriLine: lines(lineArcs(O.kri)) };
   L.lakes = feats(O.lakes); L.lakesT = tileIndex(L.lakes);
   L.occ = feats(O.occupied); L.kri = feats(O.kri);
   L.CT = tileIndex(L.C); L.UT = tileIndex(L.U);
@@ -566,7 +566,7 @@ function tilePath(L, set, ti, force) {
 // ------------------------------------------------------------------ state
 let t = d3.zoomIdentity, minK = 1;
 let D = null;                                       // data
-const LOD = { w: null, lo: null, hi: null };
+const LOD = { w: null, lo: null, hi: null, x: null };
 const loading = {};
 let hover = null, pinned = null, hl = -1, hlPinned = false;
 const show = { com: true, met: true };
@@ -581,7 +581,8 @@ function loadLOD(key) {
     const L = buildLOD(topo, key);
     if (D && (L.C.length !== D.C.length || L.U.length !== D.U.length)) { console.warn('level of detail mismatch', key); return null; }
     LOD[key] = L; if (D) attachLOD(L);
-    const order = { w: 0, lo: 1, hi: 2 }; if (order[key] <= order[wantLOD()]) schedule();   // redraw only if this level is used now
+    if (LEVELS.indexOf(key) <= LEVELS.indexOf(wantLOD())) schedule();   // redraw only if this level is used now
+    if ($('pill').textContent === LOADING_TXT && LOD[wantLOD()]) pill(null);
     return L;
   }).catch(e => { console.warn(e); loading[key] = null; });
 }
@@ -628,18 +629,21 @@ function buildGrid() {   // spatial grid on the world-level bounding boxes (slig
   D.U.forEach(u => u.g.w && put(u, u.g.w)); D.C.forEach(c => c.g.w && put(c, c.g.w));
   D.grid = grid; D.G = G;
 }
-const bestFeat = (it, want) => { for (const k of (want === 'hi' ? ['hi', 'lo', 'w'] : want === 'lo' ? ['lo', 'w'] : ['w'])) { const L = LOD[k], f = it.g[k]; if (L && f && f.path) return f; } return it.g.w; };
-const pathOf = (it) => { const f = bestFeat(it, 'hi'); return f && (f.path || featPath(LOD.w, f, true)); };
+// the level of detail of the last full frame: hover outlines, selections and hit tests use the same outlines as the map
+let drawnLv = 'w';
+const featAt = (it, k = drawnLv) => (LOD[k] && it.g[k]) || it.g.w;
+const pathOf = (it, k = drawnLv) => { const L = LOD[k] && it.g[k] ? LOD[k] : LOD.w, f = it.g[L.key]; return f && featPath(L, f, true); };
 
 // ------------------------------------------------------------------ sizing & zoom
-const zoom = d3.zoom().scaleExtent([0.3, 1200]).on('zoom', e => { t = e.transform; schedule(true); hideTip(); urlSoon(); maybeLoadDetail(); })
-  .on('start', e => { if (e.sourceEvent) { cv.classList.add('drag'); if (activeView) setActiveView(null); } }).on('end', () => cv.classList.remove('drag'));
+const KMAX = 180;     // closest zoom: about where the source outlines (Natural Earth 10m, geoBoundaries) stop adding detail
+const zoom = d3.zoom().scaleExtent([0.3, KMAX]).on('zoom', e => { t = e.transform; schedule(true); hideTip(); urlSoon(); maybeLoadDetail(); })
+  .on('start', e => { fullInt *= 0.8; if (e.sourceEvent) { cv.classList.add('drag'); if (activeView) setActiveView(null); } }).on('end', () => cv.classList.remove('drag'));
 function resize() {
   const r = stage.getBoundingClientRect(), oldW = W, oldH = H;
   W = Math.max(1, r.width); H = Math.max(1, r.height); DPR = Math.min(window.devicePixelRatio || 1, 2);
   for (const c of [cv, ov]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
   minK = Math.min(W / (SB[1][0] - SB[0][0]), H / (SB[1][1] - SB[0][1])) * 0.98;
-  zoom.scaleExtent([minK * 0.9, 1200]).translateExtent([[SB[0][0] - 300, SB[0][1] - 200], [SB[1][0] + 300, SB[1][1] + 200]]);
+  zoom.scaleExtent([minK * 0.9, KMAX]).translateExtent([[SB[0][0] - 300, SB[0][1] - 200], [SB[1][0] + 300, SB[1][1] + 200]]);
   if (oldW && (oldW !== W || oldH !== H)) {          // keep the same place in the centre
     const cx = (oldW / 2 - t.x) / t.k, cy = (oldH / 2 - t.y) / t.k;
     d3.select(cv).call(zoom.transform, d3.zoomIdentity.translate(W / 2 - cx * t.k, H / 2 - cy * t.k).scale(t.k));
@@ -657,7 +661,7 @@ function insets() {    // screen space taken by floating controls, so views and 
 function fitBounds(b, pad = 0.04, maxK = 300, dur = 900, push) {
   const I = insets(), fw = W - I.l - I.r, fh = H - I.t - I.b;
   const dx = b[1][0] - b[0][0], dy = b[1][1] - b[0][1], cx = (b[0][0] + b[1][0]) / 2, cy = (b[0][1] + b[1][1]) / 2;
-  const k = Math.min(maxK, (1 - 2 * pad) * Math.min(fw / Math.max(dx, 1e-6), fh / Math.max(dy, 1e-6)));
+  const k = Math.min(maxK, KMAX, (1 - 2 * pad) * Math.min(fw / Math.max(dx, 1e-6), fh / Math.max(dy, 1e-6)));
   const tr = d3.zoomIdentity.translate(I.l + fw / 2 - cx * k, I.t + fh / 2 - cy * k).scale(k);
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   d3.select(cv).transition().duration(reduce ? 0 : dur).call(zoom.transform, tr);
@@ -682,11 +686,19 @@ function goView(key, dur) {
   else fitBounds(bboxLL(v[2]), 0.02, 999, dur);
 }
 const effK = () => t.k * DPR;
-function wantLOD() { const e = effK(); return e < 1.6 ? 'w' : e < 4.5 ? 'lo' : 'hi'; }   // each level stays within ~½ device pixel of the source outlines
+// four levels of detail, simplified at 15 km, 3 km, 700 m and 40 m; each is used only while its simplification stays
+// within about 0.6 device pixels, so outlines look the same at every zoom
+const LEVELS = ['w', 'lo', 'hi', 'x'];
+const LV_E = { w: 1.38, lo: 6.9, hi: 29.5, x: Infinity };
+function wantLOD() { const e = effK(); for (const k of LEVELS) if (e <= LV_E[k]) return k; return 'x'; }
+const LOADING_TXT = 'Loading finer outlines…';
 function maybeLoadDetail() {
   const e = effK();
-  if (e > 1.2 && !LOD.lo) loadLOD('lo');
-  if (e > 3.2 && !LOD.hi && !loading.hi) { pill('Loading finer outlines…'); loadLOD('hi').then(() => pill(null)); }
+  if (e > 1.0 && !LOD.lo) loadLOD('lo');
+  if (e > 4.5 && !LOD.hi) loadLOD('hi');
+  if (e > 18 && !LOD.x) loadLOD('x');
+  const w = wantLOD();
+  if (!LOD[w] && loading[w]) { if ($('pill').hidden) pill(LOADING_TXT); }
 }
 let pillT = 0;
 function pill(text, ms) { const p = $('pill'); clearTimeout(pillT); if (!text) { if (!p.hidden) { p.hidden = true; schedule(); } return; }
@@ -694,39 +706,76 @@ function pill(text, ms) { const p = $('pill'); clearTimeout(pillT); if (!text) {
   if (ms) pillT = setTimeout(() => { p.style.opacity = 0; pillT = setTimeout(() => { p.hidden = true; schedule(); }, 600); }, ms); }
 
 // ------------------------------------------------------------------ frame scheduling
-// While the map moves, the last full frame is stretched (cheap) unless full frames are fast on this device;
-// the full vector frame is drawn as soon as movement pauses.
+// A still map is always drawn in full at the wanted level of detail. While the map moves, full vector frames are drawn if
+// this device draws them quickly (measured from the frame rate during movement). Otherwise the last full frame is reused:
+// shifted while panning, with only the strips coming into view drawn, and stretched while zooming, with any newly exposed
+// margin drawn; the full frame follows as soon as movement pauses.
 let raf = 0, moving = false, idleT = 0, fullMs = 16, lastFull = 0;
+let fullInt = 0, backlog = false, prevTs = 0, prevFull = false;     // frame interval of full frames while moving
 const snap = document.createElement('canvas'), sctx = snap.getContext('2d');
 let snapT = null, pendingBuild = false;
 function schedule(fromZoom) {
   if (fromZoom) { moving = true; clearTimeout(idleT); idleT = setTimeout(() => { moving = false; schedule(); }, 130); }
-  if (!raf) raf = requestAnimationFrame(frame);
+  if (raf) { if (fromZoom) backlog = true; return; }
+  raf = requestAnimationFrame(frame);
 }
-function frame() {
+function frame(ts) {
   raf = 0;
+  // events that arrived while a full frame was pending: the time between frames is then the cost of drawing one
+  if (backlog && prevFull && prevTs) { const dt = Math.min(400, ts - prevTs); fullInt = fullInt ? fullInt * 0.6 + dt * 0.4 : dt; }
+  backlog = false; prevTs = ts;
   const now = performance.now();
-  let full = !moving || !snapT || fullMs < 22;
+  let full = !moving || !snapT || snapT.dpr !== DPR || snap.width !== cv.width || snap.height !== cv.height || (fullMs < 28 && fullInt < 45);
   if (!full) { const ratio = Math.abs(Math.log2(t.k / snapT.k)); if (ratio > 1.6 && now - lastFull > Math.max(250, fullMs * 3)) full = true; }
   if (full) drawFull(); else drawFast();
+  prevFull = full && moving;
   drawOverlay();
-  if (pendingBuild && !moving) { pendingBuild = false; schedule(); }
+  if (pendingBuild) { pendingBuild = false; schedule(); }
 }
 function drawFull() {
   const a = performance.now();
-  budgetEnd = a + (moving ? 6 : 14);
   pendingBuild = false;
   draw();
   const ms = performance.now() - a; fullMs = fullMs * 0.6 + ms * 0.4; lastFull = performance.now();
   if (snap.width !== cv.width || snap.height !== cv.height) { snap.width = cv.width; snap.height = cv.height; }
   sctx.setTransform(1, 0, 0, 1, 0, 0); sctx.clearRect(0, 0, snap.width, snap.height); sctx.drawImage(cv, 0, 0);
-  snapT = { x: t.x, y: t.y, k: t.k };
+  snapT = { x: t.x, y: t.y, k: t.k, dpr: DPR };
+}
+function exposed(x0, y0, x1, y1) {    // parts of the canvas (device px) outside the rectangle covered by the reused frame
+  const Wd = cv.width, Hd = cv.height, r = [];
+  x0 = Math.max(0, Math.min(Wd, x0)); x1 = Math.max(0, Math.min(Wd, x1)); y0 = Math.max(0, Math.min(Hd, y0)); y1 = Math.max(0, Math.min(Hd, y1));
+  if (y0 > 0) r.push([0, 0, Wd, y0]); if (y1 < Hd) r.push([0, y1, Wd, Hd - y1]);
+  if (x0 > 0) r.push([0, y0, x0, y1 - y0]); if (x1 < Wd) r.push([x1, y0, Wd - x1, y1 - y0]);
+  return r.filter(q => q[2] > 0 && q[3] > 0);
+}
+function paintRects(rects, tr) {     // the map (without labels) inside device-pixel rectangles, at transform tr
+  for (const q of rects) {
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.beginPath(); ctx.rect(q[0], q[1], q[2], q[3]); ctx.clip();
+    ctx.fillStyle = T.paper; ctx.fillRect(q[0], q[1], q[2], q[3]);
+    const box = [(q[0] / DPR - tr.x) / tr.k, (q[1] / DPR - tr.y) / tr.k, ((q[0] + q[2]) / DPR - tr.x) / tr.k, ((q[1] + q[3]) / DPR - tr.y) / tr.k];
+    const vis = visibleItems(box);
+    budgetEnd = performance.now() + 1e9; levelReady(drawnLv, vis);
+    drawScene(drawnLv, vis, tr);
+    ctx.restore();
+  }
 }
 function drawFast() {
   const s_ = t.k / snapT.k;
-  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = T.paper; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.setTransform(s_, 0, 0, s_, DPR * (t.x - snapT.x * s_), DPR * (t.y - snapT.y * s_));
-  ctx.imageSmoothingQuality = 'low'; ctx.drawImage(snap, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (Math.abs(s_ - 1) < 1e-9) {      // panning: shift the last frame by whole pixels and draw only what came into view
+    const dx = Math.round(DPR * (t.x - snapT.x)), dy = Math.round(DPR * (t.y - snapT.y));
+    const tr = { x: snapT.x + dx / DPR, y: snapT.y + dy / DPR, k: snapT.k };
+    ctx.globalCompositeOperation = 'copy'; ctx.drawImage(snap, dx, dy); ctx.globalCompositeOperation = 'source-over';
+    paintRects(exposed(dx, dy, dx + cv.width, dy + cv.height), tr);
+    if (dx || dy) { sctx.globalCompositeOperation = 'copy'; sctx.drawImage(cv, 0, 0); sctx.globalCompositeOperation = 'source-over'; snapT = Object.assign(tr, { dpr: DPR }); }
+    return;
+  }
+  // zooming: stretch the last frame; draw the margin it no longer covers
+  const ox = DPR * (t.x - snapT.x * s_), oy = DPR * (t.y - snapT.y * s_);
+  ctx.fillStyle = T.paper; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.setTransform(s_, 0, 0, s_, ox, oy); ctx.imageSmoothingQuality = 'low'; ctx.drawImage(snap, 0, 0);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  paintRects(exposed(Math.ceil(ox), Math.ceil(oy), Math.floor(ox + cv.width * s_), Math.floor(oy + cv.height * s_)), t);
 }
 const setT = c => c.setTransform(DPR * t.k, 0, 0, DPR * t.k, DPR * t.x, DPR * t.y);
 const NOD = (() => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d');
@@ -738,53 +787,63 @@ const HATCH = (() => { const c = document.createElement('canvas'); c.width = c.h
 
 function viewBox() { return [-t.x / t.k, -t.y / t.k, (W - t.x) / t.k, (H - t.y) / t.k]; }
 const hits = (b, v) => b[0] <= v[2] && b[2] >= v[0] && b[1] <= v[3] && b[3] >= v[1];
-function visFeatures(want, which) {    // visible items of D.C / D.U with the path to draw (best available level)
-  const v = viewBox(), Lw = LOD.w, out = [];
-  const T_ = which === 'C' ? Lw.CT : Lw.UT, arr = which === 'C' ? D.C : D.U, Fw = which === 'C' ? Lw.C : Lw.U;
-  for (const tl of T_) { if (!hits(tl.bb, v)) continue;
-    for (const j of tl.ids) { const fw = Fw[j]; if (!hits(fw.bb, v)) continue;
-      const it = which === 'C' ? D.Cbyi.get(Lw.Cprops[j].i) : D.Ubyi.get(Lw.Uprops[j].i); if (!it) continue;
-      let P = null;
-      if (want !== 'w') { for (const k of (want === 'hi' ? ['hi', 'lo'] : ['lo'])) { const L = LOD[k], f = it.g[k]; if (!L || !f) continue; P = featPath(L, f); if (P) break; if (k === want) pendingBuild = true; } }
-      out.push([it, P || fw.path]);
-    } }
-  return out;
+function visibleItems(box) {    // countries and units in view (world-level tiles and boxes)
+  const v = box || viewBox(), Lw = LOD.w, C = [], U = [];
+  for (const [T_, F, props, byi, out] of [[Lw.CT, Lw.C, Lw.Cprops, D.Cbyi, C], [Lw.UT, Lw.U, Lw.Uprops, D.Ubyi, U]])
+    for (const tl of T_) { if (!hits(tl.bb, v)) continue;
+      for (const j of tl.ids) { if (!hits(F[j].bb, v)) continue; const it = byi.get(props[j].i); if (it) out.push(it); } }
+  return { C, U, v };
 }
-function linesFor(name, want) {     // per-frame: one level for each line layer (the finest whose visible tiles are ready)
-  const v = viewBox();
-  for (const k of (want === 'hi' ? ['hi', 'lo', 'w'] : want === 'lo' ? ['lo', 'w'] : ['w'])) {
-    const L = LOD[k]; if (!L) continue; const set = L.lines[name], ps = []; let ok = true;
-    set.tiles.forEach((tl, ti) => { if (!ok || !hits(tl.bb, v)) return; const p = tilePath(L, set, ti, k === 'w'); if (!p) { ok = false; return; } ps.push(p); });
-    if (ok) return ps;
-    pendingBuild = true;
-  }
-  return [];
+const LINESETS = ['umesh', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
+function levelReady(k, vis) {    // build what this view needs at level k while the budget lasts; true once complete
+  const L = LOD[k]; if (!L) return false;
+  for (const arr of [vis.C, vis.U]) for (const it of arr) { const f = it.g[k]; if (f && !f.path && !featPath(L, f)) return false; }
+  for (const name of LINESETS) { const set = L.lines[name];
+    for (let ti = 0; ti < set.tiles.length; ti++) if (hits(set.tiles[ti].bb, vis.v) && !tilePath(L, set, ti)) return false; }
+  for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) if (!featPath(L, L.lakes[j])) return false; }
+  for (const f of L.occ) if (!featPath(L, f)) return false;
+  for (const f of L.kri) if (!featPath(L, f)) return false;
+  return true;
+}
+function frameLevel(vis) {   // one level for the whole frame: fills, borders, lakes and outlines always coincide
+  let target = wantLOD(); while (!LOD[target]) target = LEVELS[LEVELS.indexOf(target) - 1];
+  budgetEnd = performance.now() + (exporting ? 1e9 : moving ? 8 : 40);
+  if (levelReady(target, vis)) return target;
+  pendingBuild = true;      // keep building in the next frames; meanwhile draw a level that is complete for this view
+  const fb = LOD[drawnLv] && LEVELS.indexOf(drawnLv) < LEVELS.indexOf(target) ? drawnLv : target;
+  budgetEnd = performance.now() + 1e9; levelReady(fb, vis); return fb;
 }
 function draw() {
   if (!D) return;
-  const k = t.k, want = wantLOD();
+  const vis = visibleItems(), lv = frameLevel(vis);
+  drawnLv = lv;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = T.paper; ctx.fillRect(0, 0, cv.width, cv.height);
-  setT(ctx); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  drawScene(lv, vis, t);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  labels(ctx);
+  clearTimeout(lcT); lcT = setTimeout(legendCircles, 150);
+}
+function drawScene(lv, vis, tr) {     // everything drawn in map coordinates, all at one level of detail
+  const k = tr.k, L = LOD[lv], zA = k * 1000 / 1400;
+  ctx.setTransform(DPR * k, 0, 0, DPR * k, DPR * tr.x, DPR * tr.y); ctx.lineJoin = 'round'; ctx.lineCap = 'round';
   ctx.fillStyle = T.ocean; ctx.fill(D.sphere);
   ctx.strokeStyle = T.grat; ctx.lineWidth = 0.7 / k; ctx.stroke(D.grat);
   // national values underneath, then subnational units
-  const VC = visFeatures(want, 'C'), VU = visFeatures(want, 'U');
-  for (const V of [VC, VU]) {
+  for (const V of [vis.C, vis.U]) {
     const by = Array.from({ length: 13 }, () => []);
-    for (const [it, P] of V) { if (it.c === 'ATA') { ctx.fillStyle = T.darkUI ? '#2A3236' : '#EEF0EE'; ctx.fill(P, 'evenodd'); continue; } by[it.k < 0 ? 12 : it.k].push(P); }
+    for (const it of V) { const P = pathOf(it, lv); if (!P) continue;
+      if (it.c === 'ATA') { ctx.fillStyle = T.darkUI ? '#2A3236' : '#EEF0EE'; ctx.fill(P, 'evenodd'); continue; } by[it.k < 0 ? 12 : it.k].push(P); }
     for (let i = 0; i < 13; i++) { if (!by[i].length) continue; ctx.fillStyle = i === 12 ? NOD : COLORS[i]; if (i === 12) NOD.setTransform(new DOMMatrix().scale(1 / k));
       for (const P of by[i]) ctx.fill(P, 'evenodd'); }
   }
-  const each = (name, f) => { for (const p of linesFor(name, want)) f(p); };
+  const each = (name, f) => { const set = L.lines[name]; set.tiles.forEach((tl, ti) => { if (hits(tl.bb, vis.v)) f(tilePath(L, set, ti, true)); }); };
   ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = Math.min(1.2, 0.35 + k * 0.02) / k; each('umesh', p => ctx.stroke(p));
-  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.strokeStyle = 'rgba(110,110,100,.55)'; ctx.lineWidth = 0.6 / k; each('prov', p => ctx.stroke(p)); ctx.restore();
   // lakes
-  const Lk = LOD[want] || LOD.lo || LOD.w, v = viewBox();
   ctx.fillStyle = T.ocean; ctx.strokeStyle = T.coast; ctx.lineWidth = 0.5 / k;
-  for (const tl of Lk.lakesT) { if (!hits(tl.bb, v)) continue; for (const j of tl.ids) { const P = featPath(Lk, Lk.lakes[j], true); ctx.fill(P, 'evenodd'); ctx.stroke(P); } }
+  for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) { const P = featPath(L, L.lakes[j], true); ctx.fill(P, 'evenodd'); ctx.stroke(P); } }
   ctx.strokeStyle = T.coast; ctx.lineWidth = 0.7 / k; each('coast', p => ctx.stroke(p));
   const bw = Math.min(1.6, 0.7 + k * 0.03);
-  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = (bw + Math.min(1.6, 0.4 + zAbs() * 0.9)) / k; each('borders', p => ctx.stroke(p));
+  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = (bw + Math.min(1.6, 0.4 + zA * 0.9)) / k; each('borders', p => ctx.stroke(p));
   ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw / k; each('borders', p => ctx.stroke(p));
   ctx.save(); ctx.setLineDash([4 / k, 3 / k]); ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each('disputed', p => ctx.stroke(p)); ctx.restore();
   ctx.save(); ctx.setLineDash([5 / k, 4 / k]);
@@ -792,14 +851,10 @@ function draw() {
   ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each('stat', p => ctx.stroke(p)); ctx.restore();
   ctx.strokeStyle = 'rgba(70,70,64,.7)'; ctx.lineWidth = 0.8 / k; each('sar', p => ctx.stroke(p));
   // Russian-occupied Ukraine: hatching + dashed line of control; Kurdistan Region of Iraq: dashed outline
-  const Lo = LOD[want] || LOD.w;
-  HATCH.setTransform(new DOMMatrix().scale(1 / k)); ctx.fillStyle = HATCH; for (const f of Lo.occ) ctx.fill(featPath(Lo, f, true), 'evenodd');
+  HATCH.setTransform(new DOMMatrix().scale(1 / k)); ctx.fillStyle = HATCH; for (const f of L.occ) ctx.fill(featPath(L, f, true), 'evenodd');
   ctx.save(); ctx.setLineDash([5 / k, 3 / k]); ctx.strokeStyle = '#7A1F1F'; ctx.lineWidth = Math.min(1.8, 0.9 + k * 0.03) / k; each('occLine', p => ctx.stroke(p)); ctx.restore();
   ctx.save(); ctx.setLineDash([2.5 / k, 2 / k]); ctx.strokeStyle = 'rgba(255,255,255,.9)'; ctx.lineWidth = Math.min(1.8, 0.9 + k * 0.03) / k; each('kriLine', p => ctx.stroke(p)); ctx.restore();
   ctx.strokeStyle = T.coast; ctx.lineWidth = 1.2 / k; ctx.stroke(D.sphere);
-  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  labels(ctx);
-  clearTimeout(lcT); lcT = setTimeout(legendCircles, 150);
 }
 let lcT = 0;
 
@@ -989,12 +1044,12 @@ function pickBase(bx, by) {
   const L = D.grid.get(Math.floor(bx / D.G) + ',' + Math.floor(by / D.G)); if (!L) return null;
   let found = null;
   for (const it of L) {
-    const f = bestFeat(it, 'hi'), b = f && f.bb; if (!b || bx < b[0] - 1 || bx > b[2] + 1 || by < b[1] - 1 || by > b[3] + 1) continue;
-    const P = f.path || pathOf(it);
+    const f = featAt(it), b = f && f.bb; if (!b || bx < b[0] - 1 || bx > b[2] + 1 || by < b[1] - 1 || by > b[3] + 1) continue;
+    const P = pathOf(it);
     if (meas.isPointInPath(P, bx, by, 'evenodd')) { if (it.kind === 'unit') { found = { kind: 'unit', it }; break; } if (!found) found = { kind: 'country', it }; }
   }
   if (found) {
-    const Lx = LOD.hi || LOD.lo || LOD.w;
+    const Lx = LOD[drawnLv] || LOD.w;
     found.occ = Lx.occ.some(f => meas.isPointInPath(featPath(Lx, f, true), bx, by, 'evenodd'));
     found.kri = Lx.kri.some(f => meas.isPointInPath(featPath(Lx, f, true), bx, by, 'evenodd'));
   }
@@ -1012,9 +1067,9 @@ function drawOverlay() {
   if (hl >= 0) {      // legend highlight: dim everything except the chosen class
     octx.fillStyle = T.darkUI ? 'rgba(17,23,26,.72)' : 'rgba(251,250,246,.74)'; octx.fillRect(0, 0, ov.width, ov.height);
     setT(octx); octx.globalCompositeOperation = 'destination-out';
-    const want = wantLOD();
-    for (const [it, P] of visFeatures(want, 'U')) if (it.k === hl) octx.fill(P, 'evenodd');
-    for (const [it, P] of visFeatures(want, 'C')) if (it.k === hl && !D.subIso.has(it.c)) octx.fill(P, 'evenodd');
+    const vis = visibleItems();
+    for (const it of vis.U) if (it.k === hl) octx.fill(pathOf(it), 'evenodd');
+    for (const it of vis.C) if (it.k === hl && !D.subIso.has(it.c)) octx.fill(pathOf(it), 'evenodd');
     octx.globalCompositeOperation = 'source-over';
   }
   const sels = [pinned, hover].filter(Boolean);
@@ -1147,7 +1202,7 @@ function copyLink(btn) {
 }
 function selBounds(sel) {
   const it = sel.it;
-  if (sel.kind === 'unit') { const f = bestFeat(it, 'hi'); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
+  if (sel.kind === 'unit') { const f = featAt(it); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
   if (sel.kind === 'region') return it.bbB;
   if (sel.kind === 'country') {
     const parts = D.C.filter(c => c.c === it.c).map(c => c.g.w.bb).filter(b => isFinite(b[0]));
@@ -1348,7 +1403,7 @@ function applyURL(dur) {
   if (VIEWS.some(v => v[0] === h)) { pin(null, { noUrl: true }); goView(h, dur); return; }
   const m = h.match(/^@(-?[\d.]+),(-?[\d.]+),(-?[\d.]+)(?:\/(.+))?$/);
   if (!m) { goView('world', dur); return; }
-  const lon = +m[1], lat = +m[2], z = +m[3], k = minK * Math.pow(2, z), p = proj([lon, lat]);
+  const lon = +m[1], lat = +m[2], z = +m[3], k = Math.max(minK * 0.9, Math.min(KMAX, minK * Math.pow(2, z))), p = proj([lon, lat]);
   setActiveView(null);
   const tr = d3.zoomIdentity.translate(W / 2 - p[0] * k, H / 2 - p[1] * k).scale(k);
   d3.select(cv).transition().duration(dur || 0).call(zoom.transform, tr);
@@ -1424,8 +1479,9 @@ function aboutHTML() {
     <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as points: circles sized by the census count
     (Brazil 2010, Chile 2024), and small squares for documented communities without a published count. U.S. metros show the 2020 U.S. Religion Census.</p>
     <h3>Contested territories</h3>
-    <p>Borders follow de facto control, with disputed lines dashed. Territories of disputed status (Taiwan, Kosovo, Somaliland, Northern Cyprus, Western Sahara,
-    Falklands/Malvinas) are outlined with a dashed line and named in italics, without taking a side. Crimea and other Russian-occupied areas are shown as part of
+    <p>Borders follow de facto control, with disputed lines dashed. Territories of disputed status (Taiwan, Kosovo, Somaliland, Western Sahara,
+    Falklands/Malvinas) are outlined with a dashed line and named in italics, without taking a side. Cyprus is one area, because Pew’s
+    estimate covers the whole island; the de facto line in the north is dashed. Crimea and other Russian-occupied areas are shown as part of
     Ukraine, hatched (line of control: DeepState, 17 Oct 2026). The Kurdistan Region of Iraq is outlined; the wider Kurdish-majority region is named.</p>
     <h3>Sources by country</h3>
     <table class="srctab"><thead><tr><th>Country</th><th>Areas</th><th>Source</th><th>Year</th><th>Basis</th></tr></thead><tbody>${rows}</tbody></table>
@@ -1630,7 +1686,7 @@ function boot() {
   $('loading').hidden = true;
   schedule();
   new ResizeObserver(() => { resize(); schedule(); }).observe(stage);
-  window.__wmpDebug = () => ({ k: +t.k.toFixed(2), effK: +effK().toFixed(2), want: wantLOD(), loaded: Object.keys(LOD).filter(x => LOD[x]), DPR, fullMs: Math.round(fullMs) });
+  window.__wmpDebug = () => ({ k: +t.k.toFixed(2), effK: +effK().toFixed(2), want: wantLOD(), drawn: drawnLv, fullInt: Math.round(fullInt), loaded: Object.keys(LOD).filter(x => LOD[x]), DPR, minK, fullMs: Math.round(fullMs), pending: pendingBuild || !!raf });
   const retheme = () => { readTheme(); schedule(); };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });

@@ -3,7 +3,7 @@ with content-hashed data file names, so a returning visitor's browser never mixe
 import hashlib, json, os, shutil, glob
 WEB = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(WEB)
 B, SITE = f'{WEB}/build', f'{WEB}/site'
-FILES = {'w': 'map_w.json', 'lo': 'map_lo.json', 'hi': 'map.json', 'extra': 'extra.json', 'csv': 'units.csv'}
+FILES = {'w': 'map_w.json', 'lo': 'map_lo.json', 'hi': 'map.json', 'x': 'map_x.json', 'extra': 'extra.json', 'csv': 'units.csv'}
 for f in FILES.values():
     shutil.copy(f'{B}/{f}', f'{SITE}/{f}')
 # GitHub Pages
