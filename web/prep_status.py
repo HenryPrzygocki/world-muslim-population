@@ -50,13 +50,19 @@ for l in X['labels']:
     if l['c'] in STATUS:
         l['st'], l['n'], _ = STATUS[l['c']]
 X['labels'] += [
-    {'n': 'French Guiana', 'full': 'French Guiana', 'c': 'GUF', 'x': -53.2, 'y': 3.95, 'a': 83500, 'p': 0.92, 'm': 2652, 'sub': 0, 'st': 'dep'},
     {'n': 'Northern Ireland', 'full': 'Northern Ireland', 'c': 'NIR', 'x': -6.75, 'y': 54.62, 'a': 14100, 'p': None, 'm': None, 'sub': 0, 'st': 'dep'}]
-STATUS['GUF'] = ('dep', 'French Guiana', 'Overseas department and region of France (part of the EU).')
+for _c, _n in [('GUF', 'French Guiana'), ('GLP', 'Guadeloupe'), ('MTQ', 'Martinique'), ('REU', 'Réunion'), ('MYT', 'Mayotte')]:
+    STATUS[_c] = ('dep', _n, 'Overseas department and region of France (part of the EU).')
+STATUS['BES'] = ('dep', 'Caribbean Netherlands', 'Bonaire, Sint Eustatius and Saba: special municipalities of the Netherlands.')
+for l in X['labels']:
+    if l['c'] in STATUS and l['c'] in ('GUF', 'GLP', 'MTQ', 'REU', 'MYT', 'BES'):
+        l['st'], l['n'], _ = STATUS[l['c']]
 STATUS['NIR'] = ('dep', 'Northern Ireland', 'Part of the United Kingdom; under the 1998 Good Friday Agreement it may join Ireland if a majority votes for it.')
 X['notes'] = {k: v[2] for k, v in STATUS.items()}
 X['notes']['UAOCC'] = ('Internationally recognised as part of Ukraine; annexed and administered by Russia since 2014. '
-                       'Value from Russia’s census (traditionally Muslim nationalities, mainly Crimean Tatars).')
+                       'Crimea’s value is from Russia’s 2014 census of the peninsula: Crimean Tatars, Tatars and Azerbaijanis '
+                       'as a share of residents who stated a nationality.')
+X['years']['UAOCC'] = '2014'
 X['notes']['OCC'] = ('Under Russian military occupation (Crimea and parts of Donetsk and Luhansk since 2014, more since '
                      '2022); internationally recognised as part of Ukraine. Line of control: DeepState map, 17 Oct 2026.')
 X['notes']['KRI'] = ('Kurdistan Region — the autonomous region of Iraq (Erbil, Duhok, Sulaymaniyah, Halabja). '

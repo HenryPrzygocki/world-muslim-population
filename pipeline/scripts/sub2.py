@@ -195,3 +195,95 @@ if __name__ == '__main__':
     for f in (australia, canada, indonesia):
         r = f()
         print(f.__name__, len(r), 'units; muslims', int(r.drop_duplicates('unit').muslims.sum()))
+
+
+# ------------------------------------------------------------------ Russia, federal subjects (2010 census, ethnicity)
+# Rosstat, All-Russian Population Census 2010, vol. 4 (national composition), as reproduced by Demoscope Weekly
+# (one page per region); the raw rows are in data/sub2/RUS_2010_demoscope.txt and every nationality column sums
+# exactly to the national total. Share = persons of traditionally Muslim nationalities ÷ persons who stated a
+# nationality (Rosstat's own basis for national-composition percentages).
+RUS_MUSLIM = ['Абазины', 'Аварцы Всего', 'Агулы', 'Адыгейцы', 'Азербайджанцы', 'Арабы', 'Афганцы', 'Балкарцы', 'Башкиры',
+              'Даргинцы Всего', 'Дунгане', 'Ингуши', 'Кабардинцы', 'Казахи', 'Каракалпаки', 'Карачаевцы', 'Киргизы',
+              'Крымские татары', 'Кумыки', 'Курды Всего', 'Лакцы', 'Лезгины', 'Ногайцы Всего', 'Персы', 'Рутульцы',
+              'Табасараны', 'Таджики', 'Талыши', 'Татары Всего', 'Турки', 'Турки-месхетинцы', 'Туркмены', 'Уйгуры',
+              'Узбеки', 'Цахуры', 'Черкесы', 'Чеченцы Всего', 'Шапсуги', 'Хемшилы']
+RUS_MINUS = ['в т.ч. Кряшены']      # Orthodox Christian Tatars, counted within "Tatars"
+# Natural Earth admin-1 name -> (display name, Demoscope region options to add, options to subtract)
+RUS_REG = {
+    'Adygey': ('Adygea', [31]), 'Gorno-Altay': ('Altai Republic', [65]), 'Altay': ('Altai Krai', [69]), 'Amur': ('Amur', [86]),
+    "Arkhangel'sk": ('Arkhangelsk', [22], [23]), "Astrakhan'": ('Astrakhan', [34]), 'Bashkortostan': ('Bashkortostan', [44]),
+    'Belgorod': ('Belgorod', [2]), 'Bryansk': ('Bryansk', [3]), 'Buryat': ('Buryatia', [66]), 'Chechnya': ('Chechnya', [42]),
+    'Chelyabinsk': ('Chelyabinsk', [64]), 'Chukchi Autonomous Okrug': ('Chukotka', [90]), 'Chuvash': ('Chuvashia', [49]),
+    'Dagestan': ('Dagestan', [37]), 'Ingush': ('Ingushetia', [38]), 'Irkutsk': ('Irkutsk', [75]), 'Ivanovo': ('Ivanovo', [6]),
+    'Kamchatka': ('Kamchatka', [82]), 'Kabardin-Balkar': ('Kabardino-Balkaria', [39]),
+    'Karachay-Cherkess': ('Karachay-Cherkessia', [40]), 'Krasnodar': ('Krasnodar', [33]), 'Kemerovo': ('Kemerovo', [77]),
+    'Kaliningrad': ('Kaliningrad', [25]), 'Kurgan': ('Kurgan', [59]), 'Khabarovsk': ('Khabarovsk', [85]),
+    'Khanty-Mansiy': ('Khanty-Mansi', [62]), 'Kirov': ('Kirov', [52]), 'Khakass': ('Khakassia', [68]),
+    'Kalmyk': ('Kalmykia', [32]), 'Kaluga': ('Kaluga', [7]), 'Komi': ('Komi', [21]), 'Kostroma': ('Kostroma', [8]),
+    'Karelia': ('Karelia', [20]), 'Kursk': ('Kursk', [9]), 'Krasnoyarsk': ('Krasnoyarsk', [72]), 'Leningrad': ('Leningrad Oblast', [26]),
+    'Lipetsk': ('Lipetsk', [10]), 'Maga Buryatdan': ('Magadan', [87]), 'Mariy-El': ('Mari El', [45]), 'Mordovia': ('Mordovia', [46]),
+    'Moskva': ('Moscow', [19]), 'Moskovskaya': ('Moscow Oblast', [11]), 'Murmansk': ('Murmansk', [27]), 'Nenets': ('Nenets', [23]),
+    'Novgorod': ('Novgorod', [28]), 'Nizhegorod': ('Nizhny Novgorod', [53]), 'Novosibirsk': ('Novosibirsk', [78]),
+    'Omsk': ('Omsk', [79]), 'Orenburg': ('Orenburg', [54]), 'Orel': ('Oryol', [12]), "Perm'": ('Perm', [50]), 'Penza': ('Penza', [55]),
+    "Primor'ye": ('Primorsky', [84]), 'Pskov': ('Pskov', [29]), 'Rostov': ('Rostov', [36]), "Ryazan'": ('Ryazan', [13]),
+    'Sakha (Yakutia)': ('Sakha (Yakutia)', [81]), 'Sakhalin': ('Sakhalin', [88]), 'Samara': ('Samara', [56]),
+    'Saratov': ('Saratov', [57]), 'North Ossetia': ('North Ossetia–Alania', [41]), 'Smolensk': ('Smolensk', [14]),
+    'City of St. Petersburg': ('Saint Petersburg', [30]), "Stavropol'": ('Stavropol', [43]), 'Sverdlovsk': ('Sverdlovsk', [60]),
+    'Tatarstan': ('Tatarstan', [47]), 'Tambov': ('Tambov', [15]), 'Tomsk': ('Tomsk', [80]), 'Tula': ('Tula', [17]),
+    "Tver'": ('Tver', [16]), 'Tuva': ('Tuva', [67]), "Tyumen'": ('Tyumen', [61], [62, 63]), 'Udmurt': ('Udmurtia', [48]),
+    "Ul'yanovsk": ('Ulyanovsk', [58]), 'Volgograd': ('Volgograd', [35]), 'Vladimir': ('Vladimir', [4]), 'Vologda': ('Vologda', [24]),
+    'Voronezh': ('Voronezh', [5]), 'Yamal-Nenets': ('Yamalo-Nenets', [63]), "Yaroslavl'": ('Yaroslavl', [18]),
+    'Yevrey': ('Jewish Autonomous Oblast', [89]), 'Chita': ('Zabaykalsky', [70]),
+}
+
+
+def russia_2010():
+    rows = {}
+    for l in open(f'{S2}/RUS_2010_demoscope.txt', encoding='utf-8'):
+        if l.startswith('#') or not l.strip():
+            continue
+        n, rest = l.strip().split('|')
+        rows[int(n)] = {k: int(v) for k, v in (kv.split('=') for kv in rest.split(';'))}
+    sub_okrug = {23, 51, 62, 63, 71, 73, 74, 76, 83}
+    top = [n for n in rows if n not in sub_okrug and n != 1]
+    for k in rows[1]:                                   # transcription check: regions add up to the national total
+        assert sum(rows[n].get(k, 0) for n in top) == rows[1][k], k
+    def mus(r):
+        return sum(r.get(k, 0) for k in RUS_MUSLIM) - sum(r.get(k, 0) for k in RUS_MINUS)
+    out = []
+    for ne, spec in RUS_REG.items():
+        disp, plus = spec[0], spec[1]; minus = spec[2] if len(spec) > 2 else []
+        m = sum(mus(rows[i]) for i in plus) - sum(mus(rows[i]) for i in minus)
+        st = sum(rows[i]['STATED'] for i in plus) - sum(rows[i]['STATED'] for i in minus)
+        out.append({'ne': ne, 'unit': disp, 'muslims': m, 'stated': st, 'pct': m / st * 100})
+    return pd.DataFrame(out)
+
+
+# ------------------------------------------------------------------ China, provinces (2010 census, ethnicity)
+# NBS, 2010 Population Census of China, table 1-6 "Population by region, sex and nationality" (all persons).
+CHN_MUSLIM = ['回族', '维吾尔族', '哈萨克族', '东乡族', '柯尔克孜族', '撒拉族', '塔吉克族', '乌孜别克族', '保安族', '塔塔尔族']
+CHN_PROV = {'北京': 'Beijing', '天津': 'Tianjin', '河北': 'Hebei', '山西': 'Shanxi', '内蒙古': 'Inner Mongol', '辽宁': 'Liaoning',
+            '吉林': 'Jilin', '黑龙江': 'Heilongjiang', '上海': 'Shanghai', '江苏': 'Jiangsu', '浙江': 'Zhejiang', '安徽': 'Anhui',
+            '福建': 'Fujian', '江西': 'Jiangxi', '山东': 'Shandong', '河南': 'Henan', '湖北': 'Hubei', '湖南': 'Hunan',
+            '广东': 'Guangdong', '广西': 'Guangxi', '海南': 'Hainan', '重庆': 'Chongqing', '四川': 'Sichuan', '贵州': 'Guizhou',
+            '云南': 'Yunnan', '西藏': 'Xizang', '陕西': 'Shaanxi', '甘肃': 'Gansu', '青海': 'Qinghai', '宁夏': 'Ningxia', '新疆': 'Xinjiang'}
+CHN_DISP = {'Inner Mongol': 'Inner Mongolia', 'Xizang': 'Tibet (Xizang)'}
+
+
+def china_2010():
+    x = pd.read_excel(f'{S2}/CHN_2010_census_table_1-6.xls', header=None)
+    hdr = x.iloc[3].ffill()
+    cols = {re.sub(r'\s+', '', str(hdr[j])): j for j in range(1, x.shape[1]) if x.iloc[4, j] in ('小计', '合计')}
+    out, tot = [], None
+    for i in range(5, x.shape[0]):
+        r = re.sub(r'\s+', '', str(x.iloc[i, 0]))
+        if r in ('nan', ''):
+            continue
+        v = [x.iloc[i, cols[m]] for m in CHN_MUSLIM]
+        m = float(sum(0 if (a != a or a == '-') else a for a in v)); t = float(x.iloc[i, cols['合计']])
+        if r == '全国':
+            tot = (m, t); continue
+        out.append({'ne': CHN_PROV[r], 'unit': CHN_DISP.get(CHN_PROV[r], CHN_PROV[r]), 'muslims': m, 'total': t, 'pct': m / t * 100})
+    d = pd.DataFrame(out)
+    assert abs(d.muslims.sum() - tot[0]) < 1 and len(d) == 31, (d.muslims.sum(), tot)
+    return d

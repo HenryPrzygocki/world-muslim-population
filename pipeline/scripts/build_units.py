@@ -62,6 +62,12 @@ for _pn, _gu in [('French Guiana', 'French Guiana'), ('Guadeloupe', 'Guadeloupe'
     if len(_r): GEOU[_gu] = (float(_r.pct.iloc[0]), 'Pew Research Center 2020 estimate'); natcnt[_gu] = float(_r.muslims_2020.iloc[0])
 GEOU['Caribbean Netherlands'] = (np.nan, 'no figure')
 base = NE0[['ADMIN', 'ADM0_A3', 'GEOUNIT', 'GU_A3', 'NAME', 'LABELRANK', 'POP_EST', 'geometry']].copy()
+# overseas departments with their own figure are map units of their own (own code, name and label)
+OVERSEAS = {'French Guiana': 'GUF', 'Martinique': 'MTQ', 'Guadeloupe': 'GLP', 'Reunion': 'REU', 'Mayotte': 'MYT',
+            'Caribbean Netherlands': 'BES'}
+_ov = base.GEOUNIT.isin(list(OVERSEAS))
+base.loc[_ov, 'ADM0_A3'] = base.loc[_ov, 'GEOUNIT'].map(OVERSEAS)
+_ovadmin = base.loc[_ov, 'ADMIN'].copy()
 vals, srcs = [], []
 for _, r in base.iterrows():
     if r.ADMIN in NODATA:
@@ -73,6 +79,7 @@ for _, r in base.iterrows():
     else:
         vals.append(v[0]); srcs.append(v[1])
 base['pct'] = vals; base['src'] = srcs
+base.loc[_ov, 'ADMIN'] = base.loc[_ov, 'GEOUNIT'].replace({'Reunion': 'Réunion'})
 base['level'] = 0
 base['iso'] = base.ADM0_A3
 base['unit'] = base.GEOUNIT
@@ -210,12 +217,35 @@ uk['unit'] = uk.AREANM; uk['iso'] = 'GBR'; uk['src'] = SRC['GBR']; uk['level'] =
 add(uk)
 
 # ---------------------------------------------------------------- Russia (federal subjects)
-_ru = read_sub('RUS'); _ru = _ru[~_ru.basis.str.contains('estimate|~', regex=True)]
-add(attach(ne1('RUS'), _ru, 'RUS', default=None, src=SRC['RUS'], cutoff=0.95))
+# 2010 census, every federal subject: traditionally Muslim nationalities ÷ persons who stated a nationality (sub2.py)
+_ru = sub2.russia_2010().set_index('ne')
+_g = NE1[(NE1.adm0_a3 == 'RUS') & NE1.name.notna()][['name', 'geometry']].rename(columns={'name': 'gname'}).copy()
+_g['unit'] = [_ru.unit.get(n, n) for n in _g.gname]
+_g['pct'] = [_ru.pct.get(n, np.nan) for n in _g.gname]
+_g['muslims'] = [_ru.muslims.get(n, np.nan) for n in _g.gname]
+_g['src'] = SRC['RUS']; _g['dflt'] = False
+# Crimea (annexed by Russia, internationally recognised as Ukraine): Russia's 2014 census of the peninsula, table 4.6
+# "Population of selected nationalities" — Crimean Tatars 228,830 + Tatars 42,082 + Azerbaijanis 3,715 of 1,819,434
+# persons who stated a nationality. Sevastopol: no figure collected.
+_ci = _g.gname == 'Crimea'
+_g.loc[_ci, 'pct'] = (228830 + 42082 + 3715) / 1819434 * 100; _g.loc[_ci, 'muslims'] = 228830 + 42082 + 3715
+_g.loc[_ci, 'src'] = ('Rosstat — 2014 census of the Crimean Federal District, table 4.6 (Crimean Tatars, Tatars and '
+                      'Azerbaijanis, the Muslim nationalities the table lists, ÷ persons who stated a nationality)')
+_g.loc[_g.gname == 'Sevastopol', 'dflt'] = True
+_miss = _g[_g.pct.isna() & ~_g.dflt].gname.tolist()
+assert _miss == [], _miss
+_g['iso'] = 'RUS'; _g['level'] = 1
+add(_g)
 
 # ---------------------------------------------------------------- China (provinces + Xinjiang prefectures + Linxia)
-_cn = read_sub('CHN'); _cn = _cn[~_cn.basis.str.contains('approx', case=False)]
-add(attach(ne1('CHN'), _cn, 'CHN', default=None, src=SRC['CHN']))
+# 2010 census, every province: the ten traditionally Muslim nationalities ÷ total population (sub2.py)
+_cn = sub2.china_2010().set_index('ne')
+_g = NE1[(NE1.adm0_a3 == 'CHN') & NE1.name.isin(_cn.index)][['name', 'geometry']].rename(columns={'name': 'gname'}).copy()
+assert len(_g) == 31, len(_g)
+_g['unit'] = [_cn.unit[n] for n in _g.gname]; _g['pct'] = [_cn.pct[n] for n in _g.gname]
+_g['muslims'] = [_cn.muslims[n] for n in _g.gname]
+_g['src'] = SRC['CHN']; _g['dflt'] = False; _g['iso'] = 'CHN'; _g['level'] = 1
+add(_g)
 
 
 def decode_echarts(fn):
@@ -463,7 +493,8 @@ def safe_union(geoms):
                 polys += [p for p in getattr(g, 'geoms', [g]) if p.geom_type == 'Polygon']
             return MultiPolygon(polys)
 subs['dflt'] = subs.dflt.fillna(False).astype(bool)
-subs.loc[subs.dflt, 'unit'] = ''          # unmatched units sharing a fallback value: merged, unlabelled
+_named = (subs.iso == 'RUS') & (subs.unit == 'Sevastopol')     # keeps its name (recoded to occupied Ukraine)
+subs.loc[subs.dflt & ~_named, 'unit'] = ''          # unmatched units sharing a fallback value: merged, unlabelled
 subs.loc[subs.dflt, 'muslims'] = np.nan
 rows = []
 for k, grp in subs.groupby(['iso', 'unit', 'pct', 'level', 'layer', 'dflt'], dropna=False):

@@ -168,7 +168,8 @@ short.update({'PSX': 'Palestine', 'KOS': 'Kosovo', 'SOL': 'Somaliland', 'CYN': '
               'COG': 'Republic of the Congo', 'CIV': "Côte d'Ivoire", 'CZE': 'Czechia', 'MKD': 'North Macedonia',
               'SWZ': 'Eswatini', 'TLS': 'Timor-Leste', 'CPV': 'Cabo Verde', 'BHS': 'The Bahamas', 'GMB': 'The Gambia',
               'KOR': 'South Korea', 'PRK': 'North Korea', 'LAO': 'Laos', 'RUS': 'Russia', 'SRB': 'Serbia',
-              'TZA': 'Tanzania', 'HKG': 'Hong Kong', 'MAC': 'Macau', 'UAOCC': 'Ukraine'})
+              'TZA': 'Tanzania', 'HKG': 'Hong Kong', 'MAC': 'Macau', 'UAOCC': 'Ukraine', 'GUF': 'French Guiana',
+              'GLP': 'Guadeloupe', 'MTQ': 'Martinique', 'REU': 'Réunion', 'MYT': 'Mayotte', 'BES': 'Caribbean Netherlands'})
 for l in labels:
     l['short'] = short.get(l['c'], l['full'])
 ug = g  # units as written
@@ -197,7 +198,8 @@ for r in pp.itertuples():
                    'pop': int(r.pop_max)})
 # national totals as the sum of mapped areas (only where every area has a published count)
 usum = {}
-for iso, grp in ug[~ug.c.isin(['ROU'])].groupby('c'):   # partial coverage: no national sum
+_ann = (ug.c == 'RUS') & ug.n.isin(['Crimea', 'Sevastopol'])     # occupied Ukraine (recoded by prep_status.py)
+for iso, grp in ug[~ug.c.isin(['ROU']) & ~_ann].groupby('c'):   # partial coverage: no national sum
     if grp.m.isna().any() or grp.p.isna().any() or (grp.p.fillna(0) <= 0).any() or (grp.e == 1).any():
         continue
     pop = (grp.m / grp.p * 100).sum()
@@ -210,14 +212,18 @@ def rbasis(r):
     return 'Census / register'
 regtab = [{'c': r.iso3, 'name': short.get(r.iso3, {'LAT': 'Latin America & Caribbean (circles)', 'PSE': 'Palestine'}.get(r.iso3, r.iso3)),
            'level': str(r.level), 'source': str(r.source).replace('ESTIMATE — ', '').replace('ESTIMATE ', ''),
-           'year': str(r.year), 'basis': rbasis(r)} for r in reg.itertuples()]
+           'year': str(r.year), 'basis': rbasis(r), 'note': cn.get(r.iso3, '')} for r in reg.itertuples()]
 regtab.sort(key=lambda d: d['name'])
 # downloadable table of every unit
 cn_short = lambda iso: short.get(iso, iso)
 csv = ug.drop(columns='geometry').copy()
 csv['country'] = csv.c.map(cn_short); csv['source'] = csv.s.map(lambda i: srcs[i]); csv['year'] = csv.c.map(year_of)
 csv['basis'] = csv.q.map({'c': 'census/register', 's': 'published estimate', 'e': 'ethnicity-based', 'n': 'no figure collected'})
+csv.loc[csv.q == 'n', 'source'] = ''; csv.loc[csv.q == 'n', 'year'] = ''
 csv['unit'] = csv.n.where(csv.n != '', 'Rest of ' + csv.country)
+_occ = (csv.c == 'RUS') & csv.n.isin(['Crimea', 'Sevastopol'])      # occupied Ukraine (see prep_status.py)
+csv.loc[_occ, 'country'] = 'Ukraine (Russian-occupied)'; csv.loc[_occ, 'c'] = 'UKR'
+csv.loc[_occ, 'year'] = np.where(csv.loc[_occ, 'n'] == 'Crimea', '2014', '')
 csv = csv[['country', 'c', 'unit', 'r', 'p', 'm', 'e', 'basis', 'source', 'year']].rename(columns={
     'c': 'iso3', 'r': 'province', 'p': 'share_muslim_pct', 'm': 'muslims', 'e': 'count_is_share_x_population'})
 csv.sort_values(['country', 'unit']).to_csv(f'{OUT}/units.csv', index=False)

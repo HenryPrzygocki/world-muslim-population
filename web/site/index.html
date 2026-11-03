@@ -101,9 +101,11 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 /* legend */
 .legend { position: absolute; left: max(12px, env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 6;
   background: var(--panel); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 10px;
-  box-shadow: var(--shadow); padding: 9px 12px 8px; width: 318px; max-width: calc(100% - 74px); box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
-.lg-head { display: flex; align-items: center; gap: 8px; }
-.lg-title { font: 700 11px var(--f-display); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  box-shadow: var(--shadow); padding: 9px 12px 8px; width: 340px; max-width: calc(100% - 74px); box-sizing: border-box; display: flex; flex-direction: column; gap: 6px; }
+.lg-head { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.lg-title { font: 700 11px var(--f-display); letter-spacing: .05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.lg-short { display: none; }
+@media (max-width: 400px) { .lg-long { display: none; } .lg-short { display: inline; } }
 .lg-btn { margin-left: auto; font: 500 12.5px var(--f-cond); color: var(--accent); background: none; border: 0; cursor: pointer; padding: 2px 4px; border-radius: 4px; display: inline-flex; gap: 3px; align-items: center; white-space: nowrap; }
 .lg-btn svg { width: 11px; height: 11px; transition: transform .2s; }
 .lg-btn[aria-expanded="true"] svg { transform: rotate(180deg); }
@@ -143,6 +145,8 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .zoom button + button { border-top: 1px solid var(--line); }
 .zoom button:hover { color: var(--accent); }
 .zoom button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.zoom button:disabled { opacity: .45; cursor: progress; }
+#zimg { border-top: 1px solid var(--line); }
 .zoom svg { width: 16px; height: 16px; }
 .attrib .long { display: none; }
 @media (min-width: 1280px) { .attrib .long { display: inline; } }
@@ -155,7 +159,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 #tip { width: 290px; max-width: calc(100% - 24px); pointer-events: none; }
 #panel { top: 12px; right: max(12px, env(safe-area-inset-right, 0px)); width: 320px; max-height: calc(100% - 24px); overflow-y: auto; }
 .card .eb { font: 600 10.5px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); padding-right: 26px; }
-.card h3 { margin: 0; font: 700 19px/1.15 var(--f-display); text-wrap: balance; padding-right: 22px; }
+.card h2 { margin: 0; font: 700 19px/1.15 var(--f-display); text-wrap: balance; padding-right: 22px; }
 .card .big { display: flex; align-items: center; gap: 9px; font: 700 26px var(--f-cond); font-variant-numeric: tabular-nums; }
 .card .big .sw { width: 18px; height: 18px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.14); flex: none; }
 .card .big small { font: 400 13px var(--f-display); color: var(--ink-2); }
@@ -177,13 +181,75 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .card .x:focus-visible { outline: 2px solid var(--accent); }
 .handle { display: none; }
 
-/* about dialog */
-dialog#about { width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 14px;
+/* dialogs: about, data table */
+dialog.dlg { width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 40px); padding: 0; border: 1px solid var(--line); border-radius: 14px;
   background: var(--panel-solid); color: var(--ink); box-shadow: var(--shadow); }
-dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
-.ab-head { position: sticky; top: 0; background: var(--panel-solid); display: flex; align-items: center; padding: 16px 20px 12px; border-bottom: 1px solid var(--line); z-index: 1; }
+dialog.dlg::backdrop { background: rgba(10, 20, 24, .45); }
+dialog.dlg[open] { animation: dlg-in .18s ease-out; }
+@keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(.99); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { dialog.dlg[open] { animation: none; } }
+.ab-head { position: sticky; top: 0; background: var(--panel-solid); display: flex; align-items: center; gap: 12px; padding: 16px 20px 12px; border-bottom: 1px solid var(--line); z-index: 2; }
 .ab-head h2 { margin: 0; font: 800 20px var(--f-display); }
-.ab-head button { margin-left: auto; }
+.ab-head button { margin-left: auto; flex: none; }
+dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100vh - 40px); display: flex; flex-direction: column; overflow: hidden; }
+.tb-lede { margin: 2px 0 0; font: 400 13px var(--f-display); color: var(--ink-2); }
+.tb-ctl { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 12px 20px 4px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; padding: 2px; background: var(--paper); }
+.seg button { border: 0; background: none; color: var(--ink-2); font: 500 13.5px var(--f-display); padding: 6px 12px; border-radius: 7px; cursor: pointer; }
+.seg button[aria-checked="true"] { background: var(--panel-solid); color: var(--ink); box-shadow: 0 1px 3px rgba(20,35,40,.16); font-weight: 600; }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.tb-q { position: relative; flex: 1 1 240px; min-width: 0; }
+.tb-q svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; color: var(--ink-2); pointer-events: none; }
+.tb-q input { width: 100%; box-sizing: border-box; font: 400 14px var(--f-display); color: var(--ink); background: var(--panel-solid);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px 7px 30px; }
+.tb-q input:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.chk { display: inline-flex; align-items: center; gap: 7px; font: 400 13.5px var(--f-display); color: var(--ink); cursor: pointer; }
+.chk input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+.tb-count { margin: 4px 20px 8px; font: 400 12.5px var(--f-cond); color: var(--ink-2); }
+.tb-wrap { flex: 1; min-height: 0; overflow: auto; border-top: 1px solid var(--line); overscroll-behavior: contain; }
+.dtab { width: 100%; border-collapse: separate; border-spacing: 0; font: 400 13.5px var(--f-display); font-variant-numeric: tabular-nums; }
+.dtab thead th { position: sticky; top: 0; z-index: 1; background: var(--panel-solid); text-align: left; font: 600 12px var(--f-cond); letter-spacing: .02em;
+  color: var(--ink-2); border-bottom: 1px solid var(--ink); padding: 0; white-space: nowrap; }
+.dtab thead th button { all: unset; box-sizing: border-box; display: flex; align-items: center; gap: 4px; width: 100%; padding: 8px 10px; cursor: pointer; }
+.dtab thead th button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dtab thead th.num button { justify-content: flex-end; }
+.dtab thead th button::after { content: ''; width: 0; height: 0; border: 4px solid transparent; opacity: .35; }
+.dtab thead th[aria-sort="descending"] button::after { border-top-color: currentColor; margin-top: 4px; opacity: 1; }
+.dtab thead th[aria-sort="ascending"] button::after { border-bottom-color: currentColor; margin-bottom: 4px; opacity: 1; }
+.dtab thead th[aria-sort] { color: var(--ink); }
+.dtab td, .dtab tbody th { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: middle; text-align: left; font-weight: 400; }
+.dtab tbody tr:hover { background: var(--accent-soft); }
+.dtab .num { text-align: right; white-space: nowrap; }
+.dtab .tb-go { all: unset; cursor: pointer; font-weight: 600; color: var(--ink); border-radius: 3px; }
+.dtab .tb-go:hover { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.dtab .tb-go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.dtab .tb-go.st { font-style: italic; }
+.dtab .tb-sub { display: block; font: 400 12px var(--f-cond); color: var(--ink-2); }
+.dtab .pc { display: inline-flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.dtab .pc b { font-weight: 400; min-width: 3.4em; text-align: right; }
+.dtab .bar { display: inline-block; width: 64px; height: 8px; border-radius: 2px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; flex: none; }
+.dtab .bar i { display: block; height: 100%; }
+.dtab .bs { font: 600 11px var(--f-cond); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; }
+.dtab .bs.c, .dtab .bs.s { color: var(--accent); } .dtab .bs.e { color: #3D6C8F; }
+.dtab td.mut { color: var(--ink-2); }
+.tb-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 20px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
+.tb-foot .tb-sp { flex: 1; }
+.tb-foot .iconbtn { height: 34px; font-size: 13.5px; text-decoration: none; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .dtab .bs.e { color: #8DB8D8; } }
+:root[data-theme="dark"] .dtab .bs.e { color: #8DB8D8; }
+@media (max-width: 720px) {
+  dialog.dlg-wide[open] { width: 100vw; max-width: 100vw; height: 100%; max-height: 100%; border-radius: 0; border: 0; margin: 0; }
+  dialog.dlg { max-height: calc(100% - 24px); }
+  .tb-ctl, .tb-count { padding-left: 14px; padding-right: 14px; margin-left: 0; margin-right: 0; }
+  .tb-lede { display: none; }
+  dialog.dlg-wide .ab-head { padding: 12px 14px 10px; }
+  .tb-count { padding: 0 14px; }
+  .dtab .c-yr, .dtab .c-bs { display: none; }
+  .dtab .bar { width: 36px; }
+  .dtab td, .dtab tbody th { padding: 7px 8px; }
+  .tb-foot { padding-left: 14px; padding-right: 14px; }
+}
+@media (max-width: 420px) { .dtab .c-ct { display: none; } }
 .ab-body { padding: 4px 20px 22px; font: 400 14.5px/1.55 var(--f-display); }
 .ab-body h3 { font: 700 13px var(--f-display); letter-spacing: .07em; text-transform: uppercase; color: var(--accent); margin: 20px 0 6px; }
 .ab-body p { margin: 0 0 8px; }
@@ -194,18 +260,27 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
 .srctab th { text-align: left; font-weight: 600; color: var(--ink-2); border-bottom: 1px solid var(--ink); padding: 4px 6px; position: sticky; top: 52px; background: var(--panel-solid); }
 .srctab td { border-bottom: 1px solid var(--line); padding: 5px 6px; vertical-align: top; }
 .srctab td:first-child { font-weight: 600; white-space: nowrap; }
+.srctab .sn { display: block; margin-top: 2px; color: var(--ink-2); font-size: 11.5px; }
 .srctab .bm { color: #A0521C; font-weight: 600; } .srctab .bc { color: var(--accent); font-weight: 600; } .srctab .be { color: #3D6C8F; font-weight: 600; }
 
+/* tablets and narrow windows: icon buttons leave room for the search box */
+@media (max-width: 1080px) {
+  #aboutBtn .lbl, #tblBtn .lbl { display: none; }
+  #aboutBtn, #tblBtn { padding: 0 10px; }
+}
 /* phones and small windows */
 @media (max-width: 720px) {
   .mast { gap: 8px; flex-wrap: wrap; padding-block: 8px 7px; }
+  .brand { flex: 1 1 0; }
+  .brand h1 { text-wrap: balance; }
   .brand .sub { display: none; }
   .search { flex: 1 1 100%; order: 3; }
-  #aboutBtn .lbl { display: none; }
-  #aboutBtn { height: 32px; padding: 0 9px; }
+  #aboutBtn .lbl, #tblBtn .lbl { display: none; }
+  #aboutBtn, #tblBtn { height: 32px; padding: 0 9px; }
   .legend { width: auto; right: max(64px, calc(env(safe-area-inset-right, 0px) + 64px)); max-width: none; padding: 7px 10px 6px; }
   .lg-title { font-size: 10px; }
   .attrib { right: auto; left: max(8px, env(safe-area-inset-left, 0px)); bottom: auto; top: 6px; max-width: 70%; font-size: 10px; text-align: left; }
+  .pill { top: 34px; max-width: calc(100% - 32px); white-space: normal; text-align: center; }
   #panel { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-height: 52%; border-radius: 16px 16px 0 0; border-bottom: 0;
     padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
   #panel .handle { display: block; width: 40px; height: 5px; border-radius: 3px; background: var(--line); margin: -4px auto 2px; flex: none; }
@@ -219,7 +294,7 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
   .search input { padding-block: 6px; }
   .views { display: none; }
   #viewsBtnM { display: inline-flex; height: 32px; }
-  #aboutBtn { height: 32px; }
+  #aboutBtn, #tblBtn { height: 32px; }
   .legend { width: 290px; right: auto; }
   #panel { top: 8px; bottom: 8px; left: auto; right: 8px; width: 300px; max-height: none; border-radius: 12px; border-bottom: 1px solid var(--line); }
   #panel .handle { display: none; }
@@ -241,7 +316,10 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
         placeholder="Search a country, province, city…" aria-label="Search a country, province, district or city">
       <ul class="results" id="results" role="listbox" aria-label="Search results" hidden></ul>
     </div>
-    <button class="iconbtn" id="aboutBtn" aria-haspopup="dialog">
+    <button class="iconbtn" id="tblBtn" aria-haspopup="dialog" aria-label="Data table" title="Data table">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="2" y="2.5" width="12" height="11" rx="1.6"/><path d="M2 6.3h12M2 9.9h12M6.4 6.3v7.2"/></svg>
+      <span class="lbl">Data table</span></button>
+    <button class="iconbtn" id="aboutBtn" aria-haspopup="dialog" aria-label="About and sources" title="About &amp; sources">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.2v4.2M8 4.7v.1" stroke-linecap="round"/></svg>
       <span class="lbl">About &amp; sources</span></button>
   </header>
@@ -259,7 +337,7 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
     <div class="loading" id="loading"><div>Loading map data<div class="bar"><i></i></div></div></div>
     <aside class="legend" id="legend" aria-label="Legend">
       <div class="lg-head">
-        <span class="lg-title">Muslim share of population</span>
+        <span class="lg-title"><span class="lg-long">Muslim share of population</span><span class="lg-short">% Muslim</span></span>
         <button class="lg-btn" id="lgMore" aria-expanded="false" aria-controls="lgBody">Key &amp; layers
           <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.5 7.5L6 4l3.5 3.5"/></svg></button>
       </div>
@@ -283,7 +361,8 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
     <div class="zoom">
       <button id="zin" aria-label="Zoom in">+</button>
       <button id="zout" aria-label="Zoom out">−</button>
-      <button id="zhome" aria-label="Show the whole world"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c2.2 2 2.2 10.4 0 12.4M8 1.8c-2.2 2-2.2 10.4 0 12.4"/></svg></button>
+      <button id="zhome" aria-label="Show the whole world" title="Whole world"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M1.8 8h12.4M8 1.8c2.2 2 2.2 10.4 0 12.4M8 1.8c-2.2 2-2.2 10.4 0 12.4"/></svg></button>
+      <button id="zimg" aria-label="Save an image of this view" title="Save an image of this view"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 2.2v7.6M4.8 6.8L8 10l3.2-3.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 10.5v2.2c0 .6.5 1.1 1.1 1.1h8.8c.6 0 1.1-.5 1.1-1.1v-2.2" stroke-linecap="round"/></svg></button>
     </div>
     <div class="attrib"><span class="long">Data: Pew Research Center &amp; national statistics · Boundaries: Natural Earth, geoBoundaries, ONS, DataMeet, </span>© OpenStreetMap contributors · <button data-about>Credits</button></div>
     <div class="card" id="tip" hidden></div>
@@ -292,9 +371,29 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
   </main>
 </div>
 
-<dialog id="about" aria-labelledby="abTitle">
+<dialog id="about" class="dlg" aria-labelledby="abTitle">
   <div class="ab-head"><h2 id="abTitle">About this map</h2><button class="iconbtn" id="abClose" aria-label="Close">Close</button></div>
   <div class="ab-body" id="abBody"></div>
+</dialog>
+
+<dialog id="tbl" class="dlg dlg-wide" aria-labelledby="tbTitle">
+  <div class="ab-head"><div><h2 id="tbTitle">Data table</h2><p class="tb-lede">Every mapped figure, sortable. Choose a row to show it on the map.</p></div>
+    <button class="iconbtn" id="tbClose" aria-label="Close">Close</button></div>
+  <div class="tb-ctl">
+    <div class="seg" role="radiogroup" aria-label="Level of the table">
+      <button type="button" role="radio" aria-checked="true" data-lv="u">Provinces &amp; districts</button>
+      <button type="button" role="radio" aria-checked="false" data-lv="c">Countries</button>
+    </div>
+    <div class="tb-q"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="7" cy="7" r="5.2"/><path d="M11 11l3.6 3.6" stroke-linecap="round"/></svg>
+      <input type="search" id="tbQ" placeholder="Filter by name, province or country" aria-label="Filter the table" autocomplete="off" spellcheck="false"></div>
+    <label class="chk"><input type="checkbox" id="tbView"> Only what is in view on the map</label>
+  </div>
+  <p class="tb-count" id="tbCount" aria-live="polite"></p>
+  <div class="tb-wrap" id="tbWrap">
+    <table class="dtab" id="tbTable"><caption class="sr" id="tbCap"></caption><thead></thead><tbody></tbody></table>
+  </div>
+  <div class="tb-foot"><button class="iconbtn" id="tbMore" hidden></button><span class="tb-sp"></span>
+    <a class="iconbtn" id="tbCsv" href="#" download="World_Muslim_Population_2026_areas.csv">Download all areas (CSV)</a><span class="mem" id="tbMsg"></span></div>
 </dialog>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
@@ -302,7 +401,7 @@ dialog#about::backdrop { background: rgba(10, 20, 24, .45); }
 (() => {
 'use strict';
 const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
-const UPDATED = '20 October 2026';
+const UPDATED = '3 November 2026';
 const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // inside the claude.ai viewer: no shareable URL, downloads via capability
 
 // ------------------------------------------------------------------ colour classes
@@ -346,6 +445,7 @@ const SEAS = [['Mediterranean Sea', 18, 34.6], ['Black Sea', 34.5, 43.3], ['Casp
   ['Gulf of Mexico', -90, 25], ['North Sea', 3, 56], ['Baltic Sea', 19, 57.5], ['South China Sea', 114, 13],
   ['Java Sea', 110, -5], ['Gulf of Guinea', 3, 1.5], ['Adriatic Sea', 15.3, 43], ['Aegean Sea', 25, 38.8]];
 const DISP = new Set(['TWN', 'KOS', 'SOL', 'CYN', 'SAH', 'FLK']), SAR = new Set(['HKG', 'MAC']);
+const ETHNIC_C = new Set(['RUS', 'CHN', 'BIH']);      // census without a religion question: ethnicity-based figures
 const ALIASES = { USA: ['USA', 'US', 'America', 'United States of America'], GBR: ['UK', 'Britain', 'Great Britain'], TUR: ['Türkiye', 'Turkiye'],
   ARE: ['UAE', 'Emirates'], COD: ['DRC', 'Congo-Kinshasa', 'Zaire'], COG: ['Congo-Brazzaville'], CIV: ['Ivory Coast'], MMR: ['Burma'],
   CZE: ['Czech Republic'], SWZ: ['Swaziland'], NLD: ['Holland'], KOR: ['Korea'], PSX: ['Palestinian territories', 'Gaza', 'West Bank'],
@@ -361,7 +461,7 @@ const meas = document.createElement('canvas').getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const T = {};
 const readTheme = () => { const cs = getComputedStyle(document.documentElement);
-  for (const k of ['paper', 'ink', 'ink-2', 'ocean', 'grat', 'coast', 'water-txt', 'halo', 'accent', 'label', 'label-halo']) T[k] = cs.getPropertyValue('--' + k).trim();
+  for (const k of ['paper', 'ink', 'ink-2', 'ocean', 'grat', 'coast', 'water-txt', 'halo', 'accent', 'brown', 'label', 'label-halo']) T[k] = cs.getPropertyValue('--' + k).trim();
   T.darkUI = lum(T.paper.length === 7 ? T.paper : '#FBFAF6') < .2; };
 
 // ------------------------------------------------------------------ projection (data arrive pre-projected in metres)
@@ -572,7 +672,13 @@ function bboxLL(bb) {
 function goView(key, dur) {
   setActiveView(key);
   const v = VIEWS.find(r => r[0] === key);
-  if (!v || !v[2]) { if (W / H < 0.8) fitBounds(bboxLL([-15, -36, 78, 62]), 0, 999, dur); else fitBounds(SB, 0.005, 999, dur); }
+  if (!v || !v[2]) {     // the whole world where it fits; narrower windows open on the regions with most Muslims
+    const a = W / H;
+    if (a < 0.8) fitBounds(bboxLL([-15, -36, 78, 62]), 0, 999, dur);
+    else if (a < 1.1) fitBounds(bboxLL([-20, -40, 150, 68]), 0, 999, dur);
+    else if (a < 1.45) fitBounds(bboxLL([-105, -42, 155, 70]), 0, 999, dur);
+    else fitBounds(SB, 0.005, 999, dur);
+  }
   else fitBounds(bboxLL(v[2]), 0.02, 999, dur);
 }
 const effK = () => t.k * DPR;
@@ -583,8 +689,9 @@ function maybeLoadDetail() {
   if (e > 6.5 && !LOD.hi && !loading.hi) { pill('Loading detail…'); loadLOD('hi').then(() => pill(null)); }
 }
 let pillT = 0;
-function pill(text, ms) { const p = $('pill'); clearTimeout(pillT); if (!text) { p.hidden = true; return; } p.textContent = text; p.hidden = false; p.style.opacity = 1;
-  if (ms) pillT = setTimeout(() => { p.style.opacity = 0; pillT = setTimeout(() => p.hidden = true, 600); }, ms); }
+function pill(text, ms) { const p = $('pill'); clearTimeout(pillT); if (!text) { if (!p.hidden) { p.hidden = true; schedule(); } return; }
+  const was = p.hidden; p.textContent = text; p.hidden = false; p.style.opacity = 1; if (was) schedule();
+  if (ms) pillT = setTimeout(() => { p.style.opacity = 0; pillT = setTimeout(() => { p.hidden = true; schedule(); }, 600); }, ms); }
 
 // ------------------------------------------------------------------ frame scheduling
 // While the map moves, the last full frame is stretched (cheap) unless full frames are fast on this device;
@@ -726,8 +833,19 @@ function text(c, s, x, y, f, px, col, align = 'center', base = 'middle', halo = 
   c.fillStyle = col; c.fillText(s, x, y);
 }
 let LAST = { circles: [] };
+let exporting = false;
+function uiRects() {     // floating controls in stage pixels: no label is placed underneath them
+  const st = stage.getBoundingClientRect(), out = [];
+  if (exporting) return out;
+  for (const el of stage.querySelectorAll('#legend, .zoom, .attrib, #pill, #panel')) {
+    if (el.hidden) continue; const r = el.getBoundingClientRect(); if (!r.width) continue;
+    out.push([r.left - st.left - 3, r.top - st.top - 3, r.right - st.left + 3, r.bottom - st.top + 3]);
+  }
+  return out;
+}
 function labels(c) {
   const z = zAbs(), pk = pxkm(), box = new Boxes();
+  for (const r of uiRects()) box.add(r);
   const inView = (x, y, m = 80) => x > -m && y > -m && x < W + m && y < H + m;
   const free = b => b[0] >= 2 && b[1] >= 2 && b[2] <= W - 2 && b[3] <= H - 2 && !box.hit(b);
   const INK = '#1E2A30', HALO = 'rgba(251,250,246,.85)';
@@ -938,8 +1056,9 @@ function cardHTML(sel, full) {
     const eb = isU ? [it.r, it.country].filter(Boolean).join(' · ')
       : st === 'disputed' ? 'Territory of disputed status' : st === 'sar' ? 'Special Administrative Region of China' : st === 'dep' ? 'Overseas or constituent territory'
       : sel.occ ? 'Ukraine · Russian-occupied area' : 'Country';
+    const eth = isU && it.q === 'e';
     let kv = '';
-    if (it.m != null) kv += `<dt>Muslims</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span>(share × population)</span>' : ''}</dd>`;
+    if (it.m != null) kv += `<dt>${eth ? 'Muslim nationalities' : 'Muslims'}</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span>(share × population)</span>' : ''}</dd>`;
     const notes = [];
     if (isU && it.p == null) { const nl = D.labelOf.get(it.c); notes.push('No figure was collected for ' + (it.n ? 'this area' : 'these areas') + '.' + (nl && nl.p != null ? ` The national figure for ${it.country} is ${fmtP(nl.p)} (Pew 2020).` : '')); }
     if (X.notes[it.c]) notes.push(X.notes[it.c]);
@@ -948,28 +1067,29 @@ function cardHTML(sel, full) {
     if (sel.city) notes.unshift(`${sel.city} lies in this area.`);
     let sum = '';
     if (!isU && D.subIso.has(it.c)) {
-      const u = X.usum && X.usum[it.c];
-      sum = u ? `<div class="sum">The ${D.U.filter(x => x.c === it.c).length.toLocaleString('en-US')} areas mapped add up to <b>${u.m.toLocaleString('en-US')}</b> Muslims (${fmtP(u.p)}) in ${esc(u.y)}. The national figure above is Pew’s 2020 estimate.</div>`
+      const u = X.usum && X.usum[it.c], ethC = ETHNIC_C.has(it.c), n = D.U.filter(x => x.c === it.c && x.p != null).length;
+      sum = u ? `<div class="sum">The ${n.toLocaleString('en-US')} areas mapped add up to <b>${u.m.toLocaleString('en-US')}</b> ${ethC ? 'people of traditionally Muslim nationalities' : 'Muslims'} (${fmtP(u.p)}) in ${esc(u.y)}. The national figure above is Pew’s 2020 estimate.</div>`
               : `<div class="sum">Zoom in to see provinces and districts; their values come from national sources (${esc(X.years[it.c] || '')}).</div>`;
     }
-    return `<div class="eb">${esc(eb)}</div><h3>${esc(name)}</h3>
-      ${it.p == null ? '' : `<div class="big">${sw(it.k)}${fmtP(it.p)}<small>of residents</small></div>`}
+    const ofWhat = isU && it.q === 'e' && (it.c === 'RUS' || it.c === 'UAOCC') ? 'of residents who gave a nationality' : 'of residents';
+    return `<div class="eb">${esc(eb)}</div><h2>${esc(name)}</h2>
+      ${it.p == null ? '' : `<div class="big">${sw(it.k)}${fmtP(it.p)}<small>${ofWhat}</small></div>`}
       ${kv ? `<dl class="kv">${kv}</dl>` : ''}${badge(isU ? it.q : (it.p == null ? 'n' : 'p'), yr)}${sum}
       ${notes.map(n => `<div class="mem">${esc(n)}</div>`).join('')}
-      ${full && src ? `<div class="src">Source: ${esc(src)}</div>` : ''}`;
+      ${full && src && it.p != null ? `<div class="src">Source: ${esc(src)}</div>` : ''}`;
   }
   if (sel.kind === 'region') {
     const us = D.U.filter(u => u.c === it.c && u.r === it.n);
     const ok = us.length && us.every(u => u.m != null && u.p > 0 && !u.e);
     const m = ok ? us.reduce((a, u) => a + u.m, 0) : null, pop = ok ? us.reduce((a, u) => a + u.m / u.p * 100, 0) : null;
     const p = ok ? m / pop * 100 : null;
-    return `<div class="eb">Province / region · ${esc(D.countryName(it.c))}</div><h3>${esc(it.n)}</h3>
+    return `<div class="eb">Province / region · ${esc(D.countryName(it.c))}</div><h2>${esc(it.n)}</h2>
       ${ok ? `<div class="big">${sw(klass(p))}${fmtP(p)}<small>of residents</small></div><dl class="kv"><dt>Muslims</dt><dd>${m.toLocaleString('en-US')}</dd></dl>` : ''}
       <div class="mem">${us.length} mapped area${us.length === 1 ? '' : 's'} — select one for its own figure.</div>
       ${full ? `<div class="src">Source: ${esc(D.X.regsrc[it.c] || '')} · ${esc(D.X.years[it.c] || '')}</div>` : ''}`;
   }
   if (sel.kind === 'met') {
-    return `<div class="eb">U.S. metropolitan area</div><h3>${esc(it.full)}</h3>
+    return `<div class="eb">U.S. metropolitan area</div><h2>${esc(it.full)}</h2>
       <div class="big">${it.m.toLocaleString('en-US')}<small>Muslim adherents</small></div>
       <dl class="kv"><dt>Mosques counted</dt><dd>${it.k}</dd></dl>
       ${full ? '<div class="src">Source: 2020 U.S. Religion Census (ASARB), Muslim estimate — a congregation-based count, via ARDA</div>' : ''}`;
@@ -978,7 +1098,7 @@ function cardHTML(sel, full) {
     : 'Documented community; no published count for this place' + (it.c === 'Argentina' ? ' (Argentina’s census does not ask religion)' : '');
   const mem = it.k > 1 ? `<div class="mem">Includes ${esc(it.mem)}</div>` : '';
   const note = /Ciudad del Este/.test(it.mem) ? '<div class="mem">Paraguay’s 2002 census counted 486 Muslims in Alto Paraná department; community leaders put Ciudad del Este’s Muslim community at about 7,000 (Última Hora, 2026).</div>' : '';
-  return `<div class="eb">${esc(it.c)} · Muslim community</div><h3>${esc(it.n)}</h3>
+  return `<div class="eb">${esc(it.c)} · Muslim community</div><h2>${esc(it.n)}</h2>
     ${it.b === 'unsized' ? '' : `<div class="big">${it.m.toLocaleString('en-US')}<small>Muslims</small></div>`}
     ${mem}${note}<div class="src">${basis}</div>`;
 }
@@ -999,13 +1119,15 @@ function showTip(sel, mx, my) {
 }
 const hideTip = () => { tip.hidden = true; };
 function pin(sel, opts = {}) {
+  const was = !panel.hidden;
   pinned = sel; hover = null; hideTip();
-  if (!sel) { panel.hidden = true; stage.classList.remove('sheet'); drawOverlay(); urlSoon(); return; }
+  if (!sel) { panel.hidden = true; stage.classList.remove('sheet'); if (document.activeElement !== q) q.value = '';
+    drawOverlay(); if (was) schedule(); if (!opts.noUrl) urlSoon(); return; }
   panel.innerHTML = `<div class="handle" aria-hidden="true"></div><button class="x" aria-label="Close">×</button>${cardHTML(sel, true)}
     <div class="acts"><button data-act="zoom">Zoom to</button>${IN_ARTIFACT ? '' : '<button data-act="link">Copy link</button>'}</div>`;
   panel.hidden = false; stage.classList.add('sheet'); panel.scrollTop = 0;
   $('live').textContent = plainText(sel);
-  drawOverlay(); if (!opts.noUrl) urlSoon(opts.push);
+  drawOverlay(); if (!was) schedule(); if (!opts.noUrl) urlSoon(opts.push);
 }
 panel.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1071,7 +1193,7 @@ cv.addEventListener('keydown', e => {
   }
   e.preventDefault();
 });
-addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('menu').hidden) closeMenu(); else if (!res.hidden) closeResults(); else if (hlPinned) setHL(-1, false); else if (pinned) pin(null); } });
+addEventListener('keydown', e => { if (e.key === 'Escape' && !document.querySelector('dialog[open]')) { if (!$('menu').hidden) closeMenu(); else if (!res.hidden) closeResults(); else if (hlPinned) setHL(-1, false); else if (pinned) pin(null); } });
 
 // ------------------------------------------------------------------ search
 const q = $('q'), res = $('results');
@@ -1272,13 +1394,13 @@ function legendCircles() {
   el.innerHTML = h;
 }
 $('lgMore').onclick = () => { const b = $('lgBody'), open = b.hidden; b.hidden = !open; $('lgMore').setAttribute('aria-expanded', open);
-  try { localStorage.setItem('wmp-legend', open ? 'open' : ''); } catch (_) {} legendCircles(); };
+  try { localStorage.setItem('wmp-legend', open ? 'open' : ''); } catch (_) {} legendCircles(); schedule(); };
 for (const [id, key] of [['tCom', 'com'], ['tMet', 'met']]) $(id).addEventListener('change', e => { show[key] = e.target.checked; schedule(); legendCircles(); });
 
 // ------------------------------------------------------------------ about
 function aboutHTML() {
   const X = D.X, cls = r => r.basis === 'Census (ethnicity)' ? 'be' : 'bc';
-  const rows = X.reg.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.level)}</td><td>${esc(r.source)}</td><td>${esc(r.year)}</td><td class="${cls(r)}">${esc(r.basis)}</td></tr>`).join('');
+  const rows = X.reg.map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.level)}</td><td>${esc(r.source)}${r.note ? `<span class="sn">${esc(r.note)}</span>` : ''}</td><td>${esc(r.year)}</td><td class="${cls(r)}">${esc(r.basis)}</td></tr>`).join('');
   return `<p>The map shows the <b>share of residents who are Muslim</b> — and, where the source gives it, their number — for the smallest areas
     for which a reasonably current figure exists: districts in India, local government areas in Australia, municipalities in the Balkans,
     provinces or regions elsewhere. Browns mark Muslim minorities, greens Muslim majorities; the scale changes at 50%.</p>
@@ -1290,7 +1412,7 @@ function aboutHTML() {
     Each place’s card says which kind of figure it is:</p>
     <ul><li><b>Official census / register</b> — counts or shares published by a statistics office.</li>
     <li><b>Published estimate</b> — figures from a non-official body: the U.S. Religion Census (congregations, ASARB) and Spain’s Muslim community union (UCIDE).</li>
-    <li><b>Census, by ethnicity</b> — Russia and China do not ask religion; the share of traditionally Muslim nationalities is shown, as Pew and the original map do. Bosnia and Herzegovina’s cantons show the census share of Bosniaks.</li>
+    <li><b>Census, by ethnicity</b> — the censuses of Russia and China do not ask religion, so the share of people of traditionally Muslim nationalities is shown, as Pew and the original map do: every Russian federal subject from the 2010 census (as a share of residents who gave a nationality) and every Chinese province from the 2010 census. The nationalities counted are listed under the sources below. Crimea uses Russia’s 2014 census of the peninsula. Bosnia and Herzegovina’s cantons show the census share of Bosniaks.</li>
     <li><b>No figure collected</b> — hatched areas inside a country with regional data, where no figure was gathered for this map. Countries without any regional data show their national figure.</li></ul>
     <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as points: circles sized by the census count
     (Brazil 2010, Chile 2024), and small squares for documented communities without a published count. U.S. metros show the 2020 U.S. Religion Census.</p>
@@ -1314,22 +1436,173 @@ function aboutHTML() {
     ${IN_ARTIFACT ? '' : '<button class="iconbtn" id="abCopy">Copy link to this view</button>'}</div><p id="abMsg" class="mem" style="margin-top:6px"></p>`;
 }
 const about = $('about');
-function openAbout() {
-  if (!D) return; $('abBody').innerHTML = aboutHTML();
-  if ($('abCopy')) $('abCopy').onclick = e => copyLink(e.target);
-  if (IN_ARTIFACT) $('abCsv').onclick = async e => {     // the artifact viewer only saves files through its downloads capability
-    e.preventDefault(); const msg = $('abMsg');
+function wireCsv(a, msg) {      // the artifact viewer only saves files through its downloads capability
+  a.href = FILES.csv;
+  if (!IN_ARTIFACT) return;
+  a.onclick = async e => {
+    e.preventDefault();
     try { const dl = await window.claude.use('downloads'); if (!dl) { msg.textContent = 'Downloads are not available in this view.'; return; }
       const data = await fetch(FILES.csv).then(r => r.text());
       await dl.save({ filename: 'World_Muslim_Population_2026_areas.csv', data }); msg.textContent = '';
     } catch (err) { msg.textContent = err && err.code === 'declined' ? '' : 'The file could not be saved here (' + ((err && err.code) || 'error') + ').'; }
   };
+}
+function openAbout() {
+  if (!D) return; $('abBody').innerHTML = aboutHTML();
+  if ($('abCopy')) $('abCopy').onclick = e => copyLink(e.target);
+  wireCsv($('abCsv'), $('abMsg'));
   about.showModal();
 }
+
+// ------------------------------------------------------------------ data table (an accessible, sortable view of every figure)
+const tbl = $('tbl');
+const TB = { lv: 'u', sort: 'p', dir: -1, q: '', view: false, limit: 400, rows: [] };
+const BASIS_SHORT = { c: 'Census', s: 'Estimate', e: 'Ethnicity', n: 'No figure', p: 'Pew 2020' };
+const COLS = {
+  u: [['name', 'Area'], ['ct', 'Country', 'c-ct'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']],
+  c: [['name', 'Country or territory'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']] };
+function tbData() {
+  if (TB.lv === 'c') {
+    const seen = new Set(), out = [];
+    for (const l of D.labels) { if (seen.has(l.c)) continue; seen.add(l.c);
+      const it = D.C.find(c => c.c === l.c); if (!it) continue;
+      out.push({ kind: 'country', it, name: l.st ? l.n : (l.short || l.full), st: !!l.st, ct: '', sub: l.st === 'disputed' ? 'Disputed status' : l.st === 'dep' ? 'Territory' : l.st === 'sar' ? 'SAR of China' : '',
+        p: it.p, m: it.m, yr: it.p == null ? '' : '2020', q: it.p == null ? 'n' : 'p', k: it.k }); }
+    return out;
+  }
+  return D.U.map(u => ({ kind: 'unit', it: u, name: u.n || 'Other areas of ' + u.country, st: false, ct: u.c === 'UAOCC' ? 'Ukraine (occupied)' : u.country, sub: u.r || '',
+    p: u.p, m: u.m, yr: u.p == null ? '' : (D.X.years[u.c] || ''), q: u.q, k: u.k }));
+}
+function inView(r) {
+  const v = viewBox();
+  if (r.kind === 'unit') { const f = r.it.g.w; return f && hits(f.bb, v); }
+  return D.C.some(c => c.c === r.it.c && c.g.w && hits(c.g.w.bb, v));
+}
+function tbRender() {
+  const cols = COLS[TB.lv], fq = fold(TB.q.trim());
+  let rows = TB.all;
+  if (fq) rows = rows.filter(r => fold(r.name).includes(fq) || fold(r.ct).includes(fq) || fold(r.sub).includes(fq));
+  if (TB.view) rows = rows.filter(inView);
+  const key = TB.sort, dir = TB.dir;
+  const val = r => key === 'name' ? r.name : key === 'ct' ? r.ct : key === 'yr' ? r.yr : key === 'bs' ? BASIS_SHORT[r.q] : r[key];
+  rows = rows.slice().sort((a, b) => { const x = val(a), y = val(b);
+    if (x == null || x === '') return (y == null || y === '') ? 0 : 1; if (y == null || y === '') return -1;
+    return (typeof x === 'string' ? x.localeCompare(y) : x - y) * dir || a.name.localeCompare(b.name); });
+  TB.rows = rows;
+  $('tbTable').querySelector('thead').innerHTML = '<tr>' + cols.map(([k, lab, cls]) =>
+    `<th scope="col" class="${cls || ''}"${k === key ? ` aria-sort="${dir < 0 ? 'descending' : 'ascending'}"` : ''}><button type="button" data-k="${k}">${lab}</button></th>`).join('') + '</tr>';
+  const shown = rows.slice(0, TB.limit);
+  $('tbTable').querySelector('tbody').innerHTML = shown.map((r, i) => {
+    const pc = r.p == null ? '<span class="mut">—</span>' : `<span class="pc"><span class="bar" aria-hidden="true"><i style="width:${Math.max(1.5, Math.min(100, r.p))}%;background:${COLORS[r.k]}"></i></span><b>${fmtP(r.p)}</b></span>`;
+    const m = r.m == null ? '' : (r.kind === 'unit' && r.it.e ? '≈ ' : '') + Math.round(r.m).toLocaleString('en-US');
+    const cells = { name: `<th scope="row"><button type="button" class="tb-go${r.st ? ' st' : ''}" data-i="${i}">${esc(r.name)}</button>${r.sub ? `<span class="tb-sub">${esc(r.sub)}</span>` : ''}</th>`,
+      ct: `<td class="c-ct">${esc(r.ct)}</td>`, p: `<td class="num">${pc}</td>`, m: `<td class="num${m ? '' : ' mut'}">${m || '—'}</td>`,
+      yr: `<td class="c-yr${r.yr ? '' : ' mut'}">${esc(r.yr || '—')}</td>`, bs: `<td class="c-bs"><span class="bs ${r.q}">${BASIS_SHORT[r.q]}</span></td>` };
+    return '<tr>' + cols.map(([k]) => cells[k]).join('') + '</tr>';
+  }).join('');
+  const n = rows.length, tot = TB.all.length, what = TB.lv === 'c' ? 'countries and territories' : 'areas';
+  const order = { name: 'name', ct: 'country', p: 'share', m: 'number of Muslims', yr: 'year', bs: 'basis' }[key] + (dir < 0 ? ', highest first' : ', lowest first');
+  $('tbCount').textContent = (n === tot ? `${tot.toLocaleString('en-US')} ${what}` : `${n.toLocaleString('en-US')} of ${tot.toLocaleString('en-US')} ${what}`) + ` · sorted by ${key === 'name' || key === 'ct' ? order.replace('highest', 'Z').replace('lowest', 'A') : order}`;
+  $('tbCap').textContent = `${TB.lv === 'c' ? 'Countries and territories' : 'Provinces, districts and other areas'}, sorted by ${order}`;
+  const more = $('tbMore'); more.hidden = n <= TB.limit; more.textContent = `Show all ${n.toLocaleString('en-US')}`;
+}
+function openTable() {
+  if (!D) return;
+  TB.all = tbData(); TB.limit = 400; tbRender();
+  wireCsv($('tbCsv'), $('tbMsg'));
+  tbl.showModal(); $('tbWrap').scrollTop = 0;
+}
+tbl.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('button[data-lv]'); if (!b || b.dataset.lv === TB.lv) return;
+  TB.lv = b.dataset.lv; tbl.querySelectorAll('.seg button').forEach(x => x.setAttribute('aria-checked', x === b));
+  if (TB.lv === 'c' && TB.sort === 'ct') TB.sort = 'p'; TB.all = tbData(); TB.limit = 400; tbRender(); $('tbWrap').scrollTop = 0; });
+tbl.querySelector('.seg').addEventListener('keydown', e => { if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return; e.preventDefault();
+  const o = tbl.querySelector(`.seg button[data-lv="${TB.lv === 'u' ? 'c' : 'u'}"]`); o.click(); o.focus(); });
+$('tbTable').addEventListener('click', e => {
+  const h = e.target.closest('thead button[data-k]');
+  if (h) { const k = h.dataset.k; if (TB.sort === k) TB.dir = -TB.dir; else { TB.sort = k; TB.dir = (k === 'p' || k === 'm' || k === 'yr') ? -1 : 1; }
+    tbRender(); const nb = $('tbTable').querySelector(`thead button[data-k="${k}"]`); if (nb) nb.focus(); return; }
+  const g = e.target.closest('.tb-go'); if (!g) return;
+  const r = TB.rows[+g.dataset.i]; if (!r) return;
+  tbl.close(); setActiveView(null);
+  const sel = { kind: r.kind, it: r.it };
+  pin(sel, { push: true }); requestAnimationFrame(() => frameSel(sel));
+});
+let tbT = 0;
+$('tbQ').addEventListener('input', e => { clearTimeout(tbT); tbT = setTimeout(() => { TB.q = e.target.value; TB.limit = 400; tbRender(); }, 120); });
+$('tbView').addEventListener('change', e => { TB.view = e.target.checked; tbRender(); });
+$('tbMore').addEventListener('click', () => { TB.limit = 1e9; tbRender(); });
+$('tblBtn').onclick = openTable;
+$('tbClose').onclick = () => tbl.close();
+tbl.addEventListener('click', e => { if (e.target === tbl) tbl.close(); });
 document.addEventListener('click', e => { if (e.target.closest('[data-about]')) openAbout(); });
 $('aboutBtn').onclick = openAbout;
 $('abClose').onclick = () => about.close();
 about.addEventListener('click', e => { if (e.target === about) about.close(); });
+
+// ------------------------------------------------------------------ save an image of the current view (map, legend, credits)
+async function saveImage() {
+  if (!D) return;
+  const btn = $('zimg'); btn.disabled = true;
+  const oldDPR = DPR, S = Math.max(2, oldDPR);
+  hover = null; hideTip();
+  try {
+    DPR = S; for (const c of [cv, ov]) { c.width = Math.round(W * S); c.height = Math.round(H * S); }
+    exporting = true; budgetEnd = performance.now() + 6000; draw(); drawOverlay(); exporting = false;
+    const head = 64, foot = 78, out = document.createElement('canvas');
+    out.width = Math.round(W * S); out.height = Math.round((H + head + foot) * S);
+    const x = out.getContext('2d'); x.scale(S, S);
+    x.fillStyle = T.paper; x.fillRect(0, 0, W, H + head + foot);
+    x.drawImage(cv, 0, head, W, H); x.drawImage(ov, 0, head, W, H);
+    x.strokeStyle = T.darkUI ? '#2C383D' : '#D9DDD8'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(0, head - .5); x.lineTo(W, head - .5); x.moveTo(0, head + H + .5); x.lineTo(W, head + H + .5); x.stroke();
+    // title
+    x.textBaseline = 'alphabetic'; x.textAlign = 'left'; x.fillStyle = T.ink;
+    x.font = '900 26px "Fira Sans", system-ui, sans-serif'; x.fillText('WORLD MUSLIM POPULATION', 18, 34);
+    const v = activeView && VIEWS.find(r => r[0] === activeView);
+    const what = pinned ? plainText(pinned) : v && v[0] !== 'world' ? v[1] : '';
+    x.font = '400 14px "Fira Sans", system-ui, sans-serif'; x.fillStyle = T['ink-2'];
+    x.fillText('Share of residents who are Muslim, by country, province and district' + (what ? ' · ' + what : ''), 18, 54, W - 36);
+    // legend
+    const y0 = head + H + 14, sw_ = Math.min(30, (W - 36) / 16);
+    x.font = 'italic 500 11.5px "Fira Sans Condensed", sans-serif';
+    x.fillStyle = T.brown || '#6B4221'; x.fillText('Muslim minority', 18, y0 + 9);
+    let xx = 18; const xs = [];
+    COLORS.forEach((c, i) => { if (i === 7) xx += 8; xs.push(xx); x.fillStyle = c; x.fillRect(xx, y0 + 15, sw_ - 2, 13);
+      if (i === 0) { x.strokeStyle = 'rgba(0,0,0,.2)'; x.strokeRect(xx + .5, y0 + 15.5, sw_ - 3, 12); } xx += sw_; });
+    x.fillStyle = T.accent; x.textAlign = 'right'; x.fillText('Muslim majority', xx - 2, y0 + 9);
+    x.font = '500 11px "Fira Sans Condensed", sans-serif'; x.textAlign = 'center'; x.fillStyle = T['ink-2'];
+    [1, 5, 10, 20, 30, 40].forEach((t_, i) => x.fillText(String(t_), xs[i + 1] - 1, y0 + 42));
+    [60, 70, 80, 90].forEach((t_, i) => x.fillText(String(t_), xs[i + 8] - 1, y0 + 42));
+    x.font = '700 11px "Fira Sans Condensed", sans-serif'; x.fillStyle = T.ink; x.fillText('50%', xs[7] - 5, y0 + 42);
+    x.fillRect(xs[7] - 5, y0 + 11, 1.2, 19);
+    // credits
+    const cx = xx + 24, cw = W - cx - 18;
+    if (cw > 160) {
+      x.textAlign = 'left'; x.font = '400 11px "Fira Sans Condensed", sans-serif'; x.fillStyle = T['ink-2'];
+      const lines = ['Data: Pew Research Center (2020) and national censuses and registers (see the sources table).',
+        'Boundaries: Natural Earth, geoBoundaries, ONS, DataMeet · © OpenStreetMap contributors.',
+        (IN_ARTIFACT ? '' : location.host + location.pathname.replace(/index\.html$/, '') + ' · ') + 'Updated ' + UPDATED + '.'];
+      lines.forEach((l, i) => x.fillText(l, cx, y0 + 12 + i * 15, cw));
+    }
+    const blob = await new Promise(r => out.toBlob(r, 'image/png'));
+    const slug = (pinned ? plainText(pinned).split(':')[0] : v ? v[1] : 'view').replace(/[^\w]+/g, '_').replace(/^_|_$/g, '');
+    const filename = `World_Muslim_Population_${slug}.png`;
+    if (IN_ARTIFACT) {
+      const dl = await window.claude.use('downloads');
+      if (!dl) pill('Saving images is not available in this view', 3000);
+      else { await dl.save({ filename, data: blob }); pill('Image saved', 2000); }
+    } else {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      pill('Image saved', 2000);
+    }
+  } catch (err) {
+    if (!(err && err.code === 'declined')) pill('The image could not be saved' + (err && err.code ? ' (' + err.code + ')' : ''), 3500);
+  } finally {
+    exporting = false; DPR = oldDPR; for (const c of [cv, ov]) { c.width = Math.round(W * DPR); c.height = Math.round(H * DPR); }
+    snapT = null; schedule(); btn.disabled = false;
+  }
+}
 
 // ------------------------------------------------------------------ boot
 function boot() {
@@ -1343,6 +1616,7 @@ function boot() {
   $('zin').onclick = () => d3.select(cv).transition().duration(300).call(zoom.scaleBy, 2);
   $('zout').onclick = () => d3.select(cv).transition().duration(300).call(zoom.scaleBy, 0.5);
   $('zhome').onclick = () => pickView('world');
+  $('zimg').onclick = saveImage;
   try { if (localStorage.getItem('wmp-legend') === 'open' && innerWidth >= 720) { $('lgBody').hidden = false; $('lgMore').setAttribute('aria-expanded', 'true'); } } catch (_) {}
   t = d3.zoomIdentity.scale(minK);
   applyURL(0);
