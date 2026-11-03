@@ -49,6 +49,9 @@ def anchor(g_ll):
 
 # ---- national map units
 natc = nat[nat.geometry.notna()].copy()
+# one shape per country code: Natural Earth splits some countries into map units (Belgium's three regions, the UK's four
+# nations, Bosnia's entities...) that carry the same national figure, and drawing them separately leaves seams
+natc = natc.dissolve(by='ADM0_A3', as_index=False, aggfunc={'ADMIN': 'first', 'pct': 'first', 'muslims': 'first', 'src': 'first'})
 recs = []
 for r in natc.itertuples():
     recs.append({'i': len(recs), 'n': r.ADMIN, 'c': r.ADM0_A3, 'p': None if r.pct != r.pct else round(float(r.pct), 2),

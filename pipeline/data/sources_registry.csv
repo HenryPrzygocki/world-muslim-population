@@ -15,7 +15,7 @@ GBR,"local authority (E&W 331 + Glasgow, Edinburgh, Aberdeen, Dundee)","ONS Cens
 BGR,province (28),National Statistical Institute of Bulgaria — 2021 Census (share of total population incl. non-respondents),2021,Lower bound; ~12% did not answer religion
 ALB,county (12),INSTAT — 2023 Population and Housing Census (Sunni + Bektashi),2023,
 MKD,municipality (80; Skopje left blank),State Statistical Office — 2021 Census (religious affiliation),2021,
-MNE,municipality (2011 boundaries),"MONSTAT — 2011 Census by municipality (Podgorica incl. Tuzi and Zeta, as in 2011); Plav, Gusinje, Berane and Petnjica left blank",2011,
+MNE,municipality (2011 boundaries),"MONSTAT — 2023 Census, table 2 ""Population by religion, by municipalities"" (Islam ÷ total). Podgorica includes Tuzi and Zeta; Andrijevica, Plužine, Šavnik and Žabljak, whose counts are suppressed, are shown together (national total minus the published counts)",2023,
 SRB,municipality (those collected),Statistical Office of the Republic of Serbia — 2022 Census (religion). Municipalities not collected are left blank,2022,Excludes Kosovo
 ESP,province (52),"UCIDE — Estudio demográfico de la población musulmana: Muslims by province at 31 Dec 2017, divided by INE official population at 1 Jan 2018",2017–2018,Community body estimate (UCIDE)
 USA,state (51) + 383 metropolitan areas,"ASARB — 2020 U.S. Religion Census, Muslim adherents by state and by metropolitan statistical area (via ARDA)",2020,Congregation-based estimate

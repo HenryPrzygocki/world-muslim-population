@@ -424,8 +424,14 @@ mk_alias = {'Drugovo': 'Kičevo', 'Oslomej': 'Kičevo', 'Vraneštica': 'Kičevo'
             'Vrapcište': 'Vrapčište', 'Čučer Sandevo': 'Čučer-Sandevo', 'Centar župa': 'Centar Župa'}
 mk = attach(ne1('MKD'), read_sub('MKD'), 'MKD', aliases=mk_alias, src=SRC['MKD'])
 add(mk)
-_me = read_sub('MNE'); _me = _me[~_me.unit.isin(['Plav', 'Gusinje', 'Berane', 'Petnjica', 'Tuzi', 'Zeta'])]
-add(attach(gbf('MNE-ADM1'), _me, 'MNE', src=SRC['MNE'], aliases={'Tuzi': 'Podgorica', 'Zeta': 'Podgorica'}))
+# MONSTAT 2023 census, table 2 (religion by municipality). The boundaries predate the 2018/2022 splits, so Podgorica is
+# shown with Tuzi and Zeta (sums of the three); the four municipalities whose counts are suppressed ("z") are shown
+# together: Montenegro's total minus the published counts (14 Muslims) over their summed population.
+_me = read2('MNE_2023')
+_comb = 'Andrijevica, Plužine, Šavnik and Žabljak'
+add(attach(gbf('MNE-ADM1'), _me, 'MNE', src=SRC['MNE'],
+           aliases={'Podgorica Municipality': 'Podgorica (incl. Tuzi and Zeta)', 'Andrijevica Municipality': _comb,
+                    'Plužine Municipality': _comb, 'Šavnik Municipality': _comb, 'Žabljak Municipality': _comb}))
 srb = gbf('SRB-ADM2'); srb['gname'] = srb.gname.str.replace(r' (Municipality|City|Municipal\*)$', '', regex=True)
 add(attach(srb, read_sub('SRB'), 'SRB', src=SRC['SRB'], default=None, cutoff=0.9))
 kos_alias = {'Kosovska Mitrovica': 'Mitrovicë', 'Štrpce': 'Shtërpcë', 'Novo Brdo': 'Novobërdë', 'Klina': 'Klinë',

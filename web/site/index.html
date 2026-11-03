@@ -42,7 +42,7 @@ button { font-family: inherit; }
   border-bottom: 1px solid var(--line); background: var(--paper); position: relative; z-index: 7; }
 .brand { display: flex; flex-direction: column; gap: 1px; min-width: 0; margin-right: auto; }
 .brand h1 { margin: 0; font-weight: 900; font-size: clamp(18px, 2.6vw, 27px); letter-spacing: -.01em; line-height: 1.05; text-transform: uppercase; }
-.brand .sub { font-size: 13px; color: var(--ink-2); }
+.brand .sub { font-size: 13px; color: var(--ink-2); text-wrap: balance; }
 .brand .sub b { color: var(--accent); font-weight: 600; }
 .search { position: relative; flex: 0 1 380px; min-width: 0; }
 .search input { width: 100%; box-sizing: border-box; font: 400 15px var(--f-display); color: var(--ink); background: var(--panel-solid);
@@ -598,9 +598,9 @@ Promise.all([getJSON(FILES.w), getJSON(FILES.extra), document.fonts ? document.f
     budgetEnd = performance.now() + 1e9; for (const f of L.C) featPath(L, f, true); for (const f of L.U) featPath(L, f, true);
     boot();
     const idle = window.requestIdleCallback || (f => setTimeout(f, 200));
-    idle(() => loadLOD('lo'));
+    idle(() => loadLOD('lo'), { timeout: 600 });
     const cn = navigator.connection; const roomy = matchMedia('(pointer: fine)').matches && !(cn && (cn.saveData || /2g/.test(cn.effectiveType || '')));
-    if (roomy) setTimeout(() => idle(() => loadLOD('hi')), 2500);
+    if (roomy) setTimeout(() => idle(() => loadLOD('hi')), 1200);
   })
   .catch(e => { console.error(e); const el = $('loading'); el.hidden = false; el.textContent = 'The map data could not be loaded (' + e.message + '). Check your connection and reload the page.'; });
 
@@ -682,11 +682,11 @@ function goView(key, dur) {
   else fitBounds(bboxLL(v[2]), 0.02, 999, dur);
 }
 const effK = () => t.k * DPR;
-function wantLOD() { const e = effK(); return e < 2.6 ? 'w' : e < 9 ? 'lo' : 'hi'; }
+function wantLOD() { const e = effK(); return e < 1.6 ? 'w' : e < 4.5 ? 'lo' : 'hi'; }   // each level stays within ~½ device pixel of the source outlines
 function maybeLoadDetail() {
   const e = effK();
-  if (e > 1.8 && !LOD.lo) loadLOD('lo');
-  if (e > 6.5 && !LOD.hi && !loading.hi) { pill('Loading detail…'); loadLOD('hi').then(() => pill(null)); }
+  if (e > 1.2 && !LOD.lo) loadLOD('lo');
+  if (e > 3.2 && !LOD.hi && !loading.hi) { pill('Loading finer outlines…'); loadLOD('hi').then(() => pill(null)); }
 }
 let pillT = 0;
 function pill(text, ms) { const p = $('pill'); clearTimeout(pillT); if (!text) { if (!p.hidden) { p.hidden = true; schedule(); } return; }
@@ -1630,6 +1630,7 @@ function boot() {
   $('loading').hidden = true;
   schedule();
   new ResizeObserver(() => { resize(); schedule(); }).observe(stage);
+  window.__wmpDebug = () => ({ k: +t.k.toFixed(2), effK: +effK().toFixed(2), want: wantLOD(), loaded: Object.keys(LOD).filter(x => LOD[x]), DPR, fullMs: Math.round(fullMs) });
   const retheme = () => { readTheme(); schedule(); };
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', retheme);
   new MutationObserver(retheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
