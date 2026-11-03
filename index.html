@@ -520,12 +520,21 @@ function bboxOfRings(A, rings) {
 // Outlines are drawn as smooth curves through the source points (quadratic B-spline: straight to the middle of the first
 // segment, curves through each inner point to the next midpoint, straight to the end). Arc ends stay fixed and the curve
 // is the same in both directions, so neighbouring fills and the border lines between them still coincide exactly.
-function emitArc(P, A, ai, move) {
+function emitArc(P, A, ai, move, loop) {
   const rev = ai < 0, a = rev ? ~ai : ai, s = A.st[a], L = A.ln[a], xy = A.xy;
   const ix = k => 2 * (rev ? s + L - 1 - k : s + k);
   let i = ix(0), x0 = xy[i], y0 = xy[i + 1];
-  if (move) P.moveTo(x0, y0);
-  if (L < 3) { if (L === 2) { i = ix(1); P.lineTo(xy[i], xy[i + 1]); } return; }
+  if (move && !(loop && L > 3)) P.moveTo(x0, y0);
+  if (L < 3) { if (move && loop && L > 3) P.moveTo(x0, y0); if (L === 2) { i = ix(1); P.lineTo(xy[i], xy[i + 1]); } return; }
+  const e = ix(L - 1);
+  if (loop && L > 3 && xy[e] === x0 && xy[e + 1] === y0) {     // a closed outline on its own (an island): no corner at its start
+    i = ix(1); let x1 = xy[i], y1 = xy[i + 1], mx = (x0 + x1) / 2, my = (y0 + y1) / 2;
+    if (move) P.moveTo(mx, my); else P.lineTo(mx, my);
+    for (let k = 1; k < L - 1; k++) { i = ix(k + 1); const x2 = xy[i], y2 = xy[i + 1];
+      P.quadraticCurveTo(x1, y1, (x1 + x2) / 2, (y1 + y2) / 2); x1 = x2; y1 = y2; }
+    P.quadraticCurveTo(x0, y0, mx, my); return;
+  }
+  if (move && loop && L > 3) P.moveTo(x0, y0);
   i = ix(1); let x1 = xy[i], y1 = xy[i + 1];
   P.lineTo((x0 + x1) / 2, (y0 + y1) / 2);
   for (let k = 1; k < L - 1; k++) { i = ix(k + 1); const x2 = xy[i], y2 = xy[i + 1];
@@ -534,10 +543,10 @@ function emitArc(P, A, ai, move) {
 }
 function addRing(P, A, ring, close) {
   let first = true;
-  for (const ai of ring) { emitArc(P, A, ai, first); first = false; }
+  for (const ai of ring) { emitArc(P, A, ai, first, ring.length === 1); first = false; }
   if (close) P.closePath();
 }
-function addArc(P, A, a) { emitArc(P, A, a, true); }
+function addArc(P, A, a) { emitArc(P, A, a, true, true); }
 const tileKey = (x, y) => Math.floor(x / TILE) + ',' + Math.floor(y / TILE);
 function tileIndex(items) {     // items: {bb}; one tile per item by bbox centre; tile extent grows to cover its items
   const T = new Map();
