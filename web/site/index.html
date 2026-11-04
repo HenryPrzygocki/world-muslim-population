@@ -132,6 +132,8 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .keys .k-dash { background: #F6F2EA; outline: 1.4px dashed #2E3236; outline-offset: -1px; }
 .keys .k-kri { background: #004A32; outline: 1.6px dashed #fff; outline-offset: -3px; }
 .keys .k-prov { height: 0; border-radius: 0; border-top: 1.4px dashed rgba(110,110,100,.85); }
+.keys .k-l1 { height: 0; border-radius: 0; border-top: 1.6px solid rgba(36,44,48,.75); }
+.keys .k-l2 { height: 0; border-radius: 0; border-top: 1px solid rgba(36,44,48,.4); }
 .keys .k-nofig { background: repeating-linear-gradient(45deg, rgba(120,120,112,.6) 0 1px, #E2E2DE 1px 5px); }
 .toggles { display: flex; flex-direction: column; gap: 6px; }
 .toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
@@ -351,6 +353,8 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
           <span><i class="k-hatch"></i><span>Russian-occupied, internationally recognised as Ukraine</span></span>
           <span><i class="k-dash"></i><span>Territory of disputed status, e.g. <em>Taiwan</em>, <em>Kosovo</em>, <em>Falklands (Malvinas)</em></span></span>
           <span><i class="k-kri"></i><span>Autonomous region (Kurdistan Region of Iraq)</span></span>
+          <span><i class="k-l1"></i><span>State or province boundary</span></span>
+          <span><i class="k-l2"></i><span>Boundary of smaller areas with their own figures (districts, municipalities…)</span></span>
           <span><i class="k-prov"></i><span>State or province boundary in a large country with a national figure only</span></span>
         </div>
         <div class="toggles">
@@ -418,7 +422,7 @@ const klass = p => { if (p == null || p !== p) return -1; for (let i = 0; i < 12
 const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
 const DARK = COLORS.map(c => lum(c) < .2);
 
-const VIEWS = [   // key, label, bbox (lon/lat), shown as a chip
+const VIEWS = [   // key, label, bbox (lon/lat), shown as a chip; the others are in "More views"
   ['world', 'World', null, 1],
   ['europe', 'Europe', [-10.6, 35.4, 30, 60.5], 1],
   ['mena', 'Middle East & N. Africa', [-17, 12, 63, 42], 1],
@@ -426,20 +430,21 @@ const VIEWS = [   // key, label, bbox (lon/lat), shown as a chip
   ['southasia', 'South Asia', [60, 5, 98, 37.5], 1],
   ['seasia', 'Southeast Asia', [92, -11.5, 141, 21], 1],
   ['china', 'Central Asia & China', [46, 17, 125, 54], 1],
-  ['usa', 'United States', [-125, 24.5, -66.5, 49.5], 1],
+  ['namerica', 'US & Canada', [-126, 24.5, -60, 56], 1],
   ['latam', 'Latin America', [-118, -45, -33, 30], 1],
-  ['uk', 'United Kingdom', [-8.3, 49.8, 2.0, 58.8], 0],
-  ['london', 'London', [-0.55, 51.27, 0.35, 51.71], 0],
-  ['weurope', 'Western Europe', [-10.6, 35.4, 17.6, 59.4], 0],
+  ['britain', 'British Isles', [-10.8, 49.8, 2.0, 59.2], 0],
   ['balkans', 'Balkans', [13.4, 39.25, 29.9, 46.75], 0],
   ['caucasus', 'Caucasus', [36.6, 38.25, 51.2, 45.75], 0],
   ['volga', 'Volga–Ural', [40, 50, 62, 58.5], 0],
   ['wafrica', 'West Africa', [-18, 3.5, 16, 21], 0],
-  ['eafrica', 'East Africa', [27, -16, 52, 16], 0],
+  ['horn', 'Horn of Africa & Sudan', [21.5, -4.8, 51.5, 22.5], 0],
+  ['esafrica', 'East & Southern Africa', [12, -35, 42, 2], 0],
+  ['ganges', 'Ganges & Bengal', [73.5, 20.5, 96.5, 32], 0],
+  ['malay', 'Indonesia & Malaysia', [94, -11.2, 128, 7.6], 0],
   ['samerica', 'Southern South America', [-66.8, -36.4, -39, -14.6], 0],
-  ['canada', 'Canada', [-141, 41.5, -52, 62], 0],
-  ['australia', 'Australia', [112, -44, 154, -10], 0],
+  ['oceania', 'Australia & New Zealand', [111, -47.5, 179, -9], 0],
 ];
+const VIEW_ALIAS = { usa: 'namerica', canada: 'namerica', uk: 'britain', london: 'britain', weurope: 'europe', eafrica: 'horn', australia: 'oceania' };   // older links
 const OCEANS = [['NORTH PACIFIC OCEAN', -150, 27], ['NORTH PACIFIC OCEAN', 152, 30], ['SOUTH PACIFIC OCEAN', -125, -32],
   ['NORTH ATLANTIC OCEAN', -42, 33], ['SOUTH ATLANTIC OCEAN', -17, -26], ['INDIAN OCEAN', 80, -25],
   ['ARCTIC OCEAN', -20, 84.5], ['SOUTHERN OCEAN', 40, -61]];
@@ -554,19 +559,29 @@ function buildLOD(topo, key) {
   const oc = owners(O.countries), ou = owners(O.units), os = O.states ? owners(O.states) : null;   // states: dashed lines only
   const cc = O.countries.geometries.map(g => g.properties.c);
   const isD = gi => DISP.has(cc[gi]), isS = gi => SAR.has(cc[gi]);
-  const coast = [], borders = [], stat = [], sar = [], umesh = [], smesh = [];
+  const coast = [], borders = [], stat = [], sar = [];
+  // borders inside a country: between first-level divisions (A) or between finer areas inside one (B); 'd' sets lie
+  // between two dark fills and are drawn light, the others dark. National-only countries' state lines (s) likewise.
+  const uA = [], uAd = [], uB = [], uBd = [], sL = [], sD = [];
+  const up = O.units.geometries.map(g => g.properties), isDark = p => { const kk = klass(p); return kk >= 0 && DARK[kk]; };
+  const uDark = up.map(p => isDark(p.p)), cDark = new Map(O.countries.geometries.map(g => [g.properties.c, isDark(g.properties.p)]));
+  const sc = O.states ? O.states.geometries.map(g => g.properties.c) : [];
   for (let a = 0; a < A.ln.length; a++) {
     const p = oc.o1[a], q = oc.o2[a];
     if (p >= 0) {
       if (q < 0) { coast.push(a); if (cc[p] === 'TWN' || cc[p] === 'FLK') stat.push(a); }
       else if (cc[p] !== cc[q]) { if (isD(p) || isD(q)) stat.push(a); else if (isS(p) || isS(q)) sar.push(a); else borders.push(a); }
     }
-    if (ou.o1[a] >= 0 && ou.o2[a] >= 0 && ou.o1[a] !== ou.o2[a]) umesh.push(a);
-    if (os && os.o1[a] >= 0 && os.o2[a] >= 0 && os.o1[a] !== os.o2[a]) smesh.push(a);
+    const u1 = ou.o1[a], u2 = ou.o2[a];
+    if (u1 >= 0 && u2 >= 0 && u1 !== u2 && up[u1].c === up[u2].c) {
+      const dark = uDark[u1] && uDark[u2];
+      (up[u1].pk !== up[u2].pk ? (dark ? uAd : uA) : (dark ? uBd : uB)).push(a);
+    }
+    if (os && os.o1[a] >= 0 && os.o2[a] >= 0 && os.o1[a] !== os.o2[a]) (cDark.get(sc[os.o1[a]]) ? sD : sL).push(a);
   }
   const lineArcs = (obj) => { const s = new Set(); obj.geometries.forEach(g => { for (const r of ringsOf(g)) for (const ai of r) s.add(ai < 0 ? ~ai : ai); }); return [...s]; };
   const lines = (arcs) => ({ tiles: tileIndex(arcs.map(a => ({ a, bb: [A.bb[a * 4], A.bb[a * 4 + 1], A.bb[a * 4 + 2], A.bb[a * 4 + 3]] }))), arcs, paths: new Map() });
-  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), umesh: lines(umesh), smesh: lines(smesh),
+  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), uA: lines(uA), uAd: lines(uAd), uB: lines(uB), uBd: lines(uBd), sL: lines(sL), sD: lines(sD),
     disputed: lines(lineArcs(O.disputed)), occLine: lines(lineArcs(O.occupied)), kriLine: lines(lineArcs(O.kri)) };
   L.lakes = feats(O.lakes); L.lakesT = tileIndex(L.lakes);
   L.occ = feats(O.occupied); L.kri = feats(O.kri);
@@ -637,7 +652,10 @@ function prepare(L, X) {
   const C = L.Cprops.map(p => mk(p, 'country')), U = L.Uprops.map(p => mk(p, 'unit'));
   D = { X, C, U, short, countryName, subIso: new Set(U.map(u => u.c)), sphere: new Path2D(gpath({ type: 'Sphere' })),
         grat: new Path2D(gpath(d3.geoGraticule().step([15, 15])())), labelOf: new Map(X.labels.map(l => [l.c, l])) };
-  U.forEach(u => { if (u.lx != null) { const q = proj([u.lx, u.ly]); u.ax = q[0]; u.ay = q[1]; } });
+  U.forEach(u => { if (u.lx != null) { const q = proj([u.lx, u.ly]); u.ax = q[0]; u.ay = q[1]; }
+    // zoom from which the area may be labelled: earlier the more Muslims it has (or, without a count, the higher its share)
+    u.zmin = u.m != null ? Math.max(2.5, Math.min(8, 8.5 - Math.log10(u.m + 1)))
+      : u.p == null ? Infinity : u.p >= 50 ? 3 : u.p >= 20 ? 3.8 : u.p >= 5 ? 4.8 : 6; });
   D.labels = X.labels.map(l => { const q = proj([l.x, l.y]); return Object.assign({}, l, { ax: q[0], ay: q[1], k: klass(l.p) }); });
   const pts = arr => arr.map(c => { const q = proj([c.x, c.y]); return Object.assign({}, c, { ax: q[0], ay: q[1] }); });
   D.comW = pts(X.comW); D.comR = pts(X.comR); D.metros = pts(X.metros);
@@ -818,7 +836,7 @@ function visibleItems(box) {    // countries and units in view (world-level tile
       for (const j of tl.ids) { if (!hits(F[j].bb, v)) continue; const it = byi.get(props[j].i); if (it) out.push(it); } }
   return { C, U, v };
 }
-const LINESETS = ['umesh', 'smesh', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
+const LINESETS = ['uA', 'uAd', 'uB', 'uBd', 'sL', 'sD', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
 function levelReady(k, vis) {    // build what this view needs at level k while the budget lasts; true once complete
   const L = LOD[k]; if (!L) return false;
   for (const arr of [vis.C, vis.U]) for (const it of arr) { const f = it.g[k]; if (f && !f.path && !featPath(L, f)) return false; }
@@ -861,8 +879,20 @@ function drawScene(lv, vis, tr) {     // everything drawn in map coordinates, al
       for (const P of by[i]) ctx.fill(P, 'evenodd'); }
   }
   const each = (name, f) => { const set = L.lines[name]; set.tiles.forEach((tl, ti) => { if (hits(tl.bb, vis.v)) f(tilePath(L, set, ti, true)); }); };
-  ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = Math.min(1.2, 0.35 + k * 0.02) / k; each('umesh', p => ctx.stroke(p));
-  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.strokeStyle = 'rgba(110,110,100,.55)'; ctx.lineWidth = 0.6 / k; each('smesh', p => ctx.stroke(p)); ctx.restore();
+  // borders inside countries, visible on any fill: finer areas with data (fading in with zoom), then first-level divisions
+  // (states, provinces) on top, then the dashed state lines of countries with a national figure only
+  const zf = (z0, z1) => Math.max(0, Math.min(1, (zA - z0) / (z1 - z0)));
+  const fB = zf(1.4, 3.6);
+  if (fB > 0) { ctx.lineWidth = Math.min(0.85, 0.32 + 0.04 * zA) / k;
+    ctx.strokeStyle = `rgba(36,44,48,${(0.26 * fB).toFixed(3)})`; each('uB', p => ctx.stroke(p));
+    ctx.strokeStyle = `rgba(255,255,255,${(0.5 * fB).toFixed(3)})`; each('uBd', p => ctx.stroke(p)); }
+  const aA = 0.55 + 0.3 * zf(0.8, 6);
+  ctx.lineWidth = Math.min(1.7, 0.65 + 0.13 * zA) / k;
+  ctx.strokeStyle = `rgba(36,44,48,${aA.toFixed(3)})`; each('uA', p => ctx.stroke(p));
+  ctx.strokeStyle = `rgba(255,255,255,${(aA + 0.15).toFixed(3)})`; each('uAd', p => ctx.stroke(p));
+  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.lineWidth = Math.min(1.1, 0.55 + 0.06 * zA) / k;
+  ctx.strokeStyle = 'rgba(56,60,58,.5)'; each('sL', p => ctx.stroke(p));
+  ctx.strokeStyle = 'rgba(255,255,255,.55)'; each('sD', p => ctx.stroke(p)); ctx.restore();
   // lakes
   ctx.fillStyle = T.ocean; ctx.strokeStyle = T.coast; ctx.lineWidth = 0.5 / k;
   for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) { const P = featPath(L, L.lakes[j], true); ctx.fill(P, 'evenodd'); ctx.stroke(P); } }
@@ -1010,16 +1040,20 @@ function labels(c) {
     }
   };
   if (show.com) drawCircles(z < 7 ? D.comW : D.comR, comR, 'com');
-  if (show.met && z > 1.8) drawCircles(D.metros, metR, 'met');
+  if (show.met && z > 2.6) drawCircles(D.metros, metR, 'met');
   LAST.circles = circles;
   countryDraws.forEach(f => f());
   regionLabels.forEach(f => f());
   // ---- circle labels (bigger first; small places once there is room)
-  const minLab = z < 0.6 ? 50000 : z < 1.6 ? 4000 : z < 3 ? 700 : z < 6 ? 120 : 0;
-  const lab = circles.slice().sort((a, b) => ((b.it.b === 'unsized' ? 30000 : b.it.m) - (a.it.b === 'unsized' ? 30000 : a.it.m)));
+  // circle labels by zoom tier: Latin American places from continental zoom, U.S. metros from the U.S. view (largest
+  // first); a national capital may be named as soon as its country is, where there is room
+  const minCom = z < 1.6 ? Infinity : z < 3 ? 3000 : z < 5 ? 500 : z < 8 ? 100 : 0;
+  const minMet = z < 4 ? 200000 : z < 6 ? 40000 : z < 9 ? 8000 : 0;
+  const weight = it => (it.cap ? 1e9 : 0) + (it.b === 'unsized' ? 2500 : it.m);
+  const lab = circles.slice().sort((a, b) => weight(b.it) - weight(a.it));
   for (const cc of lab) {
-    const it = cc.it, big = it.b === 'unsized' ? (it.m > 1e5 ? 1e5 : 2500) : it.m;
-    if (big < minLab) continue;
+    const it = cc.it, big = it.b === 'unsized' ? 2500 : it.m;
+    if (!(it.cap && z >= 0.9) && big < (cc.kind === 'met' ? minMet : minCom)) continue;
     const px = Math.max(10, Math.min(14.5, 9.5 + 1.6 * Math.log10(Math.max(big, 50) / 300) + z * 0.04));
     const s = it.b === 'unsized' ? it.n : it.n + '  ' + (cc.kind === 'met' ? fmtN(it.m) : it.m.toLocaleString('en-US'));
     const f = (big >= 3000) ? F_COMB : F_COM, w = tw(s, f) * px, off = cc.r + 3;
@@ -1037,7 +1071,7 @@ function labels(c) {
   // ---- unit labels: room weighted by importance, so populous places win over large empty ones
   const ul = [];
   for (const u of D.U) {
-    if (u.d || u.ax === undefined || !u.n) continue;
+    if (u.d || u.ax === undefined || !u.n || z < u.zmin) continue;
     if (u.p < 1 && u.m == null) continue;
     if (u.m != null && u.m < 10) continue;
     const rpx = u.lr * pk; if (rpx < 11) continue;
@@ -1425,7 +1459,7 @@ function updateURL(push, view) {
 }
 function urlSoon(push, view) { clearTimeout(urlT); if (push) { updateURL(true, view); return; } urlT = setTimeout(() => updateURL(false), 500); }
 function applyURL(dur) {
-  const h = decodeURIComponent(location.hash.slice(1));
+  let h = decodeURIComponent(location.hash.slice(1)); if (VIEW_ALIAS[h]) h = VIEW_ALIAS[h];
   applyingURL = true; setTimeout(() => applyingURL = false, (dur || 0) + 950);
   if (!h) { pin(null, { noUrl: true }); goView('world', dur); return; }
   if (VIEWS.some(v => v[0] === h)) { pin(null, { noUrl: true }); goView(h, dur); return; }

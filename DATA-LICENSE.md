@@ -23,6 +23,7 @@ repository: MIT.
 | BEN-ADM1 | geoBoundaries, Wikimedia Commons | Public Domain | 2012 |
 | BFA-ADM2 | World Bank | Creative Commons Attribution 4.0 (CC BY 4.0) | 2017 |
 | BGD-ADM2 | Bangladesh Bureau of Statistics (BBS), OCHA ROAP | Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO) | 2020 |
+| BIH-ADM2 | Wikimedia Commons | Public Domain | 2013 |
 | BIH-ADM3 | Wikimedia Commons | Public Domain | 2013 |
 | CAN-ADM2 | Statistics Canada (StatCan) | Open Government Canada 2.0 | 2022 |
 | ESP-ADM2 | El Instituto Nacional de Estadstica | National Institute of Statistics (INE) Data License | 2018 |

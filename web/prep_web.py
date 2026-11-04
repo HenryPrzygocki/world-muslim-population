@@ -93,6 +93,29 @@ A1p['parent'] = [r[PARENT_FIELD[r.adm0_a3]] for _, r in A1p.iterrows()]
 A1p['parent'] = A1p.parent.replace({'Sind': 'Sindh', 'K.P.': 'Khyber Pakhtunkhwa'})
 fold = lambda x: ''.join(ch for ch in str(x).lower() if ch.isalnum())
 
+# ---- first-level division of each unit, for the border hierarchy: lines between units of different first-level divisions
+#      are drawn stronger than lines inside one. Where the units are themselves the first level (U.S. and Brazilian states,
+#      Kenyan counties, Russian federal subjects...) each unit is its own parent, so all its borders are first-level lines.
+BORDER_PARENT = {'AUS': 'name', 'BGD': 'name', 'CAN': 'name', 'ETH': 'name', 'IDN': 'name', 'IND': 'name', 'SRB': 'name',
+                 'GBR': 'geonunit', 'ESP': 'region', 'PHL': 'region', 'MWI': 'region', 'UGA': 'region', 'LKA': 'region',
+                 'BFA': 'region'}
+A1b = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces.geojson')[['adm0_a3', 'name', 'region', 'geonunit', 'geometry']]
+A1b = A1b[A1b.adm0_a3.isin(list(BORDER_PARENT))].copy()
+A1b['bp'] = [r[BORDER_PARENT[r.adm0_a3]] for _, r in A1b.iterrows()]
+BIH2 = gpd.read_file(f'{RAW}/gb/geoBoundaries-BIH-ADM2_simplified.geojson')[['shapeName', 'geometry']]   # cantons, RS, Brčko
+def border_parent(iso, geom, i):
+    p = geom.representative_point()
+    if iso == 'BIH':
+        cand = BIH2.assign(bp=BIH2.shapeName)
+    elif iso in BORDER_PARENT:
+        cand = A1b[(A1b.adm0_a3 == iso) & A1b.bp.notna()]
+    else:
+        return f'u{i}'
+    h = cand[cand.geometry.contains(p)]
+    if not len(h):            # just outside the parent outlines (coast, simplified edges): the nearest one
+        h = cand.iloc[[int(cand.geometry.distance(p).values.argmin())]]
+    return iso + ':' + h.bp.iloc[0]
+
 # ---- subnational units
 recs = []
 for r in sub.itertuples():
@@ -111,7 +134,7 @@ for r in sub.itertuples():
         hitp = A1p[(A1p.adm0_a3 == r.iso) & A1p.geometry.contains(gpd.points_from_xy([a[0]], [a[1]])[0])]
         if len(hitp) and isinstance(hitp.parent.iloc[0], str) and fold(hitp.parent.iloc[0]) != fold(nm):
             par = hitp.parent.iloc[0]
-    recs.append({'i': len(recs), 'n': nm, 'r': par, 'q': basis(r.iso, nm, r.src, r.dflt, r.pct), 'c': r.iso, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
+    recs.append({'i': len(recs), 'n': nm, 'r': par, 'pk': border_parent(r.iso, r.geometry, len(recs)), 'q': basis(r.iso, nm, r.src, r.dflt, r.pct), 'c': r.iso, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
                  'm': None if r.muslims != r.muslims else int(round(r.muslims)),
                  'd': int(bool(r.dflt)), 's': sidx(r.src), 'y': None if r.year != r.year else int(r.year),
                  'lx': a[0] if a else None, 'ly': a[1] if a else None, 'lr': a[2] if a else None,
@@ -191,10 +214,13 @@ for adm, r in natd.iterrows():
 
 # ---- communities
 com = load_communities()
-def cl_json(R):
+_pcap = gpd.read_file(f'{RAW}/ne_10m_populated_places_simple.geojson', ignore_geometry=True)
+CAPITALS = {fold(n) for n in _pcap[_pcap.adm0cap == 1].name} | {fold(n) for n in _pcap[_pcap.adm0cap == 1].nameascii}
+def cl_json(R):     # 'cap': the circle holds a national capital (labelled as soon as its country's name is, if there is room)
     cl = cluster_communities(com, R)
     return [{'n': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 3), 'm': None if r.basis == 'unsized' else int(r.muslims), 'b': r.basis,
-             'k': r.n, 'mem': r.members, 'c': r.country} for r in cl.itertuples()]
+             'k': r.n, 'mem': r.members, 'c': r.country, 'cap': int(any(fold(x) in CAPITALS for x in r.members.split(', ')))}
+            for r in cl.itertuples()]
 us = pd.read_csv(f'{DATA}/usa_metros_arda2020.csv')
 metros = [{'n': r.city, 'full': r.name, 'x': round(r.lon, 3), 'y': round(r.lat, 3), 'm': int(r.adherents),
            'k': int(r.congregations)} for r in us.itertuples() if r.adherents >= 300]
