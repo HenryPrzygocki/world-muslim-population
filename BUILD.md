@@ -10,7 +10,8 @@ pipeline/
                       geoBoundaries licence metadata (gbmeta/, see DATA-LICENSE.md); source material the compiled tables in
                       data/ were made from (Brazil municipalities, Kenya census tables) — not read by the build
   data/               compiled statistics: sub/ and sub2/ per-country tables, pew2020.csv (national baseline),
-                      sources_registry.csv, communities.csv (Latin America), usa_metros_arda2020.csv
+                      territories.csv (census figures for territories Pew does not cover), sources_registry.csv,
+                      communities.csv (Latin America), usa_metros_arda2020.csv
   scripts/
     build_units.py    matches the statistics to boundaries → data/units_national.gpkg, data/units_sub.gpkg
     sub2.py           loaders for Russia, China, Indonesia, Canada and Australia (used by build_units.py)

@@ -1,0 +1,30 @@
+# IBGE, Censo Demográfico 2010, SIDRA table 137 "População residente, por religião" (variable 93), by state (N3);
+# religion category 100426 "Islamismo" and 0 "Total". Fetched 2026-11-04 from apisidra.ibge.gov.br/values/t/137/n3/all/v/93/p/2010/c133/0,100426
+code,unit,muslims,total
+11,Rondônia,175,1562409
+12,Acre,24,733559
+13,Amazonas,417,3483985
+14,Roraima,117,450479
+15,Pará,118,7581051
+16,Amapá,102,669526
+17,Tocantins,17,1383445
+21,Maranhão,126,6574789
+22,Piauí,78,3118360
+23,Ceará,141,8452381
+24,Rio Grande do Norte,45,3168027
+25,Paraíba,76,3766528
+26,Pernambuco,97,8796448
+27,Alagoas,4,3120494
+28,Sergipe,22,2068017
+29,Bahia,443,14016906
+31,Minas Gerais,1008,19597330
+32,Espírito Santo,76,3514952
+33,Rio de Janeiro,1428,15989929
+35,São Paulo,14778,41262199
+41,Paraná,8706,10444526
+42,Santa Catarina,774,6248436
+43,Rio Grande do Sul,3375,10693929
+50,Mato Grosso do Sul,863,2449024
+51,Mato Grosso,502,3035122
+52,Goiás,684,6003788
+53,Distrito Federal,972,2570160

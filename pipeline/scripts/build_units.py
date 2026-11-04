@@ -61,15 +61,20 @@ for _pn, _gu in [('French Guiana', 'French Guiana'), ('Guadeloupe', 'Guadeloupe'
     _r = pew[pew.country == _pn]
     if len(_r): GEOU[_gu] = (float(_r.pct.iloc[0]), 'Pew Research Center 2020 estimate'); natcnt[_gu] = float(_r.muslims_2020.iloc[0])
 GEOU['Caribbean Netherlands'] = (np.nan, 'no figure')
+# territories Pew does not cover: published census counts (data/territories.csv); year of every non-Pew national figure
+NATYEAR = {'Liechtenstein': 2020, 'Gibraltar': 2012}
+for _t in pd.read_csv(f'{DATA}/territories.csv', comment='#').itertuples():
+    GEOU[_t.geounit] = (_t.muslims / _t.total * 100, _t.source); natcnt[_t.geounit] = _t.muslims; NATYEAR[_t.geounit] = _t.year
 base = NE0[['ADMIN', 'ADM0_A3', 'GEOUNIT', 'GU_A3', 'NAME', 'LABELRANK', 'POP_EST', 'geometry']].copy()
 # overseas departments with their own figure are map units of their own (own code, name and label)
 OVERSEAS = {'French Guiana': 'GUF', 'Martinique': 'MTQ', 'Guadeloupe': 'GLP', 'Reunion': 'REU', 'Mayotte': 'MYT',
-            'Caribbean Netherlands': 'BES'}
+            'Caribbean Netherlands': 'BES', 'Christmas Island': 'CXR', 'Cocos (Keeling) Islands': 'CCK'}
 _ov = base.GEOUNIT.isin(list(OVERSEAS))
 base.loc[_ov, 'ADM0_A3'] = base.loc[_ov, 'GEOUNIT'].map(OVERSEAS)
 _ovadmin = base.loc[_ov, 'ADMIN'].copy()
-vals, srcs = [], []
+vals, srcs, yrs = [], [], []
 for _, r in base.iterrows():
+    yrs.append(NATYEAR.get(r.GEOUNIT, NATYEAR.get(r.ADMIN)))
     if r.ADMIN in NODATA:
         vals.append(np.nan); srcs.append('no permanent population'); continue
     v = GEOU.get(r.GEOUNIT) if r.GEOUNIT in GEOU else (nat.get(r.ADMIN) or nat.get(r.GEOUNIT))
@@ -79,6 +84,10 @@ for _, r in base.iterrows():
     else:
         vals.append(v[0]); srcs.append(v[1])
 base['pct'] = vals; base['src'] = srcs
+# kind of national figure: p Pew estimate, c census, n none; year of the figure
+base['basis'] = ['n' if p != p else 'p' if s_.startswith('Pew') else 'c' for p, s_ in zip(base.pct, base.src)]
+base['year'] = [2020 if b == 'p' else y if b == 'c' else np.nan for b, y in zip(base.basis, yrs)]
+assert not ((base.basis == 'c') & base.year.isna()).any(), base[(base.basis == 'c') & base.year.isna()].ADMIN.tolist()
 base.loc[_ov, 'ADMIN'] = base.loc[_ov, 'GEOUNIT'].replace({'Reunion': 'Réunion'})
 base['level'] = 0
 base['iso'] = base.ADM0_A3
@@ -159,14 +168,15 @@ add(d)
 # ---------------------------------------------------------------- United Kingdom (local authorities)
 uk = gpd.read_file(f'{RAW}/gbr/geogLA2021UK.json').set_crs(4326, allow_override=True)
 ew = pd.read_csv(f'{SUB}/GBR_EW.csv'); sn = pd.read_csv(f'{SUB}/GBR_SN.csv')
-lut = dict(zip(ew.code, ew.pct)); lut.update(dict(zip(sn.code, sn.pct)))
+ni = pd.read_csv(f'{S2}/GBR_NI_2021.csv', comment='#')          # NISRA Census 2021, MS-B20 (Muslim ÷ all usual residents)
+lut = dict(zip(ew.code, ew.pct)); lut.update(dict(zip(sn.code, sn.pct))); lut.update(dict(zip(ni.code, ni.muslims / ni.total * 100)))
 uk['pct'] = [lut.get(cd, np.nan) for cd in uk.AREACD]
 uk['dflt'] = [cd not in lut for cd in uk.AREACD]
 ukc = dict(x.split(',') for x in open(f'{SUB}/GBR_EW_counts.txt').read().strip().split(';'))
-ukc = {k: float(v) for k, v in ukc.items()}
+ukc = {k: float(v) for k, v in ukc.items()}; ukc.update(dict(zip(ni.code, ni.muslims.astype(float))))
 uk['muslims'] = [ukc.get(cd, np.nan) for cd in uk.AREACD]
 uk['unit'] = uk.AREANM; uk['iso'] = 'GBR'; uk['src'] = SRC['GBR']; uk['level'] = 2
-uk['year'] = [2022 if cd.startswith('S') else 2021 if cd[0] in 'EW' else np.nan for cd in uk.AREACD]
+uk['year'] = [2022 if cd.startswith('S') else 2021 for cd in uk.AREACD]
 add(uk)
 
 # ---------------------------------------------------------------- Russia (federal subjects)
@@ -290,8 +300,30 @@ add(attach(gbf('MNE-ADM1'), _me, 'MNE', src=SRC['MNE'],
                     'Plužine Municipality': _comb, 'Šavnik Municipality': _comb, 'Žabljak Municipality': _comb}))
 srb = gbf('SRB-ADM2'); srb['gname'] = srb.gname.str.replace(r' (Municipality|City|Municipal\*)$', '', regex=True)
 add(attach(srb, read_sub('SRB'), 'SRB', src=SRC['SRB'], default=None, cutoff=0.9))
-add(attach(gbf('BIH-ADM2'), read_sub('BIH'), 'BIH', src=SRC['BIH'], cutoff=0.6,
-           aliases={'Bosnian-Podrinje Canton Goražde': 'Bosnian Podrinje', 'Brcko District': 'Brčko'}))
+# Bosnia and Herzegovina: 2013 census, religion by municipality (BHAS final results, table 4.3), Islamic ÷ total.
+# geoBoundaries names a few municipalities differently (entity parts, a typo, Višegrad labelled "Republika Srpska").
+_bh = pd.read_csv(f'{S2}/BIH_2013.csv', comment='#'); _bh['pct'] = _bh.muslims / _bh.total * 100
+_g = gpd.read_file(f'{GB}/geoBoundaries-BIH-ADM3_simplified.geojson'); _g['geometry'] = _g.geometry.apply(make_valid)
+_x = _g.geometry.representative_point().x
+BIH_FIX = {'Republika Srpska': ('VIŠEGRAD', 'Višegrad'), 'Kupra na Uni': ('KRUPA NA UNI', 'Krupa na Uni'),
+           'Kupres': ('KUPRES - RS', 'Kupres (RS)'), 'Kupres (BiH)': ('KUPRES - F BiH', 'Kupres (FBiH)'),
+           'Trnovo (BiH)': ('TRNOVO - F BiH', 'Trnovo (FBiH)'), 'Foča': ('FOČA - RS', 'Foča'), 'Foča-Ustikolina': ('FOČA - F BiH', 'Foča-Ustikolina'),
+           'Pale': ('PALE - RS', 'Pale'), 'Pale-Prača': ('PALE - F BiH', 'Pale-Prača'), 'Centar': ('CENTAR SARAJEVO', 'Centar Sarajevo'),
+           'Stari Grad': ('STARI GRAD SARAJEVO', 'Stari Grad Sarajevo'), 'Mostar': ('GRAD MOSTAR', 'Mostar'),
+           'Prozor-Rama': ('PROZOR', 'Prozor-Rama'), 'Doboj East': ('DOBOJ-ISTOK', 'Doboj Istok'),
+           'Ustiprača': ('NOVO GORAŽDE', 'Novo Goražde'), 'Brcko District': ('BRČKO', 'Brčko')}
+_bk = {norm(u): u for u in _bh.unit}
+def _bih_key(n, x):
+    if n == 'Novi Grad':                       # two municipalities: Novi Grad (RS, west) and Novi Grad Sarajevo
+        return ('NOVI GRAD', 'Novi Grad') if x < 17.5 else ('NOVI GRAD SARAJEVO', 'Novi Grad Sarajevo')
+    return BIH_FIX.get(n) or (_bk.get(norm(n)), n)
+_k = [_bih_key(n, x) for n, x in zip(_g.shapeName, _x)]
+_g['key'] = [k[0] for k in _k]; _g['unit'] = [k[1] for k in _k]
+assert _g.key.notna().all() and sorted(_g.key) == sorted(_bh.unit), set(_g.key) ^ set(_bh.unit)
+_bl = _bh.set_index('unit')
+_g['pct'] = _g.key.map(_bl.pct); _g['muslims'] = _g.key.map(_bl.muslims)
+_g['src'] = SRC['BIH']; _g['dflt'] = False; _g['iso'] = 'BIH'; _g['level'] = 2
+add(_g[['unit', 'pct', 'muslims', 'src', 'dflt', 'iso', 'level', 'geometry']].copy())
 # Spain: UCIDE count of Muslims by province (31 Dec 2017) ÷ INE official population (1 Jan 2018)
 ep = read2('ESP_prov')
 ep['muslims'] = ep.ucide; ep['pct'] = ep.ucide / ep.ine_pop_2018 * 100
@@ -311,6 +343,15 @@ add(rou)
 
 # ---------------------------------------------------------------- Americas & Oceania
 add(attach(ne1('USA'), read_sub('USA'), 'USA', src=SRC['USA']))
+# Brazil: 2010 census, SIDRA table 137, Islamismo ÷ total resident population, every state (the 2022 census tables put
+# Islam inside "outras religiosidades")
+_br = pd.read_csv(f'{S2}/BRA_2010.csv', comment='#'); _br['pct'] = _br.muslims / _br.total * 100
+_g = NE1[NE1.adm0_a3 == 'BRA'][['name', 'geometry']].rename(columns={'name': 'gname'}).copy()
+_bm = dict(zip(_br.unit, zip(_br.pct, _br.muslims)))
+assert sorted(_g.gname) == sorted(_bm), set(_g.gname) ^ set(_bm)
+_g['unit'] = _g.gname; _g['pct'] = [_bm[n][0] for n in _g.gname]; _g['muslims'] = [_bm[n][1] for n in _g.gname]
+_g['src'] = SRC['BRA']; _g['dflt'] = False; _g['iso'] = 'BRA'; _g['level'] = 1
+add(_g)
 cn = sub2.canada(); cn['iso'] = 'CAN'; cn['src'] = SRC['CAN']; cn['level'] = 2
 add(cn)
 au = sub2.australia(); au['iso'] = 'AUS'; au['src'] = SRC['AUS']; au['level'] = 2

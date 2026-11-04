@@ -20,7 +20,7 @@ for f in $NE; do
   [ -s raw/$f.geojson ] || curl -sSfL -o raw/$f.geojson \
     "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/$NE_REV/geojson/$f.geojson"
 done
-for c in AUS-ADM2 BEN-ADM1 BFA-ADM2 BGD-ADM2 BIH-ADM2 CAN-ADM2 ESP-ADM2 ETH-ADM2 GIN-ADM1 GNB-ADM1 GUY-ADM1 \
+for c in AUS-ADM2 BEN-ADM1 BFA-ADM2 BGD-ADM2 BIH-ADM3 CAN-ADM2 ESP-ADM2 ETH-ADM2 GIN-ADM1 GNB-ADM1 GUY-ADM1 \
          HRV-ADM1 IDN-ADM1 IDN-ADM2 KEN-ADM1 KHM-ADM1 MNE-ADM1 MWI-ADM2 NPL-ADM1 PHL-ADM2 SRB-ADM2 ZAF-ADM1; do
   iso=${c%-*}; adm=${c#*-}; f=geoBoundaries-$c\_simplified.geojson
   [ -s raw/gb/$f ] || curl -sSfL -o raw/gb/$f \

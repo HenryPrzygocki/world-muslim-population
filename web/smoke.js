@@ -26,10 +26,14 @@ fs.mkdirSync(OUT, { recursive: true });
   ok(p.url().endsWith('#europe'), 'view chip sets #europe');
   await p.goBack(); await p.waitForTimeout(1500);
   ok(/Malappuram/.test(p.url()) && !(await p.$eval('#panel', e => e.hidden)), 'Back restores the previous selection');
-  // a state of a large country without regional figures: link restores it, card says the figure is national
-  await p.goto('http://localhost:8765/index.html#@-43.2,-22.9,6/s/BRA/Rio%20de%20Janeiro'); await p.waitForTimeout(1500);
+  // states of a country with a national figure only are lines, not places: an old state link opens the country
+  await p.goto('http://localhost:8765/index.html#@-103.3,20.7,6/s/MEX/Jalisco'); await p.waitForTimeout(1500);
   const st = await p.$eval('#panel', e => e.hidden ? '' : e.innerText);
-  ok(/State/i.test(st) && /Rio de Janeiro/.test(st) && /national/.test(st), 'state link pins the state card: ' + st.split('\n').slice(0, 2).join(' · '));
+  ok(/Country/i.test(st) && /Mexico/.test(st) && !/Jalisco/.test(st), 'a state of Mexico selects Mexico as a whole: ' + st.split('\n').slice(1, 3).join(' · '));
+  // Brazilian states have their own census figure, and the card says how it was made
+  await p.goto('http://localhost:8765/index.html#@-43.2,-22.9,6/s/BRA/Rio%20de%20Janeiro'); await p.waitForTimeout(1500);
+  const br = await p.$eval('#panel', e => e.hidden ? '' : e.innerText);
+  ok(/Rio de Janeiro/.test(br) && /census/i.test(br) && /2010/.test(br) && /not a sum of the cities/.test(br), 'Brazilian state shows its 2010 census figure and how it was made: ' + br.split('\n').slice(1, 4).join(' · '));
   await p.goto('http://localhost:8765/index.html#balkans'); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_balkans.png` });
   await p.evaluate(() => { location.hash = '#usa'; }); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_usa.png` });
   ok(await p.$eval('.chip[data-k="usa"]', e => e.classList.contains('on')), 'editing the hash moves the map (#usa)');

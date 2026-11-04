@@ -26,7 +26,7 @@ CY_LINE = _cyn.boundary.intersection(_cyrest.buffer(0.0008))
 _cy = nat.ADM0_A3 == 'CYP'
 assert _cy.sum() == 1 and nat.loc[_cy, 'muslims'].notna().all()
 _cyx = nat.ADM0_A3.isin(CY_PARTS)
-for col in ['ADMIN', 'pct', 'muslims', 'src']:
+for col in ['ADMIN', 'pct', 'muslims', 'src', 'basis', 'year']:
     nat.loc[_cyx, col] = nat.loc[_cy, col].iloc[0]
 nat.loc[_cyx, 'ADM0_A3'] = 'CYP'
 reg = pd.read_csv(f'{DATA}/sources_registry.csv')
@@ -64,17 +64,19 @@ def anchor(g_ll):
 natc = nat[nat.geometry.notna()].copy()
 # one shape per country code: Natural Earth splits some countries into map units (Belgium's three regions, the UK's four
 # nations, Bosnia's entities...) that carry the same national figure, and drawing them separately leaves seams
-natc = natc.dissolve(by='ADM0_A3', as_index=False, aggfunc={'ADMIN': 'first', 'pct': 'first', 'muslims': 'first', 'src': 'first'})
+natc = natc.dissolve(by='ADM0_A3', as_index=False, aggfunc={'ADMIN': 'first', 'pct': 'first', 'muslims': 'first', 'src': 'first',
+                                                         'basis': 'first', 'year': 'first'})
 recs = []
 for r in natc.itertuples():
     recs.append({'i': len(recs), 'n': r.ADMIN, 'c': r.ADM0_A3, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
-                 'm': None if r.muslims != r.muslims else int(r.muslims), 's': sidx(r.src), 'geometry': r.geometry})
+                 'm': None if r.muslims != r.muslims else int(r.muslims), 's': sidx(r.src),
+                 'q': r.basis, 'y': None if r.year != r.year else int(r.year), 'geometry': r.geometry})
 g = gpd.GeoDataFrame(recs, crs=4326)
 g.to_file(f'{OUT}/countries.geojson', driver='GeoJSON')
 
 # ---- data basis of each unit: c census/register, s published estimate (non-official body), e ethnicity-based,
 #      n no figure collected. Every value is a published figure or arithmetic on published figures.
-ETHNIC = {'RUS', 'CHN', 'BIH', 'UAOCC'}
+ETHNIC = {'RUS', 'CHN', 'UAOCC'}
 PUBLISHED_EST = {'ESP', 'USA'}
 def basis(iso, unit, src, dflt, pct):
     if dflt or pct != pct: return 'n'
@@ -126,19 +128,12 @@ g['geometry'] = g.geometry.apply(_norm)
 g.to_file(f'{OUT}/units.geojson', driver='GeoJSON')
 print('units', len(g))
 
-# ---- states / provinces of large countries without regional figures (outlines and hover targets; no figures of their
-#      own). Natural Earth admin-1, clipped to the country; pieces of the country no state covers join the state that
-#      shares the longest border with them (else the nearest), so the states tile the country exactly.
+# ---- states / provinces of large countries without regional figures: drawn as fine dashed lines only (the whole country
+#      carries its national figure and is what gets highlighted). Natural Earth admin-1, clipped to the country; pieces of the
+#      country no state covers join the state that shares the longest border with them (else the nearest), so the states tile
+#      the country exactly and the lines are the country's own arcs.
 a = nat.to_crs(EE).assign(a=lambda d: d.geometry.area / 1e6).groupby('ADM0_A3').a.sum()
 big = ((set(a[a >= 1.2e6].index) - set(sub.iso)) | {'PRY'}) - {'ATA'}
-STYPE = {'Captial District': 'Capital District', 'Municipality|Governarate': 'District', 'Préfecture': 'Prefecture',
-         'Departamento': 'Department', 'Neutral City': 'City', None: 'Municipality'}
-SFIX = {  # (country, Natural Earth name) -> display name, type: where Natural Earth's English name or type is wrong or ambiguous
-    ('ARG', 'Ciudad de Buenos Aires'): ('City of Buenos Aires', 'Autonomous City'), ('ARG', 'Buenos Aires'): ('Buenos Aires', 'Province'),
-    ('BRA', 'Distrito Federal'): ('Distrito Federal', 'Federal District'), ('MEX', 'Distrito Federal'): ('Mexico City', 'Federal Entity'),
-    ('MLI', 'Sikasso'): ('Sikasso', 'Region'), ('SDN', 'Western Darfur'): ('West Darfur', 'State'), ('PER', 'Cusco'): ('Cusco', 'Department'),
-    ('PER', 'Lima Province'): ('Lima Province', 'Province'), ('SAU', 'Ash Sharqiyah'): ('Eastern Province', 'Region'),
-    ('GRL', 'Nationalparken'): ('Northeast Greenland National Park', 'National park')}
 A1s = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces.geojson')
 def polys(q):
     q = make_valid(q)
@@ -153,20 +148,10 @@ for iso in sorted(big):
         shared = [p.boundary.intersection(q.boundary).length if not q.is_empty else 0 for q in parts]
         j = int(np.argmax(shared)) if max(shared) > 0 else int(np.argmin([p.distance(q) for q in parts]))
         parts[j] = unary_union([parts[j], p])
-    for r, q in zip(st.itertuples(), parts):
-        if q.is_empty:
-            continue
-        en = r.name_en if isinstance(r.name_en, str) and r.name_en else r.name
-        ty = STYPE.get(r.type_en if isinstance(r.type_en, str) else None, r.type_en)
-        en, ty = SFIX.get((iso, r.name), (en, ty))
-        alt = {r.name} | (set(r.name_alt.split('|')) if isinstance(r.name_alt, str) else set())
-        srecs.append({'i': len(srecs), 'c': iso, 'n': en, 't': ty,
-                      'alt': '|'.join(sorted(x.strip() for x in alt if x and x.strip() and x.strip() != en)[:4]),
-                      'geometry': MultiPolygon(polys(q)) if len(polys(q)) > 1 else polys(q)[0]})
+    for q in parts:
+        if not q.is_empty:
+            srecs.append({'c': iso, 'geometry': MultiPolygon(polys(q)) if len(polys(q)) > 1 else polys(q)[0]})
 states = gpd.GeoDataFrame(srecs, crs=4326)
-_names = {(r['c'], fold(r['n'])) for r in srecs}     # an alias that is another state's name would mislead the search
-states['alt'] = ['|'.join(a for a in r.alt.split('|') if a and (r.c, fold(a)) not in _names) for r in states.itertuples()]
-assert not states.duplicated(['c', 'n']).any(), states[states.duplicated(['c', 'n'], keep=False)][['c', 'n']].values.tolist()
 states.to_file(f'{OUT}/states.geojson', driver='GeoJSON')
 print('states', len(states), 'in', ', '.join(sorted(big)))
 
@@ -223,7 +208,8 @@ short.update({'PSX': 'Palestine', 'KOS': 'Kosovo', 'SOL': 'Somaliland', 'TWN': '
               'SWZ': 'Eswatini', 'TLS': 'Timor-Leste', 'CPV': 'Cabo Verde', 'BHS': 'The Bahamas', 'GMB': 'The Gambia',
               'KOR': 'South Korea', 'PRK': 'North Korea', 'LAO': 'Laos', 'RUS': 'Russia', 'SRB': 'Serbia',
               'TZA': 'Tanzania', 'HKG': 'Hong Kong', 'MAC': 'Macau', 'UAOCC': 'Ukraine', 'GUF': 'French Guiana',
-              'GLP': 'Guadeloupe', 'MTQ': 'Martinique', 'REU': 'Réunion', 'MYT': 'Mayotte', 'BES': 'Caribbean Netherlands'})
+              'GLP': 'Guadeloupe', 'MTQ': 'Martinique', 'REU': 'Réunion', 'MYT': 'Mayotte', 'BES': 'Caribbean Netherlands',
+              'CXR': 'Christmas Island', 'CCK': 'Cocos (Keeling) Islands'})
 for l in labels:
     l['short'] = short.get(l['c'], l['full'])
 ug = g  # units as written
@@ -260,7 +246,7 @@ for iso, grp in ug[~ug.c.isin(['ROU']) & ~_ann].groupby('c'):   # partial covera
     usum[iso] = {'m': int(grp.m.sum()), 'p': round(float(grp.m.sum() / pop * 100), 2), 'y': year_of.get(iso, '')}
 cn = dict(zip(reg.iso3, reg.notes.fillna('')))
 def rbasis(r):
-    if r.iso3 in ('RUS', 'CHN', 'BIH'): return 'Census (ethnicity)'
+    if r.iso3 in ('RUS', 'CHN'): return 'Census (ethnicity)'
     if r.iso3 in ('ESP', 'USA'): return 'Published estimate'
     if r.iso3 == 'LAT': return 'Census + documented communities'
     return 'Census / register'
@@ -284,7 +270,17 @@ csv = csv[['country', 'c', 'unit', 'r', 'p', 'm', 'basis', 'source', 'year']].re
 csv.sort_values(['country', 'unit']).to_csv(f'{OUT}/units.csv', index=False)
 com_drop = {'Trinidad & Tobago', 'Suriname', 'Guyana'}    # markers that only stood for a whole country
 
-extra = {'labels': labels, 'comW': cl_json(45), 'comR': cl_json(12), 'metros': metros, 'sources': srcs,
+# how each country's area figures were made, shown on every card (default: published for the area by the statistics office)
+HOW = {
+    'BRA': 'State total published by the 2010 census (IBGE) — not a sum of the cities on the map.',
+    'USA': 'State total published by the 2020 U.S. Religion Census, which counts mosque adherents — not a sum of the metro areas.',
+    'ESP': 'UCIDE’s count of Muslims in the province ÷ INE’s official population.',
+    'RUS': 'Sum of the traditionally Muslim nationalities the 2010 census counted here ÷ residents who stated a nationality.',
+    'UAOCC': 'Sum of the Muslim nationalities Russia’s 2014 census counted here ÷ residents who stated a nationality.',
+    'CHN': 'Sum of the ten traditionally Muslim nationalities the 2010 census counted here ÷ residents.',
+    'ISR': 'Central Bureau of Statistics count of Muslims in the district ÷ district population.',
+}
+extra = {'labels': labels, 'comW': cl_json(45), 'comR': cl_json(12), 'metros': metros, 'sources': srcs, 'how': HOW,
          'years': year_of, 'regsrc': dict(zip(reg.iso3, reg.source)),
          'regions': regions, 'cities': cities, 'usum': usum, 'reg': regtab, 'short': short}
 extra['comW'] = [c for c in extra['comW'] if c['n'] not in com_drop]

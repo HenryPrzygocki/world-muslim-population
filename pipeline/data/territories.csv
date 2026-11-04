@@ -1,0 +1,8 @@
+# National figures for territories the Pew Research Center 2020 estimates do not cover: published census counts only.
+# geounit = Natural Earth map unit; code = map code (Christmas and Cocos get their own; Natural Earth groups them).
+geounit,code,muslims,total,year,source
+Christmas Island,CXR,374,1692,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51710 Christmas Island)"
+Cocos (Keeling) Islands,CCK,389,593,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51860 Cocos Islands)"
+Norfolk Island,NFK,0,2188,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (SAL90004 Norfolk Island)"
+Cayman Islands,CYM,258,68811,2021,"Economics and Statistics Office, Cayman Islands — 2021 Census report, section 4, table 4.9A (population by religion)"
+Bermuda,BMU,616,64237,2010,"Department of Statistics, Bermuda — 2010 Census of Population and Housing, table 3.1 (population by religious affiliation)"
