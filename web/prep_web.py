@@ -126,13 +126,51 @@ g['geometry'] = g.geometry.apply(_norm)
 g.to_file(f'{OUT}/units.geojson', driver='GeoJSON')
 print('units', len(g))
 
-# ---- lines and lakes
-big = set()
+# ---- states / provinces of large countries without regional figures (outlines and hover targets; no figures of their
+#      own). Natural Earth admin-1, clipped to the country; pieces of the country no state covers join the state that
+#      shares the longest border with them (else the nearest), so the states tile the country exactly.
 a = nat.to_crs(EE).assign(a=lambda d: d.geometry.area / 1e6).groupby('ADM0_A3').a.sum()
-big = (set(a[a >= 1.2e6].index) - set(sub.iso)) | {'PRY'}
-a1 = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces_lines.geojson')
-a1 = a1[a1.ADM0_A3.isin(big)][['geometry']]
-a1.to_file(f'{OUT}/provlines.geojson', driver='GeoJSON')
+big = ((set(a[a >= 1.2e6].index) - set(sub.iso)) | {'PRY'}) - {'ATA'}
+STYPE = {'Captial District': 'Capital District', 'Municipality|Governarate': 'District', 'Préfecture': 'Prefecture',
+         'Departamento': 'Department', 'Neutral City': 'City', None: 'Municipality'}
+SFIX = {  # (country, Natural Earth name) -> display name, type: where Natural Earth's English name or type is wrong or ambiguous
+    ('ARG', 'Ciudad de Buenos Aires'): ('City of Buenos Aires', 'Autonomous City'), ('ARG', 'Buenos Aires'): ('Buenos Aires', 'Province'),
+    ('BRA', 'Distrito Federal'): ('Distrito Federal', 'Federal District'), ('MEX', 'Distrito Federal'): ('Mexico City', 'Federal Entity'),
+    ('MLI', 'Sikasso'): ('Sikasso', 'Region'), ('SDN', 'Western Darfur'): ('West Darfur', 'State'), ('PER', 'Cusco'): ('Cusco', 'Department'),
+    ('PER', 'Lima Province'): ('Lima Province', 'Province'), ('SAU', 'Ash Sharqiyah'): ('Eastern Province', 'Region'),
+    ('GRL', 'Nationalparken'): ('Northeast Greenland National Park', 'National park')}
+A1s = gpd.read_file(f'{RAW}/ne_10m_admin_1_states_provinces.geojson')
+def polys(q):
+    q = make_valid(q)
+    return [p for p in getattr(q, 'geoms', [q]) if p.geom_type == 'Polygon'] + \
+           [pp for p in getattr(q, 'geoms', []) if p.geom_type == 'MultiPolygon' for pp in p.geoms]
+srecs = []
+for iso in sorted(big):
+    cpoly = make_valid(natc[natc.ADM0_A3 == iso].geometry.iloc[0])
+    st = A1s[(A1s.adm0_a3 == iso) & A1s.name.notna()]
+    parts = [unary_union(polys(make_valid(q).intersection(cpoly))) for q in st.geometry]
+    for p in polys(cpoly.difference(unary_union(parts))):
+        shared = [p.boundary.intersection(q.boundary).length if not q.is_empty else 0 for q in parts]
+        j = int(np.argmax(shared)) if max(shared) > 0 else int(np.argmin([p.distance(q) for q in parts]))
+        parts[j] = unary_union([parts[j], p])
+    for r, q in zip(st.itertuples(), parts):
+        if q.is_empty:
+            continue
+        en = r.name_en if isinstance(r.name_en, str) and r.name_en else r.name
+        ty = STYPE.get(r.type_en if isinstance(r.type_en, str) else None, r.type_en)
+        en, ty = SFIX.get((iso, r.name), (en, ty))
+        alt = {r.name} | (set(r.name_alt.split('|')) if isinstance(r.name_alt, str) else set())
+        srecs.append({'i': len(srecs), 'c': iso, 'n': en, 't': ty,
+                      'alt': '|'.join(sorted(x.strip() for x in alt if x and x.strip() and x.strip() != en)[:4]),
+                      'geometry': MultiPolygon(polys(q)) if len(polys(q)) > 1 else polys(q)[0]})
+states = gpd.GeoDataFrame(srecs, crs=4326)
+_names = {(r['c'], fold(r['n'])) for r in srecs}     # an alias that is another state's name would mislead the search
+states['alt'] = ['|'.join(a for a in r.alt.split('|') if a and (r.c, fold(a)) not in _names) for r in states.itertuples()]
+assert not states.duplicated(['c', 'n']).any(), states[states.duplicated(['c', 'n'], keep=False)][['c', 'n']].values.tolist()
+states.to_file(f'{OUT}/states.geojson', driver='GeoJSON')
+print('states', len(states), 'in', ', '.join(sorted(big)))
+
+# ---- lines and lakes
 dl = gpd.read_file(f'{RAW}/ne_10m_admin_0_boundary_lines_disputed_areas.geojson')[['geometry']]
 dl = pd.concat([dl, gpd.GeoDataFrame(geometry=[CY_LINE], crs=4326)], ignore_index=True)
 dl.to_file(f'{OUT}/disputed.geojson', driver='GeoJSON')

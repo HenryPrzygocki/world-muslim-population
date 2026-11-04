@@ -131,6 +131,7 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .keys .k-hatch { background: repeating-linear-gradient(135deg, rgba(122,31,31,.6) 0 1.3px, #F6F2EA 1.3px 6px); outline: 1.4px dashed #7A1F1F; outline-offset: -1px; }
 .keys .k-dash { background: #F6F2EA; outline: 1.4px dashed #2E3236; outline-offset: -1px; }
 .keys .k-kri { background: #004A32; outline: 1.6px dashed #fff; outline-offset: -3px; }
+.keys .k-prov { height: 0; border-radius: 0; border-top: 1.4px dashed rgba(110,110,100,.85); }
 .keys .k-nofig { background: repeating-linear-gradient(45deg, rgba(120,120,112,.6) 0 1px, #E2E2DE 1px 5px); }
 .toggles { display: flex; flex-direction: column; gap: 6px; }
 .toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
@@ -349,6 +350,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
           <span><i class="k-hatch"></i><span>Russian-occupied, internationally recognised as Ukraine</span></span>
           <span><i class="k-dash"></i><span>Territory of disputed status, e.g. <em>Taiwan</em>, <em>Kosovo</em>, <em>Falklands (Malvinas)</em></span></span>
           <span><i class="k-kri"></i><span>Autonomous region (Kurdistan Region of Iraq)</span></span>
+          <span><i class="k-prov"></i><span>State or province of a large country without regional figures (national figure shown)</span></span>
         </div>
         <div class="toggles">
           <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
@@ -401,7 +403,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
 (() => {
 'use strict';
 const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', x: 'map_x.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
-const UPDATED = '3 November 2026';
+const UPDATED = '4 November 2026';
 const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // inside the claude.ai viewer: no shareable URL, downloads via capability
 
 // ------------------------------------------------------------------ colour classes
@@ -543,15 +545,16 @@ function tileIndex(items) {     // items: {bb}; one tile per item by bbox centre
 function buildLOD(topo, key) {
   const A = decodeArcs(topo), O = topo.objects;
   const feats = (obj) => obj.geometries.map(g => { const rings = ringsOf(g); return { rings, bb: rings.length ? bboxOfRings(A, rings) : [NaN, NaN, NaN, NaN], i: g.properties ? g.properties.i : undefined, path: null }; });
-  const L = { key, A, C: feats(O.countries), U: feats(O.units), Cprops: O.countries.geometries.map(g => g.properties), Uprops: O.units.geometries.map(g => g.properties) };
+  const L = { key, A, C: feats(O.countries), U: feats(O.units), Cprops: O.countries.geometries.map(g => g.properties), Uprops: O.units.geometries.map(g => g.properties),
+    S: O.states ? feats(O.states) : [], Sprops: O.states ? O.states.geometries.map(g => g.properties) : [] };   // states: outlines and hover targets, no figures
   // arc owners per object, for meshes (borders = arcs shared by two features)
   const owners = (obj) => { const o1 = new Int32Array(A.ln.length).fill(-1), o2 = new Int32Array(A.ln.length).fill(-1);
     obj.geometries.forEach((g, gi) => { for (const r of ringsOf(g)) for (const ai of r) { const a = ai < 0 ? ~ai : ai; if (o1[a] < 0) o1[a] = gi; else if (o1[a] !== gi && o2[a] < 0) o2[a] = gi; } });
     return { o1, o2 }; };
-  const oc = owners(O.countries), ou = owners(O.units);
+  const oc = owners(O.countries), ou = owners(O.units), os = O.states ? owners(O.states) : null;
   const cc = O.countries.geometries.map(g => g.properties.c);
   const isD = gi => DISP.has(cc[gi]), isS = gi => SAR.has(cc[gi]);
-  const coast = [], borders = [], stat = [], sar = [], umesh = [];
+  const coast = [], borders = [], stat = [], sar = [], umesh = [], smesh = [];
   for (let a = 0; a < A.ln.length; a++) {
     const p = oc.o1[a], q = oc.o2[a];
     if (p >= 0) {
@@ -559,10 +562,11 @@ function buildLOD(topo, key) {
       else if (cc[p] !== cc[q]) { if (isD(p) || isD(q)) stat.push(a); else if (isS(p) || isS(q)) sar.push(a); else borders.push(a); }
     }
     if (ou.o1[a] >= 0 && ou.o2[a] >= 0 && ou.o1[a] !== ou.o2[a]) umesh.push(a);
+    if (os && os.o1[a] >= 0 && os.o2[a] >= 0 && os.o1[a] !== os.o2[a]) smesh.push(a);
   }
   const lineArcs = (obj) => { const s = new Set(); obj.geometries.forEach(g => { for (const r of ringsOf(g)) for (const ai of r) s.add(ai < 0 ? ~ai : ai); }); return [...s]; };
   const lines = (arcs) => ({ tiles: tileIndex(arcs.map(a => ({ a, bb: [A.bb[a * 4], A.bb[a * 4 + 1], A.bb[a * 4 + 2], A.bb[a * 4 + 3]] }))), arcs, paths: new Map() });
-  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), umesh: lines(umesh),
+  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), umesh: lines(umesh), smesh: lines(smesh),
     disputed: lines(lineArcs(O.disputed)), occLine: lines(lineArcs(O.occupied)), kriLine: lines(lineArcs(O.kri)) };
   L.lakes = feats(O.lakes); L.lakesT = tileIndex(L.lakes);
   L.occ = feats(O.occupied); L.kri = feats(O.kri);
@@ -599,7 +603,7 @@ function loadLOD(key) {
   if (LOD[key] || loading[key]) return loading[key];
   return loading[key] = getJSON(FILES[key]).then(topo => {
     const L = buildLOD(topo, key);
-    if (D && (L.C.length !== D.C.length || L.U.length !== D.U.length)) { console.warn('level of detail mismatch', key); return null; }
+    if (D && (L.C.length !== D.C.length || L.U.length !== D.U.length || L.S.length !== D.S.length)) { console.warn('level of detail mismatch', key); return null; }
     LOD[key] = L; if (D) attachLOD(L);
     if (LEVELS.indexOf(key) <= LEVELS.indexOf(wantLOD())) schedule();   // redraw only if this level is used now
     if ($('pill').textContent === LOADING_TXT && LOD[wantLOD()]) pill(null);
@@ -608,9 +612,10 @@ function loadLOD(key) {
 }
 function attachLOD(L) {
   // properties are shared across levels; units/countries are matched by their stable id
-  if (!D.Ubyi) { D.Ubyi = new Map(D.U.map(u => [u.i, u])); D.Cbyi = new Map(D.C.map(c => [c.i, c])); }
+  if (!D.Ubyi) { D.Ubyi = new Map(D.U.map(u => [u.i, u])); D.Cbyi = new Map(D.C.map(c => [c.i, c])); D.Sbyi = new Map(D.S.map(s => [s.i, s])); }
   L.C.forEach((f, j) => { const it = D.Cbyi.get(L.Cprops[j].i); if (it) it.g[L.key] = f; });
   L.U.forEach((f, j) => { const it = D.Ubyi.get(L.Uprops[j].i); if (it) it.g[L.key] = f; });
+  L.S.forEach((f, j) => { const it = D.Sbyi.get(L.Sprops[j].i); if (it) it.g[L.key] = f; });
 }
 Promise.all([getJSON(FILES.w), getJSON(FILES.extra), document.fonts ? document.fonts.ready.catch(() => {}) : 0])
   .then(([wTopo, X]) => {
@@ -639,6 +644,8 @@ function prepare(L, X) {
   D.comW = pts(X.comW); D.comR = pts(X.comR); D.metros = pts(X.metros);
   D.regions = (X.regions || []).map(r => Object.assign({}, r, { bbB: bboxLL(r.b) }));
   D.cities = pts(X.cities || []);
+  D.S = L.Sprops.map(p => ({ kind: 'state', i: p.i, n: p.n, c: p.c, t: p.t, alt: p.alt ? p.alt.split('|') : [], g: {} }));
+  D.Sby = new Map(); for (const s of D.S) { if (!D.Sby.has(s.c)) D.Sby.set(s.c, []); D.Sby.get(s.c).push(s); }
   attachLOD(L); buildGrid(); buildIndex();
 }
 function buildGrid() {   // spatial grid on the world-level bounding boxes (slightly padded) for hit testing
@@ -814,7 +821,7 @@ function visibleItems(box) {    // countries and units in view (world-level tile
       for (const j of tl.ids) { if (!hits(F[j].bb, v)) continue; const it = byi.get(props[j].i); if (it) out.push(it); } }
   return { C, U, v };
 }
-const LINESETS = ['umesh', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
+const LINESETS = ['umesh', 'smesh', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
 function levelReady(k, vis) {    // build what this view needs at level k while the budget lasts; true once complete
   const L = LOD[k]; if (!L) return false;
   for (const arr of [vis.C, vis.U]) for (const it of arr) { const f = it.g[k]; if (f && !f.path && !featPath(L, f)) return false; }
@@ -858,6 +865,7 @@ function drawScene(lv, vis, tr) {     // everything drawn in map coordinates, al
   }
   const each = (name, f) => { const set = L.lines[name]; set.tiles.forEach((tl, ti) => { if (hits(tl.bb, vis.v)) f(tilePath(L, set, ti, true)); }); };
   ctx.strokeStyle = 'rgba(255,255,255,.72)'; ctx.lineWidth = Math.min(1.2, 0.35 + k * 0.02) / k; each('umesh', p => ctx.stroke(p));
+  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.strokeStyle = 'rgba(110,110,100,.55)'; ctx.lineWidth = 0.6 / k; each('smesh', p => ctx.stroke(p)); ctx.restore();
   // lakes
   ctx.fillStyle = T.ocean; ctx.strokeStyle = T.coast; ctx.lineWidth = 0.5 / k;
   for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) { const P = featPath(L, L.lakes[j], true); ctx.fill(P, 'evenodd'); ctx.stroke(P); } }
@@ -1072,12 +1080,16 @@ function pickBase(bx, by) {
     const Lx = LOD[drawnLv] || LOD.w;
     found.occ = Lx.occ.some(f => meas.isPointInPath(featPath(Lx, f, true), bx, by, 'evenodd'));
     found.kri = Lx.kri.some(f => meas.isPointInPath(featPath(Lx, f, true), bx, by, 'evenodd'));
+    if (found.kind === 'country' && D.Sby.has(found.it.c)) for (const s of D.Sby.get(found.it.c)) {
+      const b = featAt(s).bb; if (bx < b[0] || bx > b[2] || by < b[1] || by > b[3]) continue;
+      if (meas.isPointInPath(pathOf(s), bx, by, 'evenodd')) { found.st = s; break; } }
   }
   return found;
 }
 function selPaths(sel) {
   if (sel.kind === 'unit') return [pathOf(sel.it)];
   // not .map(pathOf): map would pass each index as the level of detail, and the outline would fall back to the world level
+  if (sel.kind === 'country' && sel.st) return [pathOf(sel.st)];
   if (sel.kind === 'country') return D.C.filter(c => c.c === sel.it.c).map(it => pathOf(it)).concat(D.U.filter(u => u.c === sel.it.c && sel.whole).map(it => pathOf(it)));
   if (sel.kind === 'region') return D.U.filter(u => u.c === sel.it.c && u.r === sel.it.n).map(it => pathOf(it));
   return [];
@@ -1119,8 +1131,22 @@ function badge(q, yr) {
                e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), n: 'No figure collected', p: 'National estimate · Pew 2020' }[q];
   return `<span class="badge ${q}">${esc(t_)}</span>`;
 }
+function stateCard(sel, full) {     // a state or province of a large country without regional figures
+  const s = sel.st, it = sel.it, cn = D.countryName(it.c), src = D.X.sources[it.s] || '', kind = (s.t || 'area').toLowerCase();
+  const notes = [];
+  if (sel.city) notes.push(`${sel.city} lies in this ${kind}.`);
+  notes.push(it.p == null ? `No figure has been collected for ${cn}.`
+    : `No separate figure was collected for this ${kind}: the colour and the figures shown are ${cn}’s national estimate.`);
+  if (D.X.notes[it.c]) notes.push(D.X.notes[it.c]);
+  return `<div class="eb">${esc(s.t || 'Area')} · ${esc(cn)}</div><h2>${esc(s.n)}</h2>
+    ${it.p == null ? '' : `<div class="big">${sw(it.k)}${fmtP(it.p)}<small>of residents of ${esc(cn)}</small></div>`}
+    ${it.m != null ? `<dl class="kv"><dt>Muslims in ${esc(cn)}</dt><dd>${longN(it.m)}</dd></dl>` : ''}${badge(it.p == null ? 'n' : 'p', '2020')}
+    ${notes.map(n => `<div class="mem">${esc(n)}</div>`).join('')}
+    ${full && src && it.p != null ? `<div class="src">Source: ${esc(src)}</div>` : ''}`;
+}
 function cardHTML(sel, full) {
   const X = D.X, it = sel.it;
+  if (sel.kind === 'country' && sel.st) return stateCard(sel, full);
   if (sel.kind === 'unit' || sel.kind === 'country') {
     const isU = sel.kind === 'unit', lab = D.labelOf.get(it.c);
     const st = X.status && X.status[it.c];
@@ -1178,6 +1204,7 @@ function cardHTML(sel, full) {
 }
 function plainText(sel) {
   const it = sel.it;
+  if (sel.kind === 'country' && sel.st) return `${sel.st.n}, ${D.countryName(it.c)}: ` + (it.p == null ? 'no figure collected' : `no separate figure; national figure ${fmtP(it.p)} Muslim`);
   if (sel.kind === 'unit' || sel.kind === 'country') return `${it.n || it.country}${sel.kind === 'unit' ? ', ' + it.country : ''}: ${fmtP(it.p)} Muslim` + (it.m != null ? `, ${Math.round(it.m).toLocaleString('en-US')} Muslims` : '');
   if (sel.kind === 'region') return `${it.n}, ${D.countryName(it.c)}`;
   return `${it.full || it.n}: ${it.m ? it.m.toLocaleString('en-US') + ' Muslims' : 'Muslim community'}`;
@@ -1223,6 +1250,7 @@ function selBounds(sel) {
   const it = sel.it;
   if (sel.kind === 'unit') { const f = featAt(it); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
   if (sel.kind === 'region') return it.bbB;
+  if (sel.kind === 'country' && sel.st) { const f = featAt(sel.st); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
   if (sel.kind === 'country') {
     const parts = D.C.filter(c => c.c === it.c).map(c => c.g.w.bb).filter(b => isFinite(b[0]));
     let b = parts.reduce((a, x) => [Math.min(a[0], x[0]), Math.min(a[1], x[1]), Math.max(a[2], x[2]), Math.max(a[3], x[3])]);
@@ -1233,7 +1261,7 @@ function selBounds(sel) {
   const r = 4; return [[it.ax - r, it.ay - r], [it.ax + r, it.ay + r]];
 }
 function frameSel(sel, dur) { const b = selBounds(sel); fitBounds(b, sel.kind === 'unit' || sel.kind === 'country' ? 0.12 : 0.04, sel.kind === 'met' || sel.kind === 'com' ? 120 : 400, dur); }
-function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it && a.occ === b.occ && a.kri === b.kri; }
+function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it && a.occ === b.occ && a.kri === b.kri && a.st === b.st; }
 
 // pointer interaction
 cv.addEventListener('pointermove', e => {
@@ -1285,6 +1313,7 @@ function buildIndex() {
     push({ t: 'country', name: l.short || l.full, alts: [l.full, ...(ALIASES[l.c] || [])], sub: l.st === 'disputed' ? 'Territory of disputed status' : 'Country', it, w: 3 + imp(l.m) * 0.3 }); }
   for (const u of D.U) if (u.n) push({ t: 'unit', name: u.n, alts: [], sub: [u.r, u.country].filter(Boolean).join(' · '), it: u, w: 1 + imp(u.m) * 0.25 });
   for (const r of D.regions) push({ t: 'region', name: r.n, alts: r.alt, sub: 'Province / region · ' + D.countryName(r.c), it: r, w: 2 });
+  for (const s of D.S) push({ t: 'state', name: s.n, alts: s.alt, sub: (s.t || 'Area') + ' · ' + D.countryName(s.c), it: s, w: 2 });
   for (const c of D.cities) push({ t: 'city', name: c.n, alts: c.alt, sub: 'City', it: c, w: 1.2 + imp(c.pop) * 0.2 });
   for (const c of D.comR) push({ t: 'com', name: c.n, alts: c.mem && c.k > 1 ? c.mem.split(', ') : [], sub: c.c + ' · Muslim community', it: c, w: 1 + imp(c.m) * 0.2 });
   for (const m of D.metros) push({ t: 'metro', name: m.n, alts: [m.full], sub: 'U.S. metro area', it: m, w: 1 + imp(m.m) * 0.2 });
@@ -1326,7 +1355,7 @@ q.addEventListener('input', () => {
     const it = e.it; let v = '', sub = e.sub;
     if (e.t === 'unit' || e.t === 'country') v = it.p != null ? fmtP(it.p) : '';
     else if (e.t === 'city') { const tg = cityTarget(it); if (tg) { v = tg.kind === 'region' ? '' : fmtP(tg.it.p);
-      sub = 'City · ' + (tg.kind === 'region' ? tg.it.n + ', ' + D.countryName(tg.it.c) : tg.kind === 'unit' && tg.it.n ? 'in ' + tg.it.n + ', ' + tg.it.country : tg.it.country); }
+      sub = 'City · ' + (tg.kind === 'region' ? tg.it.n + ', ' + D.countryName(tg.it.c) : tg.kind === 'unit' && tg.it.n ? 'in ' + tg.it.n + ', ' + tg.it.country : tg.st ? 'in ' + tg.st.n + ', ' + tg.it.country : tg.it.country); }
       else if (it.c) sub = 'City · ' + D.countryName(it.c); }
     else if (e.t === 'com' || e.t === 'metro') v = it.m ? fmtN(it.m) : '';
     if (viaAlt && e.t === 'com') sub = 'Part of ' + e.name + ' · ' + it.c;
@@ -1349,6 +1378,7 @@ function choose(h) {
   let sel;
   if (h.t === 'unit' || h.t === 'country') sel = { kind: h.t, it: h.it };
   else if (h.t === 'region') sel = { kind: 'region', it: h.it };
+  else if (h.t === 'state') sel = { kind: 'country', it: D.C.find(c => c.c === h.it.c), st: h.it };
   else if (h.t === 'city') { const tg = cityTarget(h.it); sel = tg ? Object.assign({}, tg, { city: h.name }) : null;
     if (!sel) { const r = 6; pin(null); fitBounds([[h.it.ax - r, h.it.ay - r], [h.it.ax + r, h.it.ay + r]], 0.05, 80); q.value = h.name; return; }
     if (sel && sel.kind === 'country') { const r = 6; fitBounds([[h.it.ax - r, h.it.ay - r], [h.it.ax + r, h.it.ay + r]], 0.05, 80); pin(sel, { push: true }); return; } }
@@ -1387,7 +1417,7 @@ function selKey(sel) {
   if (!sel) return '';
   const it = sel.it;
   if (sel.kind === 'unit') return 'u/' + it.c + '/' + encodeURIComponent(it.n || '~');
-  if (sel.kind === 'country') return 'c/' + it.c;
+  if (sel.kind === 'country') return sel.st ? 's/' + it.c + '/' + encodeURIComponent(sel.st.n) : 'c/' + it.c;
   if (sel.kind === 'region') return 'r/' + it.c + '/' + encodeURIComponent(it.n);
   if (sel.kind === 'met') return 'm/' + encodeURIComponent(it.n);
   if (sel.kind === 'com') return 'p/' + encodeURIComponent(it.n);
@@ -1397,6 +1427,7 @@ function findSel(key) {
   const [k, a, b] = key.split('/'); const dec = s => decodeURIComponent(s || '');
   if (k === 'u') { const n = dec(b) === '~' ? '' : dec(b); const it = D.U.find(u => u.c === a && u.n === n); return it && { kind: 'unit', it }; }
   if (k === 'c') { const it = D.C.find(c => c.c === a); return it && { kind: 'country', it }; }
+  if (k === 's') { const it = D.C.find(c => c.c === a), st = (D.Sby.get(a) || []).find(x => x.n === dec(b)); return it && st && { kind: 'country', it, st }; }
   if (k === 'r') { const it = D.regions.find(r => r.c === a && r.n === dec(b)); return it && { kind: 'region', it }; }
   if (k === 'm') { const it = D.metros.find(m => m.n === dec(a)); return it && { kind: 'met', it }; }
   if (k === 'p') { const it = D.comR.find(m => m.n === dec(a)); return it && { kind: 'com', it }; }
@@ -1495,6 +1526,8 @@ function aboutHTML() {
     <li><b>Published estimate</b> — figures from a non-official body: the U.S. Religion Census (congregations, ASARB) and Spain’s Muslim community union (UCIDE).</li>
     <li><b>Census, by ethnicity</b> — the censuses of Russia and China do not ask religion, so the share of people of traditionally Muslim nationalities is shown, as Pew and the original map do: every Russian federal subject from the 2010 census (as a share of residents who gave a nationality) and every Chinese province from the 2010 census. The nationalities counted are listed under the sources below. Crimea uses Russia’s 2014 census of the peninsula. Bosnia and Herzegovina’s cantons show the census share of Bosniaks.</li>
     <li><b>No figure collected</b> — hatched areas inside a country with regional data, where no figure was gathered for this map. Countries without any regional data show their national figure.</li></ul>
+    <p>In large countries without regional figures (Brazil, Mexico, Argentina, Iran, Saudi Arabia and others) states and provinces are
+    outlined with a fine dashed line and can be selected; their cards show the national figure.</p>
     <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as points: circles sized by the census count
     (Brazil 2010, Chile 2024), and small squares for documented communities without a published count. U.S. metros show the 2020 U.S. Religion Census.</p>
     <h3>Contested territories</h3>
