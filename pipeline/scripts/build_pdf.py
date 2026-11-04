@@ -45,7 +45,6 @@ for r in sub.itertuples():
     rows.append({'iso3': r.iso, 'country': names.get(r.iso, r.iso), 'unit': clean_unit(r.unit) if r.unit else '(remainder, no separate figure)',
                  'level': 'subnational', 'share_pct': round(r.pct, 3),
                  'muslims': None if r.muslims != r.muslims else int(round(r.muslims)),
-                 'muslims_approx': bool(r.cnt_est) if r.muslims == r.muslims else None,
                  'source': r.src})
 for r in nat.drop_duplicates('ADMIN').itertuples():
     if r.ADM0_A3 in subiso and r.ADM0_A3 != 'ROU':

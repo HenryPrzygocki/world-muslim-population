@@ -7,7 +7,7 @@ from shapely.ops import polylabel, unary_union
 from shapely.geometry import MultiPolygon
 from shapely import make_valid
 from common import DATA, RAW
-from mapkit import clean_unit, cluster_communities, load_communities
+from mapkit import clean_unit, cluster_communities, load_communities, RENAME, LABEL_POS
 
 OUT = __import__('os').path.join(__import__('os').path.dirname(__import__('os').path.abspath(__file__)), 'build')
 import os
@@ -110,7 +110,7 @@ for r in sub.itertuples():
         if len(hitp) and isinstance(hitp.parent.iloc[0], str) and fold(hitp.parent.iloc[0]) != fold(nm):
             par = hitp.parent.iloc[0]
     recs.append({'i': len(recs), 'n': nm, 'r': par, 'q': basis(r.iso, nm, r.src, r.dflt, r.pct), 'c': r.iso, 'p': None if r.pct != r.pct else round(float(r.pct), 2),
-                 'm': None if r.muslims != r.muslims else int(round(r.muslims)), 'e': int(bool(r.cnt_est)),
+                 'm': None if r.muslims != r.muslims else int(round(r.muslims)),
                  'd': int(bool(r.dflt)), 's': sidx(r.src), 'y': None if r.year != r.year else int(r.year),
                  'lx': a[0] if a else None, 'ly': a[1] if a else None, 'lr': a[2] if a else None,
                  'geometry': geom})
@@ -142,7 +142,6 @@ lk.to_file(f'{OUT}/lakes.geojson', driver='GeoJSON')
 
 # ---- country labels
 c0 = gpd.read_file(f'{RAW}/ne_10m_admin_0_countries.geojson')
-from world import RENAME, LABEL_POS
 natd = nat.dissolve(by='ADMIN', aggfunc={'pct': 'first', 'muslims': 'first', 'ADM0_A3': 'first'})
 area = natd.to_crs(EE).geometry.area / 1e6
 subiso = set(sub.iso) - {'ROU'}
@@ -217,7 +216,7 @@ for r in pp.itertuples():
 usum = {}
 _ann = (ug.c == 'RUS') & ug.n.isin(['Crimea', 'Sevastopol'])     # occupied Ukraine (recoded by prep_status.py)
 for iso, grp in ug[~ug.c.isin(['ROU']) & ~_ann].groupby('c'):   # partial coverage: no national sum
-    if grp.m.isna().any() or grp.p.isna().any() or (grp.p.fillna(0) <= 0).any() or (grp.e == 1).any():
+    if grp.m.isna().any() or grp.p.isna().any() or (grp.p.fillna(0) <= 0).any():
         continue
     pop = (grp.m / grp.p * 100).sum()
     usum[iso] = {'m': int(grp.m.sum()), 'p': round(float(grp.m.sum() / pop * 100), 2), 'y': year_of.get(iso, '')}
@@ -242,8 +241,8 @@ csv['unit'] = csv.n.where(csv.n != '', 'Rest of ' + csv.country)
 _occ = (csv.c == 'RUS') & csv.n.isin(['Crimea', 'Sevastopol'])      # occupied Ukraine (see prep_status.py)
 csv.loc[_occ, 'country'] = 'Ukraine (Russian-occupied)'; csv.loc[_occ, 'c'] = 'UKR'
 csv.loc[_occ, 'year'] = np.where(csv.loc[_occ, 'n'] == 'Crimea', '2014', '')
-csv = csv[['country', 'c', 'unit', 'r', 'p', 'm', 'e', 'basis', 'source', 'year']].rename(columns={
-    'c': 'iso3', 'r': 'province', 'p': 'share_muslim_pct', 'm': 'muslims', 'e': 'count_is_share_x_population'})
+csv = csv[['country', 'c', 'unit', 'r', 'p', 'm', 'basis', 'source', 'year']].rename(columns={
+    'c': 'iso3', 'r': 'province', 'p': 'share_muslim_pct', 'm': 'muslims'})
 csv.sort_values(['country', 'unit']).to_csv(f'{OUT}/units.csv', index=False)
 com_drop = {'Trinidad & Tobago', 'Suriname', 'Guyana'}    # markers that only stood for a whole country
 

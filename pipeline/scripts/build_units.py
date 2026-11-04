@@ -1,9 +1,9 @@
 """Assemble the world layer of statistical units with Muslim-share values (WGS84)."""
-import sys, json, warnings
+import sys, warnings
 sys.path.insert(0, __import__('os').path.dirname(__import__('os').path.abspath(__file__)))
 warnings.filterwarnings('ignore')
 import numpy as np, pandas as pd, geopandas as gpd
-from shapely.geometry import shape, Polygon, MultiPolygon, Point
+from shapely.geometry import MultiPolygon
 from shapely.ops import unary_union
 from shapely import make_valid
 from common import *
@@ -126,44 +126,6 @@ def attach(g, df, iso, aliases=None, default=None, key='unit', label=None, cutof
 
 
 SUBS = []
-POP = {   # resident population, latest official estimate (2021-2024), for approximate counts
-    'DEU': {'Nordrhein-Westfalen': 18139116, 'Baden-Württemberg': 11280257, 'Bayern': 13369393, 'Hessen': 6391360,
-            'Niedersachsen': 8140242, 'Berlin': 3755251, 'Hamburg': 1892122, 'Bremen': 684864,
-            'Rheinland-Pfalz': 4159150, 'Saarland': 992666, 'Schleswig-Holstein': 2953270, 'Sachsen': 4089467,
-            'Thüringen': 2126846, 'Sachsen-Anhalt': 2186643, 'Brandenburg': 2573135, 'Mecklenburg-Vorpommern': 1628378},
-    'FRA': {'Île-de-France': 12317279, "Provence-Alpes-Côte-d'Azur": 5127840, 'Auvergne-Rhône-Alpes': 8114361,
-            'Grand Est': 5561287, 'Hauts-de-France': 5987172, 'Occitanie': 6053548, 'Bourgogne-Franche-Comté': 2800194,
-            'Centre-Val de Loire': 2573295, 'Corse': 349465, 'Normandie': 3327077, 'Nouvelle-Aquitaine': 6069352,
-            'Pays de la Loire': 3873096, 'Bretagne': 3394567},
-    'ESP': {'Melilla': 85170, 'Ceuta': 83517, 'Murcia': 1568000, 'Cataluña': 8012000, 'La Rioja': 323000,
-            'Islas Baleares': 1232000, 'Aragón': 1346000, 'Foral de Navarra': 678000, 'Madrid': 7000000,
-            'Valenciana': 5216000, 'Andalucía': 8600000, 'Canary Is.': 2238000, 'Castilla-La Mancha': 2084000,
-            'País Vasco': 2227000, 'Extremadura': 1054000, 'Castilla y León': 2390000, 'Cantabria': 590000,
-            'Asturias': 1009000, 'Galicia': 2705000},
-    'NLD': {'Drenthe': 497000, 'Flevoland': 434000, 'Friesland': 654000, 'Gelderland': 2110000, 'Groningen': 590000,
-            'Limburg': 1118000, 'Noord-Brabant': 2600000, 'Noord-Holland': 2950000, 'Overijssel': 1180000,
-            'Zuid-Holland': 3800000, 'Utrecht': 1390000, 'Zeeland': 390000},
-    'BEL': {'Capital Region': 1241000, 'Flemish': 6774000, 'Walloon': 3682000},
-    'AUT': {'Wien': 1931000, 'Vorarlberg': 400000, 'Salzburg': 560000, 'Oberösterreich': 1505000, 'Tirol': 764000,
-            'Niederösterreich': 1698000, 'Steiermark': 1252000, 'Kärnten': 563000, 'Burgenland': 297000},
-    'CHE': {'Basel-Stadt': 196000, 'Glarus': 41000, 'Solothurn': 280000, 'Sankt Gallen': 518000, 'Aargau': 703000,
-            'Schaffhausen': 84000, 'Thurgau': 286000, 'Zürich': 1564000, 'Genève': 507000, 'Basel-Landschaft': 292000,
-            'Vaud': 822000, 'Ticino': 354000, 'Bern': 1047000, 'Lucerne': 420000, 'Uri': 37000, 'Schwyz': 164000,
-            'Obwalden': 38600, 'Nidwalden': 44000, 'Zug': 129000, 'Fribourg': 330000, 'Appenzell Ausserrhoden': 55600,
-            'Appenzell Innerrhoden': 16300, 'Graubünden': 201000, 'Valais': 353000, 'Neuchâtel': 176000, 'Jura': 74000},
-}
-_al = {'DEU': {'Saxony': 'Sachsen', 'Bavaria': 'Bayern', 'Rhineland-Palatinate': 'Rheinland-Pfalz', 'Lower Saxony': 'Niedersachsen',
-               'North Rhine-Westphalia': 'Nordrhein-Westfalen', 'Mecklenburg-Western Pomerania': 'Mecklenburg-Vorpommern',
-               'Free Hanseatic Bremen': 'Bremen', 'Hesse': 'Hessen', 'Thuringia': 'Thüringen', 'Saxony-Anhalt': 'Sachsen-Anhalt'},
-       'AUT': {'Lower Austria': 'Niederösterreich', 'Upper Austria': 'Oberösterreich', 'Tyrol': 'Tirol', 'Carinthia': 'Kärnten',
-               'Styria': 'Steiermark', 'Vienna': 'Wien'},
-       'CHE': {'Grisons': 'Graubünden', 'St. Gallen': 'Sankt Gallen', 'Geneva': 'Genève'},
-       'NLD': {'North Brabant': 'Noord-Brabant', 'South Holland': 'Zuid-Holland', 'North Holland': 'Noord-Holland'}}
-for _iso, _d in _al.items():
-    for _en, _loc in _d.items():
-        POP[_iso][_en] = POP[_iso][_loc]
-POP['FRA'].update({'Guadeloupe': 384000, 'Guyane française': 286000, 'Martinique': 360000, 'Mayotte': 310000, 'Réunion': 885000})
-POP['NLD'].update({'Bonaire': 22000, 'Sint Eustatius': 3200, 'Saba': 2000})
 LAYER = {}
 PARTIAL = {'ROU'}
 
@@ -175,23 +137,11 @@ def add(g):
     g['geometry'] = g.geometry.apply(make_valid)
     iso = g.iso.iloc[0]
     g['layer'] = LAYER.get(iso, 0); LAYER[iso] = LAYER.get(iso, 0) + 1
-    if 'dflt' not in g.columns:
-        g['dflt'] = False
     if 'muslims' not in g.columns:
         g['muslims'] = np.nan
-    if False:                           # (share × population counts removed: populations were not from a cited table)
-        pop = POP[iso]
-        est = [pop.get(u, np.nan) * p / 100 for u, p in zip(g.unit, g.pct)]
-        miss = [u for u in g.unit if u not in pop]
-        if miss:
-            print('  [pop] no population for', iso, miss)
-        g['muslims'] = [m if m == m else e for m, e in zip(g.muslims, est)]
-        g['cnt_est'] = True
-    if 'cnt_est' not in g.columns:
-        g['cnt_est'] = False
     if 'year' not in g.columns:
         g['year'] = np.nan                      # per-area source year where it differs from the country's
-    SUBS.append(g[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']])
+    SUBS.append(g[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'year', 'geometry']])
 
 
 reg = pd.read_csv(f'{DATA}/sources_registry.csv')
@@ -214,9 +164,6 @@ uk['pct'] = [lut.get(cd, np.nan) for cd in uk.AREACD]
 uk['dflt'] = [cd not in lut for cd in uk.AREACD]
 ukc = dict(x.split(',') for x in open(f'{SUB}/GBR_EW_counts.txt').read().strip().split(';'))
 ukc = {k: float(v) for k, v in ukc.items()}
-UKPOP = {'S12000049': 622820, 'S12000036': 514990, 'S12000033': 224190, 'S12000042': 148820, 'S12000011': 96580,
-         'S12000038': 183810, 'S12000045': 108900, 'S12000029': 327750, 'S12000050': 341370, 'S12000039': 88340,
-         'S12000014': 158380, 'S12000030': 92530, 'S12000040': 183820, 'N09000003': 345420}
 uk['muslims'] = [ukc.get(cd, np.nan) for cd in uk.AREACD]
 uk['unit'] = uk.AREANM; uk['iso'] = 'GBR'; uk['src'] = SRC['GBR']; uk['level'] = 2
 uk['year'] = [2022 if cd.startswith('S') else 2021 if cd[0] in 'EW' else np.nan for cd in uk.AREACD]
@@ -244,7 +191,7 @@ assert _miss == [], _miss
 _g['iso'] = 'RUS'; _g['level'] = 1
 add(_g)
 
-# ---------------------------------------------------------------- China (provinces + Xinjiang prefectures + Linxia)
+# ---------------------------------------------------------------- China (provinces)
 # 2010 census, every province: the ten traditionally Muslim nationalities ÷ total population (sub2.py)
 _cn = sub2.china_2010().set_index('ne')
 _g = NE1[(NE1.adm0_a3 == 'CHN') & NE1.name.isin(_cn.index)][['name', 'geometry']].rename(columns={'name': 'gname'}).copy()
@@ -254,91 +201,7 @@ _g['muslims'] = [_cn.muslims[n] for n in _g.gname]
 _g['src'] = SRC['CHN']; _g['dflt'] = False; _g['iso'] = 'CHN'; _g['level'] = 1
 add(_g)
 
-
-def decode_echarts(fn):
-    j = json.load(open(fn))
-    feats = []
-    for f in j['features']:
-        geom = f['geometry']; polys = []
-        if geom['type'] == 'Polygon':
-            parts = [geom['coordinates']]; offs = [geom['encodeOffsets']]
-        else:
-            parts = geom['coordinates']; offs = geom['encodeOffsets']
-        for rings, ro in zip(parts, offs):
-            dec = []
-            for ring, o in zip(rings, ro):
-                px, py = o; pts = []
-                for i in range(0, len(ring), 2):
-                    x = ord(ring[i]) - 64; y = ord(ring[i + 1]) - 64
-                    x = (x >> 1) ^ (-(x & 1)); y = (y >> 1) ^ (-(y & 1))
-                    x += px; y += py; px, py = x, y
-                    pts.append((x / 1024, y / 1024))
-                dec.append(pts)
-            if len(dec[0]) >= 3:
-                polys.append(Polygon(dec[0], [r for r in dec[1:] if len(r) >= 3]))
-        feats.append({'name': f['properties']['name'], 'geometry': make_valid(MultiPolygon(polys) if len(polys) > 1 else polys[0])})
-    return gpd.GeoDataFrame(feats, crs=4326)
-
-
-ec = pd.concat([decode_echarts(f'{RAW}/chn/xinjiang.json'), decode_echarts(f'{RAW}/chn/gansu.json')])
-zh = {'乌鲁木齐': 'Urumqi', '克拉玛依': 'Karamay', '吐鲁番': 'Turpan', '哈密': 'Hami', '昌吉': 'Changji',
-      '博尔塔拉': 'Bortala', '巴音郭楞': 'Bayingolin', '阿克苏': 'Aksu', '克孜勒苏': 'Kizilsu', '喀什': 'Kashgar',
-      '和田': 'Hotan', '伊犁': 'Ili', '塔城': 'Tacheng', '阿勒泰': 'Altay', '临夏': 'Linxia',
-      '石河子': 'Shihezi', '阿拉尔': 'Aral', '图木舒克': 'Tumxuk', '五家渠': 'Wujiaqu'}
-def zhname(n):
-    for k, v in zh.items():
-        if n.startswith(k):
-            return v
-    return None
-ec['key'] = ec.name.apply(zhname)
-ec = ec[ec.key.notna()]
-xj = read_sub('CHN_xinjiang')
-xlut = dict(zip(xj.unit, xj.pct)); xlut.update({'Shihezi': 3, 'Aral': 8, 'Tumxuk': 65, 'Wujiaqu': 2})
-cty = gbf('CHN-ADM2')
-cty['pt'] = cty.geometry.representative_point()
-pts = gpd.GeoDataFrame(cty[['gname']], geometry=cty.pt, crs=4326)
-j = gpd.sjoin(pts, ec[['key', 'geometry']], how='inner', predicate='within')
-cty = cty.loc[j.index].assign(key=j.key.values)
-pref = cty.dissolve(by='key', as_index=False)
-pref['pct'] = pref.key.map(xlut)
-pref['unit'] = pref.key; pref['iso'] = 'CHN'; pref['src'] = SRC['CHN']; pref['level'] = 2
-# (Xinjiang prefecture composites removed: they mixed census years with approximate Hui shares)
-
-# ---------------------------------------------------------------- Indonesia (38 provinces)
-ia = gbf('IDN-ADM1'); i2 = gbf('IDN-ADM2')
-papua_new = {
-    'Papua Selatan': ['Merauke', 'Boven Digoel', 'Mappi', 'Asmat'],
-    'Papua Tengah': ['Nabire', 'Paniai', 'Mimika', 'Dogiyai', 'Deiyai', 'Intan Jaya', 'Puncak', 'Puncak Jaya'],
-    'Papua Pegunungan': ['Jayawijaya', 'Lanny Jaya', 'Nduga', 'Mamberamo Tengah', 'Yalimo', 'Yahukimo',
-                         'Pegunungan Bintang', 'Tolikara'],
-    'Papua Barat Daya': ['Sorong', 'Kota Sorong', 'Raja Ampat', 'Sorong Selatan', 'Maybrat', 'Tambrauw'],
-}
-newmap = {norm(r): p for p, rs in papua_new.items() for r in rs}
-pap = ia[ia.gname.isin(['Papua', 'West Papua'])]
-i2['pt'] = i2.geometry.representative_point()
-inpap = gpd.sjoin(gpd.GeoDataFrame(i2[['gname']], geometry=i2.pt, crs=4326), pap.rename(columns={'gname': 'old'}),
-                  predicate='within')
-rp = i2.loc[inpap.index].assign(old=inpap.old.values)
-def newprov(r):
-    k = norm(r.gname)
-    if k in newmap:
-        return newmap[k]
-    return 'Papua' if r.old == 'Papua' else 'Papua Barat'
-rp['prov'] = rp.apply(newprov, axis=1)
-print('Papua regencies:', rp.groupby('prov').size().to_dict())
-pp = rp[['prov', 'geometry']].dissolve(by='prov', as_index=False).rename(columns={'prov': 'gname'})[['gname', 'geometry']]
-pp['disp'] = pp.gname
-ia2 = pd.concat([ia[~ia.gname.isin(['Papua', 'West Papua'])], pp], ignore_index=True)
-idn_alias = {'Bangka-Belitung Islands': 'Kepulauan Bangka Belitung', 'Central Java': 'Jawa Tengah',
-             'Central Kalimantan': 'Kalimantan Tengah', 'Central Sulawesi': 'Sulawesi Tengah', 'East Java': 'Jawa Timur',
-             'East Kalimantan': 'Kalimantan Timur', 'East Nusa Tenggara': 'Nusa Tenggara Timur',
-             'Jakarta Special Capital Region': 'DKI Jakarta', 'North Kalimantan': 'Kalimantan Utara',
-             'North Maluku': 'Maluku Utara', 'North Sulawesi': 'Sulawesi Utara', 'North Sumatra': 'Sumatera Utara',
-             'Riau Islands': 'Kepulauan Riau', 'South Kalimantan': 'Kalimantan Selatan',
-             'South Sulawesi': 'Sulawesi Selatan', 'South Sumatra': 'Sumatera Selatan',
-             'Southeast Sulawesi': 'Sulawesi Tenggara', 'Special Region of Yogyakarta': 'DI Yogyakarta',
-             'West Java': 'Jawa Barat', 'West Kalimantan': 'Kalimantan Barat', 'West Nusa Tenggara': 'Nusa Tenggara Barat',
-             'West Sulawesi': 'Sulawesi Barat', 'West Sumatra': 'Sumatera Barat'}
+# ---------------------------------------------------------------- Indonesia (regencies and cities)
 idk = sub2.indonesia(); idk['iso'] = 'IDN'; idk['src'] = SRC['IDN']; idk['level'] = 2
 add(idk)
 
@@ -372,8 +235,6 @@ add(attach(g, mmr, 'MMR', src=SRC['MMR']))
 add(attach(gbf('BGD-ADM2'), read_sub('BGD'), 'BGD', src=SRC['BGD'], cutoff=0.7,
            aliases={'Brahamanbaria': 'Brahmanbaria', 'Chittagong': 'Chattogram', 'Comilla': 'Cumilla',
                     'Nawabganj': 'Chapai Nawabganj', 'Netrakona': 'Netrokona'}))
-pak_alias = {'Karachi': 'Karachi South', 'Nawabshah': 'Shaheed Benazirabad', 'Naushehro Feroze': 'Naushahro Feroze',
-             'Jafarabad': 'Jaffarabad', 'Kachhi': 'Kacchi'}
 add(attach(gbf('NPL-ADM1'), read_sub('NPL'), 'NPL', aliases={'Province 1': 'Koshi', 'Province 2': 'Madhesh',
                                                            'Sudurpaschim': 'Sudurpashchim'}, src=SRC['NPL']))
 
@@ -402,14 +263,9 @@ uga_parent = {'Agago': 'Pader', 'Alebtong': 'Lira', 'Amolatar': 'Lira', 'Amudat'
               'Oyam': 'Apac', 'Rubirizi': 'Bushenyi', 'Serere': 'Soroti', 'Sheema': 'Bushenyi', 'Zombo': 'Nebbi',
               'Kitgum': 'Kitgum'}
 add(attach(ne1('UGA'), read_sub('UGA'), 'UGA', aliases=uga_parent, src=SRC['UGA'], cutoff=0.9))
-tz_alias = {'Kaskazini-Pemba': 'Pemba North', 'Kusini-Pemba': 'Pemba South', 'Kaskazini-Unguja': 'Zanzibar North'}
 add(attach(gbf('MWI-ADM2'), read_sub('MWI'), 'MWI', src=SRC['MWI']))
 bf = read2('BFA'); bf = bf[bf.est == 0]
-bfg = attach(gbf('BFA-ADM2'), bf, 'BFA', src=SRC['BFA'], cutoff=0.9)
-est = dict(zip(bf.unit, bf.est)); breg = dict(zip(bf.unit, bf.region))
-m_ = match_names(bfg.gname.tolist(), bf.unit.tolist(), cutoff=0.9, verbose=False)
-bfg['k'] = bfg.gname.map(m_)
-add(bfg.drop(columns='k'))
+add(attach(gbf('BFA-ADM2'), bf, 'BFA', src=SRC['BFA'], cutoff=0.9))
 add(attach(gbf('BEN-ADM1'), read_sub('BEN').query("basis.str.contains('census')", engine='python'), 'BEN', src=SRC['BEN'], cutoff=0.75,
            aliases={'Atakora': 'Atacora', 'Atlanique': 'Atlantique', 'Kouffo': 'Couffo', 'Oueme': 'Ouémé'}))
 add(attach(gbf('ZAF-ADM1'), read2('ZAF'), 'ZAF', src=SRC['ZAF'], aliases={'Nothern Cape': 'Northern Cape'}))
@@ -434,8 +290,6 @@ add(attach(gbf('MNE-ADM1'), _me, 'MNE', src=SRC['MNE'],
                     'Plužine Municipality': _comb, 'Šavnik Municipality': _comb, 'Žabljak Municipality': _comb}))
 srb = gbf('SRB-ADM2'); srb['gname'] = srb.gname.str.replace(r' (Municipality|City|Municipal\*)$', '', regex=True)
 add(attach(srb, read_sub('SRB'), 'SRB', src=SRC['SRB'], default=None, cutoff=0.9))
-kos_alias = {'Kosovska Mitrovica': 'Mitrovicë', 'Štrpce': 'Shtërpcë', 'Novo Brdo': 'Novobërdë', 'Klina': 'Klinë',
-             'Đakovica': 'Gjakovë', 'Vitina': 'Viti', 'Lipljan': 'Lipjan'}
 add(attach(gbf('BIH-ADM2'), read_sub('BIH'), 'BIH', src=SRC['BIH'], cutoff=0.6,
            aliases={'Bosnian-Podrinje Canton Goražde': 'Bosnian Podrinje', 'Brcko District': 'Brčko'}))
 # Spain: UCIDE count of Muslims by province (31 Dec 2017) ÷ INE official population (1 Jan 2018)
@@ -469,7 +323,6 @@ subs = gpd.GeoDataFrame(pd.concat(SUBS, ignore_index=True), crs=4326)
 print('subunits:', len(subs), 'countries:', subs.iso.nunique())
 
 # ---------------------------------------------------------------- clip to Natural Earth outlines, fill residual slivers
-iso_fix = {'PSX': 'PSX'}
 out = []
 for iso, g in subs.groupby('iso'):
     cpoly = make_valid(unary_union(base[base.ADM0_A3 == iso].geometry.values))
@@ -491,11 +344,11 @@ for iso, g in subs.groupby('iso'):
             rr = gpd.GeoDataFrame(geometry=list(getattr(resid, 'geoms', [resid])), crs=4326)
             rr = rr[rr.geometry.area > 1e-9]
             if len(rr):
-                near = gpd.sjoin_nearest(rr.to_crs(3857), pg[['pct', 'unit', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']].to_crs(3857),
+                near = gpd.sjoin_nearest(rr.to_crs(3857), pg[['pct', 'unit', 'src', 'level', 'layer', 'dflt', 'muslims', 'year', 'geometry']].to_crs(3857),
                                          how='left').to_crs(4326)
                 near = near[~near.index.duplicated()]
                 near['iso'] = iso
-                pg = pd.concat([pg, near[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'cnt_est', 'year', 'geometry']]], ignore_index=True)
+                pg = pd.concat([pg, near[['iso', 'unit', 'pct', 'src', 'level', 'layer', 'dflt', 'muslims', 'year', 'geometry']]], ignore_index=True)
     out.append(pg)
 subs = gpd.GeoDataFrame(pd.concat(out, ignore_index=True), crs=4326)
 subs = subs[~subs.geometry.is_empty]
@@ -520,7 +373,7 @@ for k, grp in subs.groupby(['iso', 'unit', 'pct', 'level', 'layer', 'dflt'], dro
     mu = grp.muslims.dropna()
     rows.append({'iso': k[0], 'unit': k[1], 'pct': k[2], 'level': k[3], 'layer': k[4], 'dflt': k[5],
                  'src': grp.src.iloc[0], 'muslims': mu.iloc[0] if len(mu) else np.nan,
-                 'cnt_est': bool(grp.cnt_est.fillna(False).any()), 'year': grp.year.dropna().iloc[0] if grp.year.notna().any() else np.nan,
+                 'year': grp.year.dropna().iloc[0] if grp.year.notna().any() else np.nan,
                  'geometry': safe_union(grp.geometry.values)})
 subs = gpd.GeoDataFrame(rows, crs=4326)
 # keep only polygonal parts

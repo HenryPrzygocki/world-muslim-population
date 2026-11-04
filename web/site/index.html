@@ -169,8 +169,8 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .card .kv dd span { font-weight: 400; color: var(--ink-2); }
 .badge { align-self: flex-start; font: 600 11px var(--f-cond); letter-spacing: .03em; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
 .badge.c, .badge.s { color: var(--accent); } .badge.e { color: #3D6C8F; } .badge.n, .badge.p { color: var(--ink-2); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.e { color: #8DB8D8; } :root:not([data-theme="light"]) .badge.m { color: #E2A26B; } }
-:root[data-theme="dark"] .badge.e { color: #8DB8D8; } :root[data-theme="dark"] .badge.m { color: #E2A26B; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.e { color: #8DB8D8; } }
+:root[data-theme="dark"] .badge.e { color: #8DB8D8; }
 .card .src { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 6px; }
 .card .mem { font: 400 12.5px/1.4 var(--f-cond); color: var(--ink-2); }
 .card .sum { font: 400 12.5px/1.4 var(--f-cond); background: var(--accent-soft); border-radius: 6px; padding: 6px 8px; }
@@ -628,7 +628,7 @@ Promise.all([getJSON(FILES.w), getJSON(FILES.extra), document.fonts ? document.f
 function prepare(L, X) {
   const short = X.short || {};
   const countryName = c => short[c] || c;
-  const mk = (pr, kind) => ({ kind, i: pr.i, n: pr.n, c: pr.c, p: pr.p, m: pr.m, e: pr.e, d: pr.d, s: pr.s, y: pr.y, q: pr.q || (kind === 'country' ? 'p' : 'c'),
+  const mk = (pr, kind) => ({ kind, i: pr.i, n: pr.n, c: pr.c, p: pr.p, m: pr.m, d: pr.d, s: pr.s, y: pr.y, q: pr.q || (kind === 'country' ? 'p' : 'c'),
     r: pr.r, lx: pr.lx, ly: pr.ly, lr: pr.lr, k: klass(pr.p), country: countryName(pr.c), g: {} });
   const C = L.Cprops.map(p => mk(p, 'country')), U = L.Uprops.map(p => mk(p, 'unit'));
   D = { X, C, U, short, countryName, subIso: new Set(U.map(u => u.c)), sphere: new Path2D(gpath({ type: 'Sphere' })),
@@ -893,12 +893,12 @@ const F_SEA = 'italic 400 $ "Source Serif 4", Georgia, serif', F_COM = '500 $ "F
 const font = (f, px) => f.replace('$', px.toFixed(2) + 'px');
 function fmtP(p) { if (p == null) return '—'; if (p <= 0) return '0%'; if (p < 0.1) return '<0.1%'; if (p < 1) return p.toFixed(1) + '%';
   if (p >= 99.5) return '>99%'; if (p < 10) return (+p.toFixed(1)) + '%'; return Math.round(p) + '%'; }
-function fmtN(n, est) { if (n == null) return ''; let s;
+function fmtN(n) { if (n == null) return ''; let s;
   if (n < 100) s = String(Math.round(n)); else if (n < 1000) s = String(Math.round(n / 10) * 10);
   else if (n < 9950) s = (n / 1000).toFixed(1) + 'k'; else if (n < 999500) s = Math.round(n / 1000) + 'k';
   else if (n < 9.95e6) s = (n / 1e6).toFixed(1) + 'M'; else s = Math.round(n / 1e6) + 'M';
-  return (est ? '≈' : '') + s; }
-const valLine = (p, m, e) => (m != null && p < 50) ? fmtP(p) + ' · ' + fmtN(m, e) : fmtP(p);
+  return s; }
+const valLine = (p, m) => (m != null && p < 50) ? fmtP(p) + ' · ' + fmtN(m) : fmtP(p);
 const comR = n => 0.05 * Math.sqrt(n) * Math.sqrt(Math.min(Math.max(zAbs(), 0.2), 64));
 const metR = n => 0.0115 * Math.sqrt(n) * Math.sqrt(Math.min(Math.max(zAbs(), 0.2), 64));
 function text(c, s, x, y, f, px, col, align = 'center', base = 'middle', halo = null, ls = 0) {
@@ -1042,7 +1042,7 @@ function labels(c) {
   }
   ul.sort((a, b) => b.key - a.key);
   for (const { u, x, y, rpx } of ul) {
-    const vl = valLine(u.p, u.m, u.e), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
+    const vl = valLine(u.p, u.m), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
     const px = Math.min(15, 1.35 * rpx / Math.sqrt((w1 / 2) ** 2 + 1.1 ** 2)); if (px < 9) continue;
     const w = w1 * px, b = [x - w / 2 - 1, y - px * 1.05, x + w / 2 + 1, y + px * 1.05];
     if (!free(b)) continue; box.add(b);
@@ -1112,9 +1112,7 @@ function drawOverlay() {
 // ------------------------------------------------------------------ cards
 const tip = $('tip'), panel = $('panel');
 function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
-function longN(n, est) { if (n == null) return null;
-  if (est) { const p = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.max(n, 1))) - 2)); return '≈ ' + (Math.round(n / p) * p).toLocaleString('en-US'); }
-  return Math.round(n).toLocaleString('en-US'); }
+function longN(n) { return n == null ? null : Math.round(n).toLocaleString('en-US'); }
 const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : NODATA}"></span>`;
 function badge(q, yr) {
   const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), s: 'Published estimate' + (yr ? ' · ' + yr : ''),
@@ -1134,7 +1132,7 @@ function cardHTML(sel, full) {
       : sel.occ ? 'Ukraine · Russian-occupied area' : 'Country';
     const eth = isU && it.q === 'e';
     let kv = '';
-    if (it.m != null) kv += `<dt>${eth ? 'Muslim nationalities' : 'Muslims'}</dt><dd>${longN(it.m, isU && it.e)}${isU && it.e ? ' <span>(share × population)</span>' : ''}</dd>`;
+    if (it.m != null) kv += `<dt>${eth ? 'Muslim nationalities' : 'Muslims'}</dt><dd>${longN(it.m)}</dd>`;
     const notes = [];
     if (isU && it.p == null) { const nl = D.labelOf.get(it.c); notes.push('No figure was collected for ' + (it.n ? 'this area' : 'these areas') + '.' + (nl && nl.p != null ? ` The national figure for ${it.country} is ${fmtP(nl.p)} (Pew 2020).` : '')); }
     if (X.notes[it.c]) notes.push(X.notes[it.c]);
@@ -1156,7 +1154,7 @@ function cardHTML(sel, full) {
   }
   if (sel.kind === 'region') {
     const us = D.U.filter(u => u.c === it.c && u.r === it.n);
-    const ok = us.length && us.every(u => u.m != null && u.p > 0 && !u.e);
+    const ok = us.length && us.every(u => u.m != null && u.p > 0);
     const m = ok ? us.reduce((a, u) => a + u.m, 0) : null, pop = ok ? us.reduce((a, u) => a + u.m / u.p * 100, 0) : null;
     const p = ok ? m / pop * 100 : null;
     return `<div class="eb">Province / region · ${esc(D.countryName(it.c))}</div><h2>${esc(it.n)}</h2>
@@ -1509,7 +1507,7 @@ function aboutHTML() {
     <p style="margin-top:8px">All other countries and territories: Pew Research Center 2020 national estimate.</p>
     <h3>Credits &amp; licences</h3>
     <ul><li>Statistics: Pew Research Center; the national statistics offices listed above; ASARB / ARDA (U.S. Religion Census 2020); IBGE; INE Chile; UCIDE (Spain).</li>
-    <li>Boundaries: <b>Natural Earth</b> (public domain); <b>geoBoundaries</b> (Runfola et al. 2020, <i>PLOS ONE</i> 15(4): e0231866) — individual files under CC BY 4.0, CC BY 3.0 IGO, Open Government Licence – Canada, public domain, and, for Croatia, Eritrea, Guinea-Bissau, Guyana, Cambodia, Indonesia (provinces), Montenegro, Mozambique, Serbia, Suriname, Chad, Togo and Ethiopia, the Open Database License: <b>© OpenStreetMap contributors</b>; Ghana regions CC BY-SA 2.0;
+    <li>Boundaries: <b>Natural Earth</b> (public domain); <b>geoBoundaries</b> (Runfola et al. 2020, <i>PLOS ONE</i> 15(4): e0231866) — individual files under CC BY 4.0, CC BY 3.0 IGO, Open Government Licence – Canada, public domain, and, for Cambodia, Croatia, Ethiopia, Guinea-Bissau, Guyana, Indonesia (provinces), Montenegro and Serbia, the Open Database License: <b>© OpenStreetMap contributors</b>;
     UK local authorities: Office for National Statistics, Open Government Licence v3.0 — contains OS data © Crown copyright and database right 2021; India districts: DataMeet community maps; Russian-occupied areas: DeepState.</li>
     <li>Because some boundaries are OpenStreetMap-derived, the map data files of this site are available under the Open Database License (ODbL 1.0).</li>
     <li>Concept after Edin Radončić, “World Muslim Population” (2015). Fonts: Fira Sans and Source Serif (SIL Open Font License).</li></ul>
@@ -1578,7 +1576,7 @@ function tbRender() {
   const shown = rows.slice(0, TB.limit);
   $('tbTable').querySelector('tbody').innerHTML = shown.map((r, i) => {
     const pc = r.p == null ? '<span class="mut">—</span>' : `<span class="pc"><span class="bar" aria-hidden="true"><i style="width:${Math.max(1.5, Math.min(100, r.p))}%;background:${COLORS[r.k]}"></i></span><b>${fmtP(r.p)}</b></span>`;
-    const m = r.m == null ? '' : (r.kind === 'unit' && r.it.e ? '≈ ' : '') + Math.round(r.m).toLocaleString('en-US');
+    const m = r.m == null ? '' : Math.round(r.m).toLocaleString('en-US');
     const cells = { name: `<th scope="row"><button type="button" class="tb-go${r.st ? ' st' : ''}" data-i="${i}">${esc(r.name)}</button>${r.sub ? `<span class="tb-sub">${esc(r.sub)}</span>` : ''}</th>`,
       ct: `<td class="c-ct">${esc(r.ct)}</td>`, p: `<td class="num">${pc}</td>`, m: `<td class="num${m ? '' : ' mut'}">${m || '—'}</td>`,
       yr: `<td class="c-yr${r.yr ? '' : ' mut'}">${esc(r.yr || '—')}</td>`, bs: `<td class="c-bs"><span class="bs ${r.q}">${BASIS_SHORT[r.q]}</span></td>` };

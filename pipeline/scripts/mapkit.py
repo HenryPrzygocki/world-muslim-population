@@ -51,7 +51,7 @@ def fmt(p):
     return f'{p:.0f}%'
 
 
-def fmtn(n, est=False):
+def fmtn(n):
     """compact count: 87 · 540 · 9.6k · 25k · 342k · 3.6M · 36M"""
     if n is None or n != n:
         return ''
@@ -68,12 +68,12 @@ def fmtn(n, est=False):
         s = f'{n / 1e6:.1f}M'
     else:
         s = f'{n / 1e6:.0f}M'
-    return ('≈' if est else '') + s
+    return s
 
 
-def value_line(pct, cnt=None, est=False):
+def value_line(pct, cnt=None):
     if cnt is not None and cnt == cnt and pct < 50:
-        return f'{fmt(pct)} · {fmtn(cnt, est)}'
+        return f'{fmt(pct)} · {fmtn(cnt)}'
     return fmt(pct)
 
 
@@ -228,6 +228,27 @@ class Canvas:
         self.boxes.add(b, tag)
 
 
+# ------------------------------------------------------------------ country label names and positions
+# (shared by the print edition and the web map)
+RENAME = {'United States of America': 'UNITED STATES', 'Democratic Republic of the Congo': 'DR CONGO',
+          'Republic of the Congo': 'CONGO', 'Central African Republic': 'CENTRAL AFRICAN REP.',
+          'United Republic of Tanzania': 'TANZANIA', 'Bosnia and Herzegovina': 'BOSNIA & HERZ.',
+          'United Arab Emirates': 'U.A.E.', 'Russian Federation': 'RUSSIA', 'Russia': 'RUSSIA', 'eSwatini': 'ESWATINI',
+          'Equatorial Guinea': 'EQ. GUINEA', 'South Sudan': 'SOUTH SUDAN', 'Dominican Republic': 'DOMINICAN REP.',
+          'Solomon Islands': 'SOLOMON IS.', 'North Macedonia': 'N. MACEDONIA', 'Northern Cyprus': 'N. CYPRUS',
+          'Falkland Islands': 'FALKLAND IS.', 'French Southern and Antarctic Lands': 'FR. S. & ANT. LANDS',
+          'Saint Vincent and the Grenadines': 'ST VINCENT & GREN.', 'Trinidad and Tobago': 'TRINIDAD & TOBAGO',
+          'Antigua and Barbuda': 'ANTIGUA & BARBUDA', 'Saint Kitts and Nevis': 'ST KITTS & NEVIS',
+          'São Tomé and Principe': 'SÃO TOMÉ & PRÍNCIPE', 'Federated States of Micronesia': 'MICRONESIA',
+          'Turks and Caicos Islands': 'TURKS & CAICOS', 'Papua New Guinea': 'PAPUA NEW GUINEA',
+          'Republic of Serbia': 'SERBIA', 'Czechia': 'CZECHIA', 'East Timor': 'TIMOR-LESTE',
+          'Hong Kong S.A.R.': 'HONG KONG', 'Macao S.A.R': 'MACAO', 'Palestine': 'PALESTINE',
+          'The Bahamas': 'BAHAMAS', 'Guinea-Bissau': 'GUINEA-BISSAU', 'Western Sahara': 'WESTERN SAHARA'}
+
+LABEL_POS = {'United Kingdom': (-4.1, 57.15), 'India': (78.2, 21.4), 'Norway': (9.0, 61.6),
+             'Croatia': (16.0, 45.45)}
+
+
 # ------------------------------------------------------------------ choropleth unit labels
 _NAME_FIX = {'Chechen Republic': 'Chechnya', 'Karachay-Cherkess Republic': 'Karachay-Cherkessia',
              'Kabardino-Balkar Republic': 'Kabardino-Balkaria', 'Chuvash Republic': 'Chuvashia',
@@ -362,7 +383,7 @@ def unit_labels(cv, units, minsize=0.7, maxsize=5.5, namecol='unit', avoid=True,
         name = clean_unit(getattr(r, namecol))
         if len(name) > maxchars:
             name = name[:maxchars - 1] + '…'
-        val = value_line(r.pct, cnt, bool(getattr(r, 'cnt_est', False)))
+        val = value_line(r.pct, cnt)
         w1 = max(text_w(name, COND, 1.0), text_w(val, COND_SB, 0.92))
         # box (w1*s) x (2.1*s) must fit in the inscribed circle (some overflow allowed)
         size = min(maxsize, 1.22 * rad_pt / math.sqrt((w1 / 2) ** 2 + 1.05 ** 2))

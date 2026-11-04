@@ -203,24 +203,6 @@ def world_page(preview=False):
     return fig
 
 
-RENAME = {'United States of America': 'UNITED STATES', 'Democratic Republic of the Congo': 'DR CONGO',
-          'Republic of the Congo': 'CONGO', 'Central African Republic': 'CENTRAL AFRICAN REP.',
-          'United Republic of Tanzania': 'TANZANIA', 'Bosnia and Herzegovina': 'BOSNIA & HERZ.',
-          'United Arab Emirates': 'U.A.E.', 'Russian Federation': 'RUSSIA', 'Russia': 'RUSSIA', 'eSwatini': 'ESWATINI',
-          'Equatorial Guinea': 'EQ. GUINEA', 'South Sudan': 'SOUTH SUDAN', 'Dominican Republic': 'DOMINICAN REP.',
-          'Solomon Islands': 'SOLOMON IS.', 'North Macedonia': 'N. MACEDONIA', 'Northern Cyprus': 'N. CYPRUS',
-          'Falkland Islands': 'FALKLAND IS.', 'French Southern and Antarctic Lands': 'FR. S. & ANT. LANDS',
-          'Saint Vincent and the Grenadines': 'ST VINCENT & GREN.', 'Trinidad and Tobago': 'TRINIDAD & TOBAGO',
-          'Antigua and Barbuda': 'ANTIGUA & BARBUDA', 'Saint Kitts and Nevis': 'ST KITTS & NEVIS',
-          'São Tomé and Principe': 'SÃO TOMÉ & PRÍNCIPE', 'Federated States of Micronesia': 'MICRONESIA',
-          'Turks and Caicos Islands': 'TURKS & CAICOS', 'Papua New Guinea': 'PAPUA NEW GUINEA',
-          'Republic of Serbia': 'SERBIA', 'Czechia': 'CZECHIA', 'East Timor': 'TIMOR-LESTE',
-          'Hong Kong S.A.R.': 'HONG KONG', 'Macao S.A.R': 'MACAO', 'Palestine': 'PALESTINE',
-          'The Bahamas': 'BAHAMAS', 'Guinea-Bissau': 'GUINEA-BISSAU', 'Western Sahara': 'WESTERN SAHARA'}
-
-LABEL_POS = {'United Kingdom': (-4.1, 57.15), 'India': (78.2, 21.4), 'Norway': (9.0, 61.6),
-             'Croatia': (16.0, 45.45)}
-
 REGIONS = [('Xinjiang', 84.0, 39.6, 9.5), ('Ningxia', 106.2, 37.6, 5.0), ('Linxia', 103.0, 35.2, 3.6),
            ('Kashmir', 75.4, 33.9, 5.0), ('Kerala', 76.4, 10.2, 4.2), ('Assam', 92.6, 26.0, 4.2),
            ('Lakshadweep', 72.7, 11.2, 3.0), ('Bangsamoro', 124.6, 6.3, 5.0), ('Aceh', 96.8, 4.3, 4.6),

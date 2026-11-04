@@ -178,7 +178,6 @@ def draw_panel(fig, rect_in, page_h, spec, bbox, crs, title_inset=None, frame_lw
     if country_labels:
         ctry = src('countries')
         natd = nat.dissolve(by='ADMIN', aggfunc={'pct': 'first', 'muslims': 'first', 'ADM0_A3': 'first'})
-        from world import RENAME, LABEL_POS
         rows = []
         for adm, r in natd.iterrows():
             g = r.geometry
