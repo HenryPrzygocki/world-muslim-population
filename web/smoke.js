@@ -1,9 +1,11 @@
-// Smoke test of the built site (web/test mirror, served on :8765). Usage: node smoke.js [outdir]
+// Smoke test of the built site (web/test mirror, served on :8765; see BUILD.md). Usage: node web/smoke.js [outdir]
+// Screenshots go to web/ux by default. Uses Playwright's own Chromium; set CHROMIUM=/path/to/chrome to use another build.
 const { chromium, devices } = require('playwright');
-const OUT = process.argv[2] || 'ux';
-const EXE = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless_shell';
+const path = require('path'), fs = require('fs');
+const OUT = process.argv[2] || path.join(__dirname, 'ux');
+fs.mkdirSync(OUT, { recursive: true });
 (async () => {
-  const b = await chromium.launch({ executablePath: EXE });
+  const b = await chromium.launch(process.env.CHROMIUM ? { executablePath: process.env.CHROMIUM } : {});
   const fails = [];
   const ok = (cond, msg) => { if (!cond) fails.push(msg); console.log((cond ? '  ok  ' : '  FAIL ') + msg); };
   const ready = p => p.waitForFunction(() => document.getElementById('loading').hidden, null, { timeout: 90000 });
@@ -13,7 +15,7 @@ const EXE = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless
   const t0 = Date.now(); await p.goto('http://localhost:8765/index.html'); await ready(p); console.log('desktop first map', Date.now() - t0, 'ms');
   await p.waitForTimeout(1200); await p.screenshot({ path: `${OUT}/s_world.png` });
   const search = async term => { await p.fill('#q', term); await p.waitForTimeout(200); return p.$$eval('#results li', ls => ls.map(l => l.innerText.replace(/\n/g, ' | '))); };
-  for (const [term, expect] of [['london', 'Greater London'], ['punjab', 'Punjab'], ['java', 'Java'], ['paris', 'Paris'], ['cape town', 'Cape Town'], ['türkiye', 'Turkey'], ['usa', 'United States'], ['uk', 'United Kingdom'], ['jawa', 'Java'], ['sao paulo', 'São Paulo'], ['dearborn', 'Detroit']]) {
+  for (const [term, expect] of [['london', 'Greater London'], ['punjab', 'Punjab'], ['java', 'Java'], ['paris', 'Paris'], ['cape town', 'Cape Town'], ['türkiye', 'Turkey'], ['usa', 'United States'], ['uk', 'United Kingdom'], ['jawa', 'Java'], ['sao paulo', 'São Paulo'], ['dearborn', 'Detroit'], ['minas gerais', 'Minas Gerais']]) {
     const r = await search(term); ok(r.length && r[0].toLowerCase().includes(expect.toLowerCase()), `search "${term}" → ${r[0]}`);
   }
   await p.fill('#q', 'Malappuram'); await p.waitForTimeout(200); await p.keyboard.press('Enter'); await p.waitForTimeout(1600);
@@ -24,6 +26,10 @@ const EXE = '/opt/pw-browsers/chromium_headless_shell-1194/chrome-linux/headless
   ok(p.url().endsWith('#europe'), 'view chip sets #europe');
   await p.goBack(); await p.waitForTimeout(1500);
   ok(/Malappuram/.test(p.url()) && !(await p.$eval('#panel', e => e.hidden)), 'Back restores the previous selection');
+  // a state of a large country without regional figures: link restores it, card says the figure is national
+  await p.goto('http://localhost:8765/index.html#@-43.2,-22.9,6/s/BRA/Rio%20de%20Janeiro'); await p.waitForTimeout(1500);
+  const st = await p.$eval('#panel', e => e.hidden ? '' : e.innerText);
+  ok(/State/i.test(st) && /Rio de Janeiro/.test(st) && /national/.test(st), 'state link pins the state card: ' + st.split('\n').slice(0, 2).join(' · '));
   await p.goto('http://localhost:8765/index.html#balkans'); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_balkans.png` });
   await p.evaluate(() => { location.hash = '#usa'; }); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_usa.png` });
   ok(await p.$eval('.chip[data-k="usa"]', e => e.classList.contains('on')), 'editing the hash moves the map (#usa)');
