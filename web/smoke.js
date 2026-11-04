@@ -34,6 +34,11 @@ fs.mkdirSync(OUT, { recursive: true });
   await p.goto('http://localhost:8765/index.html#@-43.2,-22.9,6/s/BRA/Rio%20de%20Janeiro'); await p.waitForTimeout(1500);
   const br = await p.$eval('#panel', e => e.hidden ? '' : e.innerText);
   ok(/Rio de Janeiro/.test(br) && /census/i.test(br) && /2010/.test(br) && /not a sum of the cities/.test(br), 'Brazilian state shows its 2010 census figure and how it was made: ' + br.split('\n').slice(1, 4).join(' · '));
+  // speculative mode: off by default; a speculative link turns it on and shows the estimate card
+  ok(!(await p.$eval('#tSpec', e => e.checked)), 'speculative mode is off by default');
+  await p.goto('http://localhost:8765/index.html#@8,11,5/x/NGA/Kano'); await p.waitForTimeout(1500);
+  const sp = await p.$eval('#panel', e => e.hidden ? '' : e.innerText);
+  ok(await p.$eval('#tSpec', e => e.checked) && /Kano/.test(sp) && /speculative/i.test(sp) && /95% range/.test(sp), 'a speculative link turns the mode on: ' + sp.split('\n').slice(1, 4).join(' · '));
   await p.goto('http://localhost:8765/index.html#balkans'); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_balkans.png` });
   await p.evaluate(() => { location.hash = '#namerica'; }); await p.waitForTimeout(1500); await p.screenshot({ path: `${OUT}/s_namerica.png` });
   ok(await p.$eval('.chip[data-k="namerica"]', e => e.classList.contains('on')), 'editing the hash moves the map (#namerica)');

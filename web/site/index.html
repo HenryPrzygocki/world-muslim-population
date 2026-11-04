@@ -132,12 +132,17 @@ canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block
 .keys .k-dash { background: #F6F2EA; outline: 1.4px dashed #2E3236; outline-offset: -1px; }
 .keys .k-kri { background: #004A32; outline: 1.6px dashed #fff; outline-offset: -3px; }
 .keys .k-prov { height: 0; border-radius: 0; border-top: 1.4px dashed rgba(110,110,100,.85); }
-.keys .k-l1 { height: 0; border-radius: 0; border-top: 1.6px solid rgba(36,44,48,.75); }
-.keys .k-l2 { height: 0; border-radius: 0; border-top: 1px solid rgba(36,44,48,.4); }
+.keys .k-l0 { height: 2px; border-radius: 0; background: #2E3236; box-shadow: 0 0 0 1.5px rgba(255,255,255,.9); }
+.keys .k-l1 { height: 0; border-radius: 0; border-top: 1.2px solid rgba(36,44,48,.65); }
+.keys .k-l2 { height: 0; border-radius: 0; border-top: 0.6px solid rgba(36,44,48,.45); }
 .keys .k-nofig { background: repeating-linear-gradient(45deg, rgba(120,120,112,.6) 0 1px, #E2E2DE 1px 5px); }
 .toggles { display: flex; flex-direction: column; gap: 6px; }
 .toggles label { display: flex; align-items: center; gap: 7px; font: 400 13px var(--f-cond); cursor: pointer; }
 .toggles input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+.toggles label.spec { align-items: flex-start; } .toggles label.spec span { color: var(--ink-2); }
+.toggles label.spec input { margin-top: 2px; }
+body.spec-on .lg-title::after { content: ' · speculative'; color: #A0521C; font-weight: 600; }
+.badge.v, .dtab .bs.v { color: #A0521C; }   /* v: speculative estimate (not 'x': that is the close button) */
 .legend .note { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); margin: 0; }
 .legend .note button, .attrib button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 
@@ -353,11 +358,13 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
           <span><i class="k-hatch"></i><span>Russian-occupied, internationally recognised as Ukraine</span></span>
           <span><i class="k-dash"></i><span>Territory of disputed status, e.g. <em>Taiwan</em>, <em>Kosovo</em>, <em>Falklands (Malvinas)</em></span></span>
           <span><i class="k-kri"></i><span>Autonomous region (Kurdistan Region of Iraq)</span></span>
+          <span><i class="k-l0"></i><span>International border</span></span>
           <span><i class="k-l1"></i><span>State or province boundary</span></span>
           <span><i class="k-l2"></i><span>Boundary of smaller areas with their own figures (districts, municipalities…)</span></span>
           <span><i class="k-prov"></i><span>State or province boundary in a large country with a national figure only</span></span>
         </div>
         <div class="toggles">
+          <label class="spec"><input type="checkbox" id="tSpec"> Speculative mode <span>— survey-based regional estimates where no official figure exists (dotted)</span></label>
           <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
           <label><input type="checkbox" id="tMet" checked> U.S. metro areas (2020 Religion Census)</label>
         </div>
@@ -551,7 +558,8 @@ function tileIndex(items) {     // items: {bb}; one tile per item by bbox centre
 function buildLOD(topo, key) {
   const A = decodeArcs(topo), O = topo.objects;
   const feats = (obj) => obj.geometries.map(g => { const rings = ringsOf(g); return { rings, bb: rings.length ? bboxOfRings(A, rings) : [NaN, NaN, NaN, NaN], i: g.properties ? g.properties.i : undefined, path: null }; });
-  const L = { key, A, C: feats(O.countries), U: feats(O.units), Cprops: O.countries.geometries.map(g => g.properties), Uprops: O.units.geometries.map(g => g.properties) };
+  const L = { key, A, C: feats(O.countries), U: feats(O.units), Cprops: O.countries.geometries.map(g => g.properties), Uprops: O.units.geometries.map(g => g.properties),
+    P: O.spec ? feats(O.spec) : [], Pprops: O.spec ? O.spec.geometries.map(g => g.properties) : [] };   // P: speculative regions
   // arc owners per object, for meshes (borders = arcs shared by two features)
   const owners = (obj) => { const o1 = new Int32Array(A.ln.length).fill(-1), o2 = new Int32Array(A.ln.length).fill(-1);
     obj.geometries.forEach((g, gi) => { for (const r of ringsOf(g)) for (const ai of r) { const a = ai < 0 ? ~ai : ai; if (o1[a] < 0) o1[a] = gi; else if (o1[a] !== gi && o2[a] < 0) o2[a] = gi; } });
@@ -562,7 +570,8 @@ function buildLOD(topo, key) {
   const coast = [], borders = [], stat = [], sar = [];
   // borders inside a country: between first-level divisions (A) or between finer areas inside one (B); 'd' sets lie
   // between two dark fills and are drawn light, the others dark. National-only countries' state lines (s) likewise.
-  const uA = [], uAd = [], uB = [], uBd = [], sL = [], sD = [];
+  const uA = [], uAd = [], uB = [], uBd = [], sL = [], sD = [], pA = [], pAd = [];
+  const op = O.spec ? owners(O.spec) : null, pp = O.spec ? O.spec.geometries.map(g => g.properties) : [];
   const up = O.units.geometries.map(g => g.properties), isDark = p => { const kk = klass(p); return kk >= 0 && DARK[kk]; };
   const uDark = up.map(p => isDark(p.p)), cDark = new Map(O.countries.geometries.map(g => [g.properties.c, isDark(g.properties.p)]));
   const sc = O.states ? O.states.geometries.map(g => g.properties.c) : [];
@@ -578,14 +587,16 @@ function buildLOD(topo, key) {
       (up[u1].pk !== up[u2].pk ? (dark ? uAd : uA) : (dark ? uBd : uB)).push(a);
     }
     if (os && os.o1[a] >= 0 && os.o2[a] >= 0 && os.o1[a] !== os.o2[a]) (cDark.get(sc[os.o1[a]]) ? sD : sL).push(a);
+    if (op && op.o1[a] >= 0 && op.o2[a] >= 0 && op.o1[a] !== op.o2[a] && pp[op.o1[a]].c === pp[op.o2[a]].c)
+      (isDark(pp[op.o1[a]].p) && isDark(pp[op.o2[a]].p) ? pAd : pA).push(a);
   }
   const lineArcs = (obj) => { const s = new Set(); obj.geometries.forEach(g => { for (const r of ringsOf(g)) for (const ai of r) s.add(ai < 0 ? ~ai : ai); }); return [...s]; };
   const lines = (arcs) => ({ tiles: tileIndex(arcs.map(a => ({ a, bb: [A.bb[a * 4], A.bb[a * 4 + 1], A.bb[a * 4 + 2], A.bb[a * 4 + 3]] }))), arcs, paths: new Map() });
-  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), uA: lines(uA), uAd: lines(uAd), uB: lines(uB), uBd: lines(uBd), sL: lines(sL), sD: lines(sD),
+  L.lines = { coast: lines(coast), borders: lines(borders), stat: lines(stat), sar: lines(sar), uA: lines(uA), uAd: lines(uAd), pA: lines(pA), pAd: lines(pAd), uB: lines(uB), uBd: lines(uBd), sL: lines(sL), sD: lines(sD),
     disputed: lines(lineArcs(O.disputed)), occLine: lines(lineArcs(O.occupied)), kriLine: lines(lineArcs(O.kri)) };
   L.lakes = feats(O.lakes); L.lakesT = tileIndex(L.lakes);
   L.occ = feats(O.occupied); L.kri = feats(O.kri);
-  L.CT = tileIndex(L.C); L.UT = tileIndex(L.U);
+  L.CT = tileIndex(L.C); L.UT = tileIndex(L.U); L.PT = tileIndex(L.P);
   return L;
 }
 let budgetEnd = 0;
@@ -608,7 +619,7 @@ let D = null;                                       // data
 const LOD = { w: null, lo: null, hi: null, x: null };
 const loading = {};
 let hover = null, pinned = null, hl = -1, hlPinned = false;
-const show = { com: true, met: true };
+const show = { com: true, met: true, spec: false };   // spec: speculative mode (off by default)
 const scr = (x, y) => [t.x + x * t.k, t.y + y * t.k];
 const zAbs = () => t.k * 1000 / 1400;
 const pxkm = () => PXKM0 * t.k;
@@ -618,7 +629,7 @@ function loadLOD(key) {
   if (LOD[key] || loading[key]) return loading[key];
   return loading[key] = getJSON(FILES[key]).then(topo => {
     const L = buildLOD(topo, key);
-    if (D && (L.C.length !== D.C.length || L.U.length !== D.U.length)) { console.warn('level of detail mismatch', key); return null; }
+    if (D && (L.C.length !== D.C.length || L.U.length !== D.U.length || L.P.length !== D.P.length)) { console.warn('level of detail mismatch', key); return null; }
     LOD[key] = L; if (D) attachLOD(L);
     if (LEVELS.indexOf(key) <= LEVELS.indexOf(wantLOD())) schedule();   // redraw only if this level is used now
     if ($('pill').textContent === LOADING_TXT && LOD[wantLOD()]) pill(null);
@@ -627,9 +638,10 @@ function loadLOD(key) {
 }
 function attachLOD(L) {
   // properties are shared across levels; units/countries are matched by their stable id
-  if (!D.Ubyi) { D.Ubyi = new Map(D.U.map(u => [u.i, u])); D.Cbyi = new Map(D.C.map(c => [c.i, c])); }
+  if (!D.Ubyi) { D.Ubyi = new Map(D.U.map(u => [u.i, u])); D.Cbyi = new Map(D.C.map(c => [c.i, c])); D.Pbyi = new Map(D.P.map(p => [p.i, p])); }
   L.C.forEach((f, j) => { const it = D.Cbyi.get(L.Cprops[j].i); if (it) it.g[L.key] = f; });
   L.U.forEach((f, j) => { const it = D.Ubyi.get(L.Uprops[j].i); if (it) it.g[L.key] = f; });
+  L.P.forEach((f, j) => { const it = D.Pbyi.get(L.Pprops[j].i); if (it) it.g[L.key] = f; });
 }
 Promise.all([getJSON(FILES.w), getJSON(FILES.extra), document.fonts ? document.fonts.ready.catch(() => {}) : 0])
   .then(([wTopo, X]) => {
@@ -661,6 +673,10 @@ function prepare(L, X) {
   D.comW = pts(X.comW); D.comR = pts(X.comR); D.metros = pts(X.metros);
   D.regions = (X.regions || []).map(r => Object.assign({}, r, { bbB: bboxLL(r.b) }));
   D.cities = pts(X.cities || []);
+  D.P = L.Pprops.map(p => ({ kind: 'spec', i: p.i, n: p.n, c: p.c, p: p.p, lo: p.lo, hi: p.hi, ns: p.ns, y: p.y, s: p.s, m: null,
+    k: klass(p.p), country: countryName(p.c), g: {}, lr: p.lr, zmin: p.p >= 50 ? 3 : p.p >= 20 ? 3.8 : p.p >= 5 ? 4.8 : 6,
+    ...(p.lx != null ? (q => ({ ax: q[0], ay: q[1] }))(proj([p.lx, p.ly])) : {}) }));
+  D.Pby = new Map(); for (const p of D.P) { if (!D.Pby.has(p.c)) D.Pby.set(p.c, []); D.Pby.get(p.c).push(p); }
   attachLOD(L); buildGrid(); buildIndex();
 }
 function buildGrid() {   // spatial grid on the world-level bounding boxes (slightly padded) for hit testing
@@ -823,6 +839,9 @@ const setT = c => c.setTransform(DPR * t.k, 0, 0, DPR * t.k, DPR * t.x, DPR * t.
 const NOD = (() => { const c = document.createElement('canvas'); c.width = c.height = 8; const x = c.getContext('2d');
   x.fillStyle = NODATA; x.fillRect(0, 0, 8, 8); x.strokeStyle = 'rgba(120,120,112,.55)'; x.lineWidth = 1; x.beginPath(); x.moveTo(-1, 9); x.lineTo(9, -1); x.stroke();
   return ctx.createPattern(c, 'repeat'); })();
+const SPECPAT = (() => { const c = document.createElement('canvas'); c.width = c.height = 6; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(30,40,44,.28)'; x.fillRect(1, 1, 1.2, 1.2); x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(4, 4, 1.2, 1.2);
+  return ctx.createPattern(c, 'repeat'); })();
 const HATCH = (() => { const c = document.createElement('canvas'); c.width = c.height = 9; const x = c.getContext('2d');
   x.strokeStyle = 'rgba(122,31,31,.6)'; x.lineWidth = 1.3; x.beginPath(); x.moveTo(-1, 10); x.lineTo(10, -1); x.moveTo(-1, 1); x.lineTo(1, -1); x.moveTo(8, 10); x.lineTo(10, 8); x.stroke();
   return ctx.createPattern(c, 'repeat'); })();
@@ -830,16 +849,18 @@ const HATCH = (() => { const c = document.createElement('canvas'); c.width = c.h
 function viewBox() { return [-t.x / t.k, -t.y / t.k, (W - t.x) / t.k, (H - t.y) / t.k]; }
 const hits = (b, v) => b[0] <= v[2] && b[2] >= v[0] && b[1] <= v[3] && b[3] >= v[1];
 function visibleItems(box) {    // countries and units in view (world-level tiles and boxes)
-  const v = box || viewBox(), Lw = LOD.w, C = [], U = [];
-  for (const [T_, F, props, byi, out] of [[Lw.CT, Lw.C, Lw.Cprops, D.Cbyi, C], [Lw.UT, Lw.U, Lw.Uprops, D.Ubyi, U]])
+  const v = box || viewBox(), Lw = LOD.w, C = [], U = [], P = [];
+  const sets = [[Lw.CT, Lw.C, Lw.Cprops, D.Cbyi, C], [Lw.UT, Lw.U, Lw.Uprops, D.Ubyi, U]];
+  if (show.spec) sets.push([Lw.PT, Lw.P, Lw.Pprops, D.Pbyi, P]);
+  for (const [T_, F, props, byi, out] of sets)
     for (const tl of T_) { if (!hits(tl.bb, v)) continue;
       for (const j of tl.ids) { if (!hits(F[j].bb, v)) continue; const it = byi.get(props[j].i); if (it) out.push(it); } }
-  return { C, U, v };
+  return { C, U, P, v };
 }
-const LINESETS = ['uA', 'uAd', 'uB', 'uBd', 'sL', 'sD', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
+const LINESETS = ['uA', 'uAd', 'pA', 'pAd', 'uB', 'uBd', 'sL', 'sD', 'coast', 'borders', 'stat', 'sar', 'disputed', 'occLine', 'kriLine'];
 function levelReady(k, vis) {    // build what this view needs at level k while the budget lasts; true once complete
   const L = LOD[k]; if (!L) return false;
-  for (const arr of [vis.C, vis.U]) for (const it of arr) { const f = it.g[k]; if (f && !f.path && !featPath(L, f)) return false; }
+  for (const arr of [vis.C, vis.U, vis.P]) for (const it of arr) { const f = it.g[k]; if (f && !f.path && !featPath(L, f)) return false; }
   for (const name of LINESETS) { const set = L.lines[name];
     for (let ti = 0; ti < set.tiles.length; ti++) if (hits(set.tiles[ti].bb, vis.v) && !tilePath(L, set, ti)) return false; }
   for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) if (!featPath(L, L.lakes[j])) return false; }
@@ -871,7 +892,7 @@ function drawScene(lv, vis, tr) {     // everything drawn in map coordinates, al
   ctx.fillStyle = T.ocean; ctx.fill(D.sphere);
   ctx.strokeStyle = T.grat; ctx.lineWidth = 0.7 / k; ctx.stroke(D.grat);
   // national values underneath, then subnational units
-  for (const V of [vis.C, vis.U]) {
+  for (const V of [vis.C, vis.U, vis.P]) {
     const by = Array.from({ length: 13 }, () => []);
     for (const it of V) { const P = pathOf(it, lv); if (!P) continue;
       if (it.c === 'ATA') { ctx.fillStyle = T.darkUI ? '#2A3236' : '#EEF0EE'; ctx.fill(P, 'evenodd'); continue; } by[it.k < 0 ? 12 : it.k].push(P); }
@@ -879,26 +900,32 @@ function drawScene(lv, vis, tr) {     // everything drawn in map coordinates, al
       for (const P of by[i]) ctx.fill(P, 'evenodd'); }
   }
   const each = (name, f) => { const set = L.lines[name]; set.tiles.forEach((tl, ti) => { if (hits(tl.bb, vis.v)) f(tilePath(L, set, ti, true)); }); };
-  // borders inside countries, visible on any fill: finer areas with data (fading in with zoom), then first-level divisions
-  // (states, provinces) on top, then the dashed state lines of countries with a national figure only
+  // three clearly different border levels, all derived from the international border's width: international (thick, dark,
+  // light casing) > states and provinces (about half as wide, mid-grey) > smaller areas inside them that have their own
+  // figures (hairlines, fading in with zoom). Inner lines are dark on light fills and light where both sides are dark.
   const zf = (z0, z1) => Math.max(0, Math.min(1, (zA - z0) / (z1 - z0)));
+  const bw = Math.min(2.4, 1.0 + 0.045 * k), wA = bw * 0.55, wB = Math.max(0.3, bw * 0.28);
   const fB = zf(1.4, 3.6);
-  if (fB > 0) { ctx.lineWidth = Math.min(0.85, 0.32 + 0.04 * zA) / k;
-    ctx.strokeStyle = `rgba(36,44,48,${(0.26 * fB).toFixed(3)})`; each('uB', p => ctx.stroke(p));
-    ctx.strokeStyle = `rgba(255,255,255,${(0.5 * fB).toFixed(3)})`; each('uBd', p => ctx.stroke(p)); }
-  const aA = 0.55 + 0.3 * zf(0.8, 6);
-  ctx.lineWidth = Math.min(1.7, 0.65 + 0.13 * zA) / k;
+  if (fB > 0) { ctx.lineWidth = wB / k;
+    ctx.strokeStyle = `rgba(36,44,48,${(0.24 * fB).toFixed(3)})`; each('uB', p => ctx.stroke(p));
+    ctx.strokeStyle = `rgba(255,255,255,${(0.45 * fB).toFixed(3)})`; each('uBd', p => ctx.stroke(p)); }
+  const aA = 0.5 + 0.15 * zf(0.8, 6);
+  ctx.lineWidth = wA / k;
   ctx.strokeStyle = `rgba(36,44,48,${aA.toFixed(3)})`; each('uA', p => ctx.stroke(p));
   ctx.strokeStyle = `rgba(255,255,255,${(aA + 0.15).toFixed(3)})`; each('uAd', p => ctx.stroke(p));
-  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.lineWidth = Math.min(1.1, 0.55 + 0.06 * zA) / k;
+  ctx.save(); ctx.setLineDash([3 / k, 2.2 / k]); ctx.lineWidth = wA / k;
   ctx.strokeStyle = 'rgba(56,60,58,.5)'; each('sL', p => ctx.stroke(p));
   ctx.strokeStyle = 'rgba(255,255,255,.55)'; each('sD', p => ctx.stroke(p)); ctx.restore();
+  if (show.spec && vis.P.length) {      // speculative regions: a fine stipple over the fill marks them as estimates
+    SPECPAT.setTransform(new DOMMatrix().scale(1 / k)); ctx.fillStyle = SPECPAT;
+    for (const it of vis.P) { const P = pathOf(it, lv); if (P) ctx.fill(P, 'evenodd'); }
+    ctx.lineWidth = wA / k; ctx.strokeStyle = `rgba(36,44,48,${aA.toFixed(3)})`; each('pA', p => ctx.stroke(p));
+    ctx.strokeStyle = `rgba(255,255,255,${(aA + 0.15).toFixed(3)})`; each('pAd', p => ctx.stroke(p)); }
   // lakes
   ctx.fillStyle = T.ocean; ctx.strokeStyle = T.coast; ctx.lineWidth = 0.5 / k;
   for (const tl of L.lakesT) { if (!hits(tl.bb, vis.v)) continue; for (const j of tl.ids) { const P = featPath(L, L.lakes[j], true); ctx.fill(P, 'evenodd'); ctx.stroke(P); } }
   ctx.strokeStyle = T.coast; ctx.lineWidth = 0.7 / k; each('coast', p => ctx.stroke(p));
-  const bw = Math.min(1.6, 0.7 + k * 0.03);
-  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = (bw + Math.min(1.6, 0.4 + zA * 0.9)) / k; each('borders', p => ctx.stroke(p));
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = (bw + Math.min(1.8, 0.8 + zA * 0.4)) / k; each('borders', p => ctx.stroke(p));
   ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw / k; each('borders', p => ctx.stroke(p));
   ctx.save(); ctx.setLineDash([4 / k, 3 / k]); ctx.strokeStyle = '#2E3236'; ctx.lineWidth = bw * 0.9 / k; each('disputed', p => ctx.stroke(p)); ctx.restore();
   ctx.save(); ctx.setLineDash([5 / k, 4 / k]);
@@ -1070,7 +1097,7 @@ function labels(c) {
   }
   // ---- unit labels: room weighted by importance, so populous places win over large empty ones
   const ul = [];
-  for (const u of D.U) {
+  for (const u of (show.spec ? D.U.concat(D.P) : D.U)) {
     if (u.d || u.ax === undefined || !u.n || z < u.zmin) continue;
     if (u.p < 1 && u.m == null) continue;
     if (u.m != null && u.m < 10) continue;
@@ -1081,7 +1108,7 @@ function labels(c) {
   }
   ul.sort((a, b) => b.key - a.key);
   for (const { u, x, y, rpx } of ul) {
-    const vl = valLine(u.p, u.m), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
+    const vl = (u.kind === 'spec' ? '≈ ' : '') + valLine(u.p, u.m), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
     const px = Math.min(15, 1.35 * rpx / Math.sqrt((w1 / 2) ** 2 + 1.1 ** 2)); if (px < 9) continue;
     const w = w1 * px, b = [x - w / 2 - 1, y - px * 1.05, x + w / 2 + 1, y + px * 1.05];
     if (!free(b)) continue; box.add(b);
@@ -1107,6 +1134,10 @@ function pickBase(bx, by) {
     const P = pathOf(it);
     if (meas.isPointInPath(P, bx, by, 'evenodd')) { if (it.kind === 'unit') { found = { kind: 'unit', it }; break; } if (!found) found = { kind: 'country', it }; }
   }
+  if (found && show.spec && D.Pby.has(found.it.c) && (found.kind === 'country' || found.it.d)) {   // a speculative region here
+    for (const p of D.Pby.get(found.it.c)) { const b = featAt(p).bb; if (bx < b[0] || bx > b[2] || by < b[1] || by > b[3]) continue;
+      if (meas.isPointInPath(pathOf(p), bx, by, 'evenodd')) { found = { kind: 'spec', it: p }; break; } }
+  }
   if (found) {
     const Lx = LOD[drawnLv] || LOD.w;
     found.occ = Lx.occ.some(f => meas.isPointInPath(featPath(Lx, f, true), bx, by, 'evenodd'));
@@ -1115,7 +1146,7 @@ function pickBase(bx, by) {
   return found;
 }
 function selPaths(sel) {
-  if (sel.kind === 'unit') return [pathOf(sel.it)];
+  if (sel.kind === 'unit' || sel.kind === 'spec') return [pathOf(sel.it)];
   // not .map(pathOf): map would pass each index as the level of detail, and the outline would fall back to the world level
   if (sel.kind === 'country') return D.C.filter(c => c.c === sel.it.c).map(it => pathOf(it)).concat(D.U.filter(u => u.c === sel.it.c && sel.whole).map(it => pathOf(it)));
   if (sel.kind === 'region') return D.U.filter(u => u.c === sel.it.c && u.r === sel.it.n).map(it => pathOf(it));
@@ -1129,12 +1160,13 @@ function drawOverlay() {
     setT(octx); octx.globalCompositeOperation = 'destination-out';
     const vis = visibleItems();
     for (const it of vis.U) if (it.k === hl) octx.fill(pathOf(it), 'evenodd');
+    for (const it of vis.P) if (it.k === hl) octx.fill(pathOf(it), 'evenodd');
     for (const it of vis.C) if (it.k === hl && !D.subIso.has(it.c)) octx.fill(pathOf(it), 'evenodd');
     octx.globalCompositeOperation = 'source-over';
   }
   const sels = [pinned, hover].filter(Boolean);
   for (const sel of sels) {
-    if (sel.kind === 'unit' || sel.kind === 'country' || sel.kind === 'region') {
+    if (sel.kind === 'unit' || sel.kind === 'country' || sel.kind === 'region' || sel.kind === 'spec') {
       setT(octx); octx.lineJoin = 'round';
       const ps = selPaths(sel);
       octx.strokeStyle = 'rgba(255,255,255,.95)'; octx.lineWidth = 4.5 / t.k; for (const p of ps) octx.stroke(p);
@@ -1155,11 +1187,22 @@ function longN(n) { return n == null ? null : Math.round(n).toLocaleString('en-U
 const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : NODATA}"></span>`;
 function badge(q, yr) {
   const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), s: 'Published estimate' + (yr ? ' · ' + yr : ''),
-               e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), n: 'No figure collected', p: 'National estimate · Pew 2020' }[q];
+               e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), n: 'No figure collected', p: 'National estimate · Pew 2020',
+               v: 'Speculative estimate · survey ' + (yr || '') }[q];
   return `<span class="badge ${q}">${esc(t_)}</span>`;
+}
+function specCard(sel, full) {      // a speculative estimate: survey share, its 95% range, sample size, how it was made
+  const it = sel.it, nl = D.labelOf.get(it.c), small = it.ns < 30;
+  return `<div class="eb">${esc(it.country)} · speculative estimate</div><h2>${esc(it.n)}</h2>
+    <div class="big">${sw(it.k)}≈ ${fmtP(it.p)}<small>of adults surveyed</small></div>
+    <dl class="kv"><dt>95% range</dt><dd>${fmtP(it.lo)} – ${fmtP(it.hi)}</dd><dt>Respondents</dt><dd>${it.ns}${small ? ' <span>(very small sample)</span>' : ''}</dd></dl>
+    ${badge('v', it.y)}<div class="how">Share of adult respondents in this region of the Afrobarometer survey who said they are Muslim (weighted). Not an official figure: no census or register publishes religion here.</div>
+    ${nl && nl.p != null ? `<div class="mem">Official national figure: ${fmtP(nl.p)} (Pew 2020).</div>` : ''}
+    ${full ? `<div class="src">Source: ${esc(D.X.sources[it.s] || '')}</div>` : ''}`;
 }
 function cardHTML(sel, full) {
   const X = D.X, it = sel.it;
+  if (sel.kind === 'spec') return specCard(sel, full);
   if (sel.kind === 'unit' || sel.kind === 'country') {
     const isU = sel.kind === 'unit', lab = D.labelOf.get(it.c);
     const st = X.status && X.status[it.c];
@@ -1175,6 +1218,8 @@ function cardHTML(sel, full) {
     const notes = [];
     if (isU && it.p == null) { const nl = D.labelOf.get(it.c); notes.push('No figure was collected for ' + (it.n ? 'this area' : 'these areas') + '.' + (nl && nl.p != null ? ` The national figure for ${it.country} is ${fmtP(nl.p)} (Pew 2020).` : '')); }
     if (X.notes[it.c]) notes.push(X.notes[it.c]);
+    if (!isU && D.Pby.has(it.c)) notes.push(show.spec ? 'Speculative mode: dotted regions show survey-based estimates (Afrobarometer), not official figures.'
+      : 'Survey-based regional estimates exist for this country: turn on speculative mode in Key & layers to see them.');
     if (sel.occ && it.c !== 'UAOCC') notes.push(X.notes.OCC);
     if (sel.kri) notes.push(X.notes.KRI);
     if (sel.city) notes.unshift(`${sel.city} lies in this area.`);
@@ -1219,6 +1264,7 @@ function cardHTML(sel, full) {
 }
 function plainText(sel) {
   const it = sel.it;
+  if (sel.kind === 'spec') return `${it.n}, ${it.country}: about ${fmtP(it.p)} Muslim (speculative survey estimate, ${fmtP(it.lo)}–${fmtP(it.hi)})`;
   if (sel.kind === 'unit' || sel.kind === 'country') return `${it.n || it.country}${sel.kind === 'unit' ? ', ' + it.country : ''}: ${fmtP(it.p)} Muslim` + (it.m != null ? `, ${Math.round(it.m).toLocaleString('en-US')} Muslims` : '');
   if (sel.kind === 'region') return `${it.n}, ${D.countryName(it.c)}`;
   return `${it.full || it.n}: ${it.m ? it.m.toLocaleString('en-US') + ' Muslims' : 'Muslim community'}`;
@@ -1262,7 +1308,7 @@ function copyLink(btn) {
 }
 function selBounds(sel) {
   const it = sel.it;
-  if (sel.kind === 'unit') { const f = featAt(it); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
+  if (sel.kind === 'unit' || sel.kind === 'spec') { const f = featAt(it); return [[f.bb[0], f.bb[1]], [f.bb[2], f.bb[3]]]; }
   if (sel.kind === 'region') return it.bbB;
   if (sel.kind === 'country') {
     const parts = D.C.filter(c => c.c === it.c).map(c => c.g.w.bb).filter(b => isFinite(b[0]));
@@ -1273,7 +1319,7 @@ function selBounds(sel) {
   }
   const r = 4; return [[it.ax - r, it.ay - r], [it.ax + r, it.ay + r]];
 }
-function frameSel(sel, dur) { const b = selBounds(sel); fitBounds(b, sel.kind === 'unit' || sel.kind === 'country' ? 0.12 : 0.04, sel.kind === 'met' || sel.kind === 'com' ? 120 : 400, dur); }
+function frameSel(sel, dur) { const b = selBounds(sel); fitBounds(b, sel.kind === 'unit' || sel.kind === 'country' || sel.kind === 'spec' ? 0.12 : 0.04, sel.kind === 'met' || sel.kind === 'com' ? 120 : 400, dur); }
 function sameSel(a, b) { return a && b && a.kind === b.kind && a.it === b.it && a.occ === b.occ && a.kri === b.kri; }
 
 // pointer interaction
@@ -1430,6 +1476,7 @@ function selKey(sel) {
   if (sel.kind === 'unit') return 'u/' + it.c + '/' + encodeURIComponent(it.n || '~');
   if (sel.kind === 'country') return 'c/' + it.c;
   if (sel.kind === 'region') return 'r/' + it.c + '/' + encodeURIComponent(it.n);
+  if (sel.kind === 'spec') return 'x/' + it.c + '/' + encodeURIComponent(it.n);
   if (sel.kind === 'met') return 'm/' + encodeURIComponent(it.n);
   if (sel.kind === 'com') return 'p/' + encodeURIComponent(it.n);
   return '';
@@ -1441,6 +1488,7 @@ function findSel(key) {
   if (k === 's') { const u = D.U.find(u => u.c === a && u.n === dec(b)), it = D.C.find(c => c.c === a);   // state links of 4 Nov 2026:
     return u ? { kind: 'unit', it: u } : it && { kind: 'country', it }; }                                 // the area, else the country
   if (k === 'r') { const it = D.regions.find(r => r.c === a && r.n === dec(b)); return it && { kind: 'region', it }; }
+  if (k === 'x') { const it = D.P.find(p => p.c === a && p.n === dec(b)); if (it) setSpec(true); return it && { kind: 'spec', it }; }   // turns speculative mode on
   if (k === 'm') { const it = D.metros.find(m => m.n === dec(a)); return it && { kind: 'met', it }; }
   if (k === 'p') { const it = D.comR.find(m => m.n === dec(a)); return it && { kind: 'com', it }; }
   return null;
@@ -1520,6 +1568,13 @@ function legendCircles() {
 $('lgMore').onclick = () => { const b = $('lgBody'), open = b.hidden; b.hidden = !open; $('lgMore').setAttribute('aria-expanded', open);
   try { localStorage.setItem('wmp-legend', open ? 'open' : ''); } catch (_) {} legendCircles(); schedule(); };
 for (const [id, key] of [['tCom', 'com'], ['tMet', 'met']]) $(id).addEventListener('change', e => { show[key] = e.target.checked; schedule(); legendCircles(); });
+function setSpec(on) {      // speculative mode: draws the survey-based estimates; never on by default
+  if (show.spec === on) return; show.spec = on; $('tSpec').checked = on; document.body.classList.toggle('spec-on', on);
+  if (!on && pinned && pinned.kind === 'spec') pin(null);
+  hover = null; snapT = null; schedule(); drawOverlay();
+  pill(on ? 'Speculative mode on: dotted regions are survey-based estimates, not official figures' : null, on ? 5000 : 0);
+}
+$('tSpec').addEventListener('change', e => setSpec(e.target.checked));
 
 // ------------------------------------------------------------------ about
 function aboutHTML() {
@@ -1542,6 +1597,13 @@ function aboutHTML() {
     outlined with a fine dashed line for orientation; the whole country carries the national figure.</p>
     <p>In Latin America and the Caribbean Muslims are under 1% almost everywhere, so communities are drawn as points: circles sized by the census count
     (Brazil 2010, Chile 2024), and small squares for documented communities without a published count. U.S. metros show the 2020 U.S. Religion Census.</p>
+    <h3>Speculative mode</h3>
+    <p>Off by default. Where no census or register publishes religion by region, speculative mode (Key &amp; layers) shows
+    <b>estimates from household surveys</b>, dotted so they are never mistaken for official figures: the share of adult respondents
+    in each region who said they are Muslim in the <b>Afrobarometer Round 10</b> survey (2024–25; 16 African countries, 253 regions),
+    weighted, with its 95% range and the number of respondents. Nothing is modelled, smoothed or rescaled; a region with few
+    respondents simply has a wide range, and regions the survey did not reach keep the national figure. Survey shares describe
+    adult citizens, so they can differ from the national estimate above.</p>
     <h3>Contested territories</h3>
     <p>Borders follow de facto control, with disputed lines dashed. Territories of disputed status (Taiwan, Kosovo, Somaliland, Western Sahara,
     Falklands/Malvinas) are outlined with a dashed line and named in italics, without taking a side. Cyprus is one area, because Pew’s
@@ -1552,8 +1614,8 @@ function aboutHTML() {
     <p style="margin-top:8px">All other countries and territories: Pew Research Center 2020 national estimate. Territories that Pew does not
     cover show their own census where it publishes religion; the rest have no figure.</p>
     <h3>Credits &amp; licences</h3>
-    <ul><li>Statistics: Pew Research Center; the national statistics offices listed above; ASARB / ARDA (U.S. Religion Census 2020); IBGE; INE Chile; UCIDE (Spain).</li>
-    <li>Boundaries: <b>Natural Earth</b> (public domain); <b>geoBoundaries</b> (Runfola et al. 2020, <i>PLOS ONE</i> 15(4): e0231866) — individual files under CC BY 4.0, CC BY 3.0 IGO, Open Government Licence – Canada, public domain, and, for Cambodia, Croatia, Ethiopia, Guinea-Bissau, Guyana, Indonesia (provinces), Montenegro and Serbia, the Open Database License: <b>© OpenStreetMap contributors</b>;
+    <ul><li>Statistics: Pew Research Center; the national statistics offices listed above; ASARB / ARDA (U.S. Religion Census 2020); IBGE; INE Chile; UCIDE (Spain). Speculative mode: Afrobarometer Round 10 data (afrobarometer.org).</li>
+    <li>Boundaries: <b>Natural Earth</b> (public domain); <b>geoBoundaries</b> (Runfola et al. 2020, <i>PLOS ONE</i> 15(4): e0231866) — individual files under CC BY 4.0, CC BY 3.0 IGO, Open Government Licence – Canada, public domain, and, for Cambodia, Chad, Croatia, Ethiopia, Guinea-Bissau, Guyana, Indonesia (provinces), Montenegro and Serbia, the Open Database License: <b>© OpenStreetMap contributors</b>; Ghana regions (speculative mode) CC BY-SA 2.0;
     UK local authorities: Office for National Statistics, Open Government Licence v3.0 — contains OS data © Crown copyright and database right 2021; India districts: DataMeet community maps; Russian-occupied areas: DeepState.</li>
     <li>Because some boundaries are OpenStreetMap-derived, the map data files of this site are available under the Open Database License (ODbL 1.0).</li>
     <li>Concept after Edin Radončić, “World Muslim Population” (2015). Fonts: Fira Sans and Source Serif (SIL Open Font License).</li></ul>
@@ -1585,7 +1647,7 @@ function openAbout() {
 // ------------------------------------------------------------------ data table (an accessible, sortable view of every figure)
 const tbl = $('tbl');
 const TB = { lv: 'u', sort: 'p', dir: -1, q: '', view: false, limit: 400, rows: [] };
-const BASIS_SHORT = { c: 'Census', s: 'Estimate', e: 'Ethnicity', n: 'No figure', p: 'Pew 2020' };
+const BASIS_SHORT = { c: 'Census', s: 'Estimate', e: 'Ethnicity', n: 'No figure', p: 'Pew 2020', v: 'Speculative' };
 const COLS = {
   u: [['name', 'Area'], ['ct', 'Country', 'c-ct'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']],
   c: [['name', 'Country or territory'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']] };
@@ -1599,11 +1661,13 @@ function tbData() {
     return out;
   }
   return D.U.map(u => ({ kind: 'unit', it: u, name: u.n || 'Other areas of ' + u.country, st: false, ct: u.c === 'UAOCC' ? 'Ukraine (occupied)' : u.country, sub: u.r || '',
-    p: u.p, m: u.m, yr: u.p == null ? '' : String(u.y || D.X.years[u.c] || ''), q: u.q, k: u.k }));
+    p: u.p, m: u.m, yr: u.p == null ? '' : String(u.y || D.X.years[u.c] || ''), q: u.q, k: u.k }))
+    .concat(show.spec ? D.P.map(p => ({ kind: 'spec', it: p, name: p.n, st: false, ct: p.country, sub: 'speculative survey estimate',
+      p: p.p, m: null, yr: p.y, q: 'v', k: p.k })) : []);
 }
 function inView(r) {
   const v = viewBox();
-  if (r.kind === 'unit') { const f = r.it.g.w; return f && hits(f.bb, v); }
+  if (r.kind === 'unit' || r.kind === 'spec') { const f = r.it.g.w; return f && hits(f.bb, v); }
   return D.C.some(c => c.c === r.it.c && c.g.w && hits(c.g.w.bb, v));
 }
 function tbRender() {

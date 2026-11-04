@@ -13,7 +13,11 @@ The statistics in this map come from the sources listed on the site (About & sou
 
 Because several geoBoundaries files are derived from OpenStreetMap (© OpenStreetMap contributors, ODbL 1.0), the map
 data files published here (`map*.json`) are made available under the **Open Database License (ODbL 1.0)**. Code in this
-repository: MIT.
+repository: MIT. Ghana's regions (speculative layer only) are CC BY-SA 2.0.
+
+**Speculative mode** (off by default) uses Afrobarometer Round 10 data: Afrobarometer Data, merged Round 10 (38 countries),
+release 25 February 2026, available at https://www.afrobarometer.org. The regional shares are computed from it by
+`pipeline/scripts/speculative.py` and stored in `pipeline/data/speculative/afrobarometer_r10.csv`.
 
 ## geoBoundaries files used
 
@@ -26,8 +30,10 @@ repository: MIT.
 | BIH-ADM2 | Wikimedia Commons | Public Domain | 2013 |
 | BIH-ADM3 | Wikimedia Commons | Public Domain | 2013 |
 | CAN-ADM2 | Statistics Canada (StatCan) | Open Government Canada 2.0 | 2022 |
+| CIV-ADM2 | World Bank | Creative Commons Attribution 4.0 International (CC BY 4.0) | 2016 |
 | ESP-ADM2 | El Instituto Nacional de Estadstica | National Institute of Statistics (INE) Data License | 2018 |
 | ETH-ADM2 | Open Africa, Code for Ethiopia | Open Data Commons Open Database License 1.0 | 2016 |
+| GHA-ADM1 | Open Street Map | Creative Commons Attribution-ShareAlike 2.0 | 2021 |
 | GIN-ADM1 | World Food Programme, OCHA ROWCA | Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO) | 2017 |
 | GNB-ADM1 | OpenStreetMap, Wambacher | Open Data Commons Open Database License 1.0 | 2017 |
 | GUY-ADM1 | OpenStreetMap, Wambacher | Open Data Commons Open Database License 1.0 | 2017 |
@@ -41,4 +47,5 @@ repository: MIT.
 | NPL-ADM1 | Survey Department of Nepal, OCHA FISS | Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO) | 2020 |
 | PHL-ADM2 | National Mapping and Resource Information Authority (NAMRIA), Philippines Statistics Authority (PSA), OCHA Philippines | Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO) | 2020 |
 | SRB-ADM2 | OpenStreetMap, Wambacher | Open Data Commons Open Database License 1.0 | 2017 |
+| TCD-ADM1 | OpenStreetMap, Wambacher | Open Data Commons Open Database License 1.0 | 2017 |
 | ZAF-ADM1 | OCHA ROSEA, South African Municipal Demarcation Board | Creative Commons Attribution 3.0 Intergovernmental Organisations (CC BY 3.0 IGO) | 2020 |

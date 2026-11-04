@@ -1,6 +1,7 @@
 # large or regenerated pipeline files
 pipeline/raw/ne_*
 pipeline/raw/gb/
+pipeline/raw/afrobarometer/
 pipeline/raw/gbr/*
 !pipeline/raw/gbr/geogLA2021UK.json
 pipeline/data/*.gpkg

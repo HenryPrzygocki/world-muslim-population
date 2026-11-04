@@ -15,6 +15,7 @@ pipeline/
   scripts/
     build_units.py    matches the statistics to boundaries → data/units_national.gpkg, data/units_sub.gpkg
     sub2.py           loaders for Russia, China, Indonesia, Canada and Australia (used by build_units.py)
+    speculative.py    survey-based regional estimates (Afrobarometer) → data/speculative/, data/units_spec.gpkg
     common.py         paths and name matching; mapkit.py: label tables, communities, number formats
     prep_layers.py, world.py, regional.py, methods.py, build_pdf.py, style.py, crop.py
                       print edition (PDF; not published and not part of the web build)
@@ -36,7 +37,7 @@ web/
 Python 3 with the geo stack, and Node for mapshaper and the smoke test:
 
 ```
-pip install geopandas shapely pyproj matplotlib xlrd
+pip install geopandas shapely pyproj matplotlib xlrd pyreadstat
 (cd web && npm ci && npx playwright install chromium)
 ```
 
@@ -45,6 +46,7 @@ Then, from the repository root:
 ```
 pipeline/fetch_raw.sh
 python pipeline/scripts/build_units.py
+python pipeline/scripts/speculative.py      # speculative layer (survey estimates; shown only in speculative mode)
 python web/prep_web.py
 python web/prep_status.py
 python web/project.py

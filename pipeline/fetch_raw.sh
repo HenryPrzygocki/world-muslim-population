@@ -20,10 +20,17 @@ for f in $NE; do
   [ -s raw/$f.geojson ] || curl -sSfL -o raw/$f.geojson \
     "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/$NE_REV/geojson/$f.geojson"
 done
+# CIV-ADM2, GHA-ADM1 and TCD-ADM1 are only used by the speculative layer (speculative.py)
 for c in AUS-ADM2 BEN-ADM1 BFA-ADM2 BGD-ADM2 BIH-ADM2 BIH-ADM3 CAN-ADM2 ESP-ADM2 ETH-ADM2 GIN-ADM1 GNB-ADM1 GUY-ADM1 \
-         HRV-ADM1 IDN-ADM1 IDN-ADM2 KEN-ADM1 KHM-ADM1 MNE-ADM1 MWI-ADM2 NPL-ADM1 PHL-ADM2 SRB-ADM2 ZAF-ADM1; do
+         CIV-ADM2 GHA-ADM1 TCD-ADM1 HRV-ADM1 IDN-ADM1 IDN-ADM2 KEN-ADM1 KHM-ADM1 MNE-ADM1 MWI-ADM2 NPL-ADM1 PHL-ADM2 SRB-ADM2 ZAF-ADM1; do
   iso=${c%-*}; adm=${c#*-}; f=geoBoundaries-$c\_simplified.geojson
   [ -s raw/gb/$f ] || curl -sSfL -o raw/gb/$f \
     "https://media.githubusercontent.com/media/wmgeolab/geoBoundaries/$GB_REV/releaseData/gbOpen/$iso/$adm/$f"
 done
+# speculative layer only: Afrobarometer Round 10 merged data (release 25 Feb 2026), free to use with citation
+AB=raw/afrobarometer; mkdir -p $AB
+if [ -z "$(ls $AB/*.sav 2>/dev/null)" ]; then
+  curl -sSfL -o $AB/r10.zip "https://www.afrobarometer.org/wp-content/uploads/2026/10/AB_R10.Merge-Dataset_25Feb26.38ctry.release.sav.zip"
+  unzip -q -o -j $AB/r10.zip '*.sav' -x '__MACOSX/*' -d $AB && rm $AB/r10.zip
+fi
 echo "raw inputs ready"

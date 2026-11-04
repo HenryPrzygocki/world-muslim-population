@@ -151,6 +151,17 @@ g['geometry'] = g.geometry.apply(_norm)
 g.to_file(f'{OUT}/units.geojson', driver='GeoJSON')
 print('units', len(g))
 
+# ---- speculative layer (shown only in speculative mode): survey-based regional estimates, see pipeline/scripts/speculative.py
+spec = gpd.read_file(f'{DATA}/units_spec.gpkg')
+precs = []
+for r in spec.itertuples():
+    a = anchor(r.geometry)
+    precs.append({'i': len(precs), 'n': r.unit, 'c': r.iso, 'p': round(float(r.pct), 1), 'lo': round(float(r.lo), 1), 'hi': round(float(r.hi), 1),
+                  'ns': int(r.n), 'y': str(r.year), 's': sidx(r.src), 'lx': a[0] if a else None, 'ly': a[1] if a else None,
+                  'lr': a[2] if a else None, 'geometry': r.geometry})
+gpd.GeoDataFrame(precs, crs=4326).to_file(f'{OUT}/spec.geojson', driver='GeoJSON')
+print('speculative regions', len(precs))
+
 # ---- states / provinces of large countries without regional figures: drawn as fine dashed lines only (the whole country
 #      carries its national figure and is what gets highlighted). Natural Earth admin-1, clipped to the country; pieces of the
 #      country no state covers join the state that shares the longest border with them (else the nearest), so the states tile
