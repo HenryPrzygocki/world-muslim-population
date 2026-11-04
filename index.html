@@ -1092,8 +1092,9 @@ function pickBase(bx, by) {
 }
 function selPaths(sel) {
   if (sel.kind === 'unit') return [pathOf(sel.it)];
-  if (sel.kind === 'country') return D.C.filter(c => c.c === sel.it.c).map(pathOf).concat(D.U.filter(u => u.c === sel.it.c && sel.whole).map(pathOf));
-  if (sel.kind === 'region') return D.U.filter(u => u.c === sel.it.c && u.r === sel.it.n).map(pathOf);
+  // not .map(pathOf): map would pass each index as the level of detail, and the outline would fall back to the world level
+  if (sel.kind === 'country') return D.C.filter(c => c.c === sel.it.c).map(it => pathOf(it)).concat(D.U.filter(u => u.c === sel.it.c && sel.whole).map(it => pathOf(it)));
+  if (sel.kind === 'region') return D.U.filter(u => u.c === sel.it.c && u.r === sel.it.n).map(it => pathOf(it));
   return [];
 }
 function drawOverlay() {
