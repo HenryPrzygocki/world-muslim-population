@@ -15,6 +15,10 @@ Because several geoBoundaries files are derived from OpenStreetMap (© OpenStree
 data files published here (`map*.json`) are made available under the **Open Database License (ODbL 1.0)**. Code in this
 repository: MIT. Ghana's regions (speculative layer only) are CC BY-SA 2.0.
 
+Figures from statistics offices' open-data services, such as Statistics Netherlands (CBS StatLine), Statistics Norway (SSB)
+and the Swiss Federal Statistical Office (FSO), are used with the source attribution their terms require; each area's
+card and the sources table name the table it comes from.
+
 **Speculative mode** (off by default) uses Afrobarometer Round 10 data: Afrobarometer Data, merged Round 10 (38 countries),
 release 25 February 2026, available at https://www.afrobarometer.org. The regional shares are computed from it by
 `pipeline/scripts/speculative.py` and stored in `pipeline/data/speculative/afrobarometer_r10.csv`.

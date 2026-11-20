@@ -1,8 +1,10 @@
-# National figures for territories the Pew Research Center 2020 estimates do not cover: published census counts only.
+# National figures for territories the Pew Research Center 2020 estimates do not cover: published census counts, or a published
+# share where only that exists (pct; basis o = official survey, c = census).
 # geounit = Natural Earth map unit; code = map code (Christmas and Cocos get their own; Natural Earth groups them).
-geounit,code,muslims,total,year,source
-Christmas Island,CXR,374,1692,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51710 Christmas Island)"
-Cocos (Keeling) Islands,CCK,389,593,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51860 Cocos Islands)"
-Norfolk Island,NFK,0,2188,2021,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (SAL90004 Norfolk Island)"
-Cayman Islands,CYM,258,68811,2021,"Economics and Statistics Office, Cayman Islands — 2021 Census report, section 4, table 4.9A (population by religion)"
-Bermuda,BMU,616,64237,2010,"Department of Statistics, Bermuda — 2010 Census of Population and Housing, table 3.1 (population by religious affiliation)"
+geounit,code,muslims,total,pct,year,basis,source
+Christmas Island,CXR,374,1692,,2021,c,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51710 Christmas Island)"
+Cocos (Keeling) Islands,CCK,389,593,,2021,c,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (LGA 51860 Cocos Islands)"
+Norfolk Island,NFK,0,2188,,2021,c,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation (SAL90004 Norfolk Island)"
+Cayman Islands,CYM,258,68811,,2021,c,"Economics and Statistics Office, Cayman Islands — 2021 Census report, section 4, table 4.9A (population by religion)"
+Bermuda,BMU,616,64237,,2010,c,"Department of Statistics, Bermuda — 2010 Census of Population and Housing, table 3.1 (population by religious affiliation)"
+Caribbean Netherlands,BES,,,0.5,2018,o,"Statistics Netherlands (CBS) — Omnibus survey Caribbean Netherlands 2017/2018, StatLine table 82868ENG: religion of persons aged 15 and over (Islam 0.5%)"

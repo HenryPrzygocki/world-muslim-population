@@ -1,0 +1,30 @@
+# Swiss Federal Statistical Office (FSO), table je-d-01.08.02.02 "Religionszugehörigkeit nach Grossregion und Kanton", sheet 2024:
+# structural survey, permanent resident population aged 15+ in private households. muslims = "Islamische Glaubensgemeinschaften"
+# (extrapolated count), total = all residents 15+, ci_pct = published confidence interval (± % of the count). dam-api.bfs.admin.ch
+unit,muslims,total,ci_pct
+Vaud,43916,699662,4.1
+Valais / Wallis,11714,311881,11.8
+Genève,31663,405611,5.1
+Bern / Berne,42122,895907,6.0
+Fribourg / Freiburg,13064,283763,11.2
+Solothurn,20306,243244,8.7
+Neuchâtel,7392,150142,9.9
+Jura,2551,62465,24.1
+Basel-Stadt,14358,168791,10.5
+Basel-Landschaft,13905,253309,10.3
+Aargau,48966,612778,3.8
+Zürich,94236,1347408,4.0
+Glarus,2189,35220,27.0
+Schaffhausen,5527,74428,16.5
+Appenzell A. Rh.,1428,46838,33.4
+Appenzell I. Rh.,260,13808,72.7
+St. Gallen,38103,448491,6.2
+Graubünden / Grigioni / Grischun,3762,175977,20.8
+Thurgau,17548,249376,9.4
+Luzern,18533,363523,6.5
+Uri,724,31946,44.2
+Schwyz,6607,142109,15.4
+Obwalden,1287,33149,33.9
+Nidwalden,970,38598,40.6
+Zug,4219,111083,12.8
+Ticino,7038,308002,10.5

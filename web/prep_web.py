@@ -74,14 +74,17 @@ for r in natc.itertuples():
 g = gpd.GeoDataFrame(recs, crs=4326)
 g.to_file(f'{OUT}/countries.geojson', driver='GeoJSON')
 
-# ---- data basis of each unit: c census/register, s published estimate (non-official body), e ethnicity-based,
-#      n no figure collected. Every value is a published figure or arithmetic on published figures.
+# ---- data basis of each unit: c census/register, o official survey (statistics office sample survey), s published estimate
+#      (non-official body), e ethnicity-based, n no figure collected. Every value is a published figure or arithmetic on
+#      published figures.
 ETHNIC = {'RUS', 'CHN', 'UAOCC'}
 PUBLISHED_EST = {'ESP', 'USA'}
+OFFICIAL_SURVEY = {'NLD', 'CHE'}
 def basis(iso, unit, src, dflt, pct):
     if dflt or pct != pct: return 'n'
     if iso in ETHNIC: return 'e'
     if iso in PUBLISHED_EST: return 's'
+    if iso in OFFICIAL_SURVEY: return 'o'
     return 'c'
 
 # ---- parent province of each unit (for cards and search), from Natural Earth admin-1
@@ -281,10 +284,12 @@ for iso, grp in ug[~ug.c.isin(['ROU']) & ~_ann].groupby('c'):   # partial covera
         continue
     pop = (grp.m / grp.p * 100).sum()
     usum[iso] = {'m': int(grp.m.sum()), 'p': round(float(grp.m.sum() / pop * 100), 2), 'y': year_of.get(iso, '')}
+usum['NOR']['w'] = 'registered members of Islamic communities'
 cn = dict(zip(reg.iso3, reg.notes.fillna('')))
 def rbasis(r):
     if r.iso3 in ('RUS', 'CHN'): return 'Census (ethnicity)'
     if r.iso3 in ('ESP', 'USA'): return 'Published estimate'
+    if r.iso3 in ('NLD', 'CHE', 'BES'): return 'Official survey'
     if r.iso3 == 'LAT': return 'Census + documented communities'
     return 'Census / register'
 regtab = [{'c': r.iso3, 'name': short.get(r.iso3, {'LAT': 'Latin America & Caribbean (circles)', 'PSE': 'Palestine'}.get(r.iso3, r.iso3)),
@@ -296,7 +301,8 @@ cn_short = lambda iso: short.get(iso, iso)
 csv = ug.drop(columns='geometry').copy()
 csv['country'] = csv.c.map(cn_short); csv['source'] = csv.s.map(lambda i: srcs[i]); csv['year'] = csv.c.map(year_of)
 csv['year'] = [str(int(y)) if y == y and y is not None else yr for y, yr in zip(csv.y, csv.year)]
-csv['basis'] = csv.q.map({'c': 'census/register', 's': 'published estimate', 'e': 'ethnicity-based', 'n': 'no figure collected'})
+csv['basis'] = csv.q.map({'c': 'census/register', 'o': 'official survey', 's': 'published estimate', 'e': 'ethnicity-based',
+                         'n': 'no figure collected'})
 csv.loc[csv.q == 'n', 'source'] = ''; csv.loc[csv.q == 'n', 'year'] = ''
 csv['unit'] = csv.n.where(csv.n != '', 'Rest of ' + csv.country)
 _occ = (csv.c == 'RUS') & csv.n.isin(['Crimea', 'Sevastopol'])      # occupied Ukraine (see prep_status.py)
@@ -316,8 +322,14 @@ HOW = {
     'UAOCC': 'Sum of the Muslim nationalities Russia’s 2014 census counted here ÷ residents who stated a nationality.',
     'CHN': 'Sum of the ten traditionally Muslim nationalities the 2010 census counted here ÷ residents.',
     'ISR': 'Central Bureau of Statistics count of Muslims in the district ÷ district population.',
+    'NLD': 'Statistics Netherlands survey: share of residents aged 15 and over who say they belong to Islam. CBS publishes these shares as whole percentages.',
+    'CHE': 'Federal Statistical Office structural survey (a large sample of residents aged 15 and over): share who belong to an Islamic community. Small cantons have wide margins.',
+    'NOR': 'Members of Islamic communities registered with the state for funding (Statistics Norway) ÷ county population. Muslims who are not registered members are not counted, so the true share is higher.',
 }
-extra = {'labels': labels, 'comW': cl_json(45), 'comR': cl_json(12), 'metros': metros, 'sources': srcs, 'how': HOW,
+# what the share is a share of, where it is not all residents
+OFW = {'NLD': 'of residents aged 15+', 'CHE': 'of residents aged 15+', 'BES': 'of residents aged 15+'}
+CNTW = {'NOR': 'Registered members'}     # what the count is, where it is not all Muslims
+extra = {'labels': labels, 'comW': cl_json(45), 'comR': cl_json(12), 'metros': metros, 'sources': srcs, 'how': HOW, 'ofw': OFW, 'cntw': CNTW,
          'years': year_of, 'regsrc': dict(zip(reg.iso3, reg.source)),
          'regions': regions, 'cities': cities, 'usum': usum, 'reg': regtab, 'short': short}
 extra['comW'] = [c for c in extra['comW'] if c['n'] not in com_drop]

@@ -3,6 +3,7 @@ with content-hashed data file names, so a returning visitor's browser never mixe
 import hashlib, json, os, shutil, glob
 WEB = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(WEB)
 B, SITE = f'{WEB}/build', f'{WEB}/site'
+SITE_URL = 'https://henryprzygocki.github.io/world-muslim-population/'     # where the site is published (GitHub Pages)
 FILES = {'w': 'map_w.json', 'lo': 'map_lo.json', 'hi': 'map.json', 'x': 'map_x.json', 'extra': 'extra.json', 'csv': 'units.csv'}
 for f in FILES.values():
     shutil.copy(f'{B}/{f}', f'{SITE}/{f}')
@@ -30,7 +31,8 @@ html = f'''<!doctype html>
 <meta property="og:title" content="World Muslim Population — 2026 edition">
 <meta property="og:description" content="{desc}">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://henryprzygocki.github.io/world-muslim-population/preview.png">
+<meta property="og:url" content="{SITE_URL}">
+<meta property="og:image" content="{SITE_URL}preview.png">
 <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#FBFAF6">

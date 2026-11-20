@@ -12,7 +12,7 @@ S2 = f'{DATA}/sub2'
 
 
 def read2(name):
-    df = pd.read_csv(f'{S2}/{name}.csv')
+    df = pd.read_csv(f'{S2}/{name}.csv', comment='#')
     if 'pct' not in df.columns and 'muslims' in df.columns:
         df['pct'] = df['muslims'] / df['total'] * 100
     return df
@@ -60,11 +60,14 @@ for _pn, _gu in [('French Guiana', 'French Guiana'), ('Guadeloupe', 'Guadeloupe'
                  ('Mayotte', 'Mayotte'), ('Reunion', 'Reunion')]:
     _r = pew[pew.country == _pn]
     if len(_r): GEOU[_gu] = (float(_r.pct.iloc[0]), 'Pew Research Center 2020 estimate'); natcnt[_gu] = float(_r.muslims_2020.iloc[0])
-GEOU['Caribbean Netherlands'] = (np.nan, 'no figure')
-# territories Pew does not cover: published census counts (data/territories.csv); year of every non-Pew national figure
+# territories Pew does not cover: published census counts, or a share from an official survey (data/territories.csv);
+# year and kind (c census, o official survey) of every non-Pew national figure
 NATYEAR = {'Liechtenstein': 2020, 'Gibraltar': 2012}
+NATBASIS = {}
 for _t in pd.read_csv(f'{DATA}/territories.csv', comment='#').itertuples():
-    GEOU[_t.geounit] = (_t.muslims / _t.total * 100, _t.source); natcnt[_t.geounit] = _t.muslims; NATYEAR[_t.geounit] = _t.year
+    _cnt = _t.muslims == _t.muslims
+    GEOU[_t.geounit] = (_t.muslims / _t.total * 100 if _cnt else _t.pct, _t.source)
+    natcnt[_t.geounit] = _t.muslims if _cnt else np.nan; NATYEAR[_t.geounit] = _t.year; NATBASIS[_t.geounit] = _t.basis
 base = NE0[['ADMIN', 'ADM0_A3', 'GEOUNIT', 'GU_A3', 'NAME', 'LABELRANK', 'POP_EST', 'geometry']].copy()
 # overseas departments with their own figure are map units of their own (own code, name and label)
 OVERSEAS = {'French Guiana': 'GUF', 'Martinique': 'MTQ', 'Guadeloupe': 'GLP', 'Reunion': 'REU', 'Mayotte': 'MYT',
@@ -84,10 +87,11 @@ for _, r in base.iterrows():
     else:
         vals.append(v[0]); srcs.append(v[1])
 base['pct'] = vals; base['src'] = srcs
-# kind of national figure: p Pew estimate, c census, n none; year of the figure
-base['basis'] = ['n' if p != p else 'p' if s_.startswith('Pew') else 'c' for p, s_ in zip(base.pct, base.src)]
-base['year'] = [2020 if b == 'p' else y if b == 'c' else np.nan for b, y in zip(base.basis, yrs)]
-assert not ((base.basis == 'c') & base.year.isna()).any(), base[(base.basis == 'c') & base.year.isna()].ADMIN.tolist()
+# kind of national figure: p Pew estimate, c census, o official survey, n none; year of the figure
+base['basis'] = ['n' if p != p else 'p' if s_.startswith('Pew') else NATBASIS.get(g_, 'c')
+                 for p, s_, g_ in zip(base.pct, base.src, base.GEOUNIT)]
+base['year'] = [2020 if b == 'p' else y if b in 'co' else np.nan for b, y in zip(base.basis, yrs)]
+assert not (base.basis.isin(['c', 'o']) & base.year.isna()).any(), base[base.basis.isin(['c', 'o']) & base.year.isna()].ADMIN.tolist()
 base.loc[_ov, 'ADMIN'] = base.loc[_ov, 'GEOUNIT'].replace({'Reunion': 'Réunion'})
 base['level'] = 0
 base['iso'] = base.ADM0_A3
@@ -137,6 +141,7 @@ def attach(g, df, iso, aliases=None, default=None, key='unit', label=None, cutof
 SUBS = []
 LAYER = {}
 PARTIAL = {'ROU'}
+MAINLAND = {'NOR': {'Norway'}}   # regional figures cover only these map units (Svalbard, Jan Mayen: national figure)
 
 
 def add(g):
@@ -337,6 +342,23 @@ es['unit'] = es.gname.map(lambda n: ESPN.get(n, n))
 es['dflt'] = False; es['iso'] = 'ESP'; es['src'] = SRC['ESP']; es['level'] = 2
 add(es)
 add(attach(gbf('HRV-ADM1'), read2('HRV'), 'HRV', src=SRC['HRV'], aliases={'City of Zagreb': 'Grad Zagreb', 'Zagreb County': 'Zagreb County'}))
+# Netherlands: CBS survey, share of residents aged 15+ who belong to Islam, by province, 2015 (whole percentages)
+_nl = read2('NLD_CBS_2015'); _nl['muslims'] = np.nan; _nl['year'] = 2015
+_g = ne1('NLD'); _g = _g[~_g.gname.isin(['Bonaire', 'Saba', 'St. Eustatius'])]
+add(attach(_g, _nl, 'NLD', src=SRC['NLD'], cutoff=0.95))
+# Switzerland: FSO structural survey 2024, residents aged 15+ in Islamic communities ÷ all residents aged 15+, by canton.
+# The counts are survey extrapolations of the population aged 15+ only, so the map shows the share alone.
+_ch = pd.read_csv(f'{S2}/CHE_FSO_2024.csv', comment='#'); _ch['pct'] = _ch.muslims / _ch.total * 100
+_ch['muslims'] = np.nan; _ch['year'] = 2024
+add(attach(ne1('CHE'), _ch, 'CHE', src=SRC['CHE'], cutoff=0.95,
+           aliases={'Bern': 'Bern / Berne', 'Fribourg': 'Fribourg / Freiburg', 'Valais': 'Valais / Wallis', 'Lucerne': 'Luzern',
+                    'Graubünden': 'Graubünden / Grigioni / Grischun', 'Sankt Gallen': 'St. Gallen',
+                    'Appenzell Ausserrhoden': 'Appenzell A. Rh.', 'Appenzell Innerrhoden': 'Appenzell I. Rh.'}))
+# Norway: members of Islamic communities registered for state support (SSB 08531) ÷ population, counties of 2019
+_no = read2('NOR_SSB_2019'); _no['year'] = 2019
+_g = ne1('NOR'); _g = _g[~_g.gname.isin(['Svalbard', 'Bouvet Island'])]
+add(attach(_g, _no, 'NOR', src=SRC['NOR'], cutoff=0.95,
+           aliases={'Nord-Trøndelag': 'Trøndelag', 'Sør-Trøndelag': 'Trøndelag'}))
 rou = ne1('ROU'); rou['unit'] = rou.gname; rou['pct'] = np.where(rou.gname == 'Constanta', 36725 / 656000 * 100, np.nan)   # INS 2021 census: 36,725 Muslims; population 656.0 thousand
 rou['muslims'] = np.where(rou.gname == 'Constanta', 36725, np.nan); rou['iso'] = 'ROU'; rou['src'] = SRC['ROU']; rou['level'] = 1
 add(rou)
@@ -380,7 +402,8 @@ for iso, g in subs.groupby('iso'):
         pieces.append(gl)
     pg = gpd.GeoDataFrame(pd.concat(pieces, ignore_index=True), crs=4326)
     if iso not in PARTIAL:
-        resid = cpoly.difference(covered)
+        fill = cpoly if iso not in MAINLAND else make_valid(unary_union(base[(base.ADM0_A3 == iso) & base.GEOUNIT.isin(MAINLAND[iso])].geometry.values))
+        resid = fill.difference(covered)
         if not resid.is_empty:
             rr = gpd.GeoDataFrame(geometry=list(getattr(resid, 'geoms', [resid])), crs=4326)
             rr = rr[rr.geometry.area > 1e-9]
@@ -439,7 +462,7 @@ DISPLAY_FIX = {'Province 1': 'Koshi', 'Province 2': 'Madhesh', 'Sudurpaschim': '
     'Region of Murcia': 'Murcia', 'Boke': 'Boké', 'Labe': 'Labé', 'Nzerekore': 'Nzérékoré',
     'Bantey Meanchey': 'Banteay Meanchey', 'Kratie': 'Kratié', 'Takeo': 'Takéo', 'Barina-Waini': 'Barima-Waini',
     'Bale': 'Balé', 'Comoe': 'Comoé', 'Leraba': 'Léraba', 'Kenedougou': 'Kénédougou', 'Passore': 'Passoré',
-    'Kourweogo': 'Kourwéogo', 'Zadar County': 'Zadar', 'Constanta': 'Constanța', 'Autonomous Republic of Crimea': 'Crimea', 'Jewish': 'Jewish Autonomous Oblast', 'Magadan': 'Magadan', 'Maga Buryatdan': 'Magadan'}
+    'Kourweogo': 'Kourwéogo', 'Zadar County': 'Zadar', 'Constanta': 'Constanța', 'Grisons': 'Graubünden', 'Autonomous Republic of Crimea': 'Crimea', 'Jewish': 'Jewish Autonomous Oblast', 'Magadan': 'Magadan', 'Maga Buryatdan': 'Magadan'}
 subs['unit'] = subs.unit.astype(str).str.strip().map(lambda u: DISPLAY_FIX.get(u, u))
 subs.loc[(subs.iso == 'ETH') & subs.unit.isin(['Central', 'Eastern', 'Southern', 'Western', 'North Western']), 'unit'] = \
     subs.loc[(subs.iso == 'ETH') & subs.unit.isin(['Central', 'Eastern', 'Southern', 'Western', 'North Western']), 'unit'] + ' Tigray'

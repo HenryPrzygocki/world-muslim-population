@@ -46,3 +46,7 @@ CCK,territory,"Australian Bureau of Statistics — 2021 Census, G14 religious af
 NFK,territory,"Australian Bureau of Statistics — 2021 Census, G14 religious affiliation",2021,Not covered by Pew
 LIE,country,Liechtenstein census 2020,2020,Not covered by Pew
 GIB,territory,Gibraltar census 2012,2012,Not covered by Pew
+NLD,province (12),"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015,Official survey; CBS publishes whole percentages. The series ended in 2015
+CHE,canton (26),"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024,Official survey (sample of the population aged 15+); small cantons have wide margins
+NOR,county (18),"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019,Registered members only: Muslims outside a registered community are not counted. Svalbard and Jan Mayen keep the national figure
+BES,territory,"Statistics Netherlands (CBS) — Omnibus survey Caribbean Netherlands 2017/2018, StatLine table 82868ENG (persons aged 15+)",2018,Not covered by Pew; official survey

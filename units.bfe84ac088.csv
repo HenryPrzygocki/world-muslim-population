@@ -2389,6 +2389,18 @@ Nepal,NPL,Koshi,,4.2,208311.0,census/register,National Statistics Office Nepal �
 Nepal,NPL,Lumbini,,7.45,381558.0,census/register,National Statistics Office Nepal — 2021 Census (Muslims by province ÷ provincial population),2021
 Nepal,NPL,Madhesh,,13.28,811878.0,census/register,National Statistics Office Nepal — 2021 Census (Muslims by province ÷ provincial population),2021
 Nepal,NPL,Sudurpashchim,,0.26,6983.0,census/register,National Statistics Office Nepal — 2021 Census (Muslims by province ÷ provincial population),2021
+Netherlands,NLD,Drenthe,,1.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Flevoland,,7.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Friesland,,1.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Gelderland,,4.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Groningen,,1.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Limburg,,4.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,North Brabant,,5.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,North Holland,,7.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Overijssel,,3.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,South Holland,,8.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Utrecht,,6.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
+Netherlands,NLD,Zeeland,,2.0,,official survey,"Statistics Netherlands (CBS) — StatLine table 83288NED, religious affiliation by province (survey of persons aged 15+): Islam, % of the population",2015
 North Macedonia,MKD,Aerodrom,,2.8,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
 North Macedonia,MKD,Aračinovo,,97.5,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
 North Macedonia,MKD,Berovo,,4.7,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
@@ -2469,6 +2481,24 @@ North Macedonia,MKD,Čučer-Sandevo,,14.8,,census/register,State Statistical Off
 North Macedonia,MKD,Štip,,8.5,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
 North Macedonia,MKD,Šuto Orizari,,75.2,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
 North Macedonia,MKD,Želino,,95.8,,census/register,State Statistical Office — 2021 Census (religious affiliation),2021
+Norway,NOR,Akershus,,3.82,23812.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Aust-Agder,,1.74,2051.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Buskerud,,4.6,13011.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Finnmark,,1.36,1029.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Hedmark,,1.54,3045.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Hordaland,,1.49,7837.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Møre og Romsdal,,0.99,2635.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Nordland,,1.07,2593.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Oppland,,1.59,3005.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Oslo,,9.53,64882.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Rogaland,,2.47,11742.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Sogn og Fjordane,,1.24,1359.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Telemark,,2.77,4796.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Troms,,1.3,2170.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Trøndelag,,1.51,7017.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Vest-Agder,,2.43,4565.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Vestfold,,2.32,5820.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
+Norway,NOR,Østfold,,4.58,13620.0,census/register,"Statistics Norway (SSB) — table 08531, members of Islamic communities registered for public support, by county (2019 counties) ÷ population 1 Jan 2019 (table 07459)",2019
 Philippines,PHL,Abra,,0.1,255.0,census/register,Philippine Statistics Authority — 2020 Census of Population and Housing (religious affiliation),2020
 Philippines,PHL,Agusan del Norte,,0.72,5417.0,census/register,Philippine Statistics Authority — 2020 Census of Population and Housing (religious affiliation),2020
 Philippines,PHL,Agusan del Sur,,0.34,2492.0,census/register,Philippine Statistics Authority — 2020 Census of Population and Housing (religious affiliation),2020
@@ -2740,6 +2770,32 @@ Sri Lanka,LKA,Puttalam,,19.73,150404.0,census/register,Department of Census and 
 Sri Lanka,LKA,Ratnapura,,2.25,24446.0,census/register,Department of Census and Statistics Sri Lanka — Census 2024 where religion published; otherwise Census 2012 (via citypopulation.de),2012
 Sri Lanka,LKA,Trincomalee,,46.5,,census/register,Department of Census and Statistics Sri Lanka — Census 2024 where religion published; otherwise Census 2012 (via citypopulation.de),2024
 Sri Lanka,LKA,Vavuniya,,10.32,17775.0,census/register,Department of Census and Statistics Sri Lanka — Census 2024 where religion published; otherwise Census 2012 (via citypopulation.de),2024
+Switzerland,CHE,Aargau,,7.99,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Appenzell Ausserrhoden,,3.05,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Appenzell Innerrhoden,,1.88,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Basel-Landschaft,,5.49,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Basel-Stadt,,8.51,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Bern,,4.7,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Fribourg,,4.6,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Geneva,,7.81,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Glarus,,6.22,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Graubünden,,2.14,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Jura,,4.08,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Lucerne,,5.1,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Neuchâtel,,4.92,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Nidwalden,,2.51,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Obwalden,,3.88,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Schaffhausen,,7.43,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Schwyz,,4.65,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Solothurn,,8.35,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,St. Gallen,,8.5,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Thurgau,,7.04,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Ticino,,2.29,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Uri,,2.27,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Valais,,3.76,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Vaud,,6.28,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Zug,,3.8,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
+Switzerland,CHE,Zürich,,6.99,,official survey,"Swiss Federal Statistical Office (FSO) — structural survey 2024, table je-d-01.08.02.02: Islamic communities ÷ permanent resident population aged 15+",2024
 Thailand,THA,Amnat Charoen,,0.09,267.0,census/register,"Thailand National Statistical Office — 2010 Population and Housing Census, provincial tables ""Population by religion"" (49 provinces); 2000 census for 15 provinces without a 2010 table; 13 provinces left blank",2010
 Thailand,THA,Ang Thong,,1.57,3994.0,census/register,"Thailand National Statistical Office — 2010 Population and Housing Census, provincial tables ""Population by religion"" (49 provinces); 2000 census for 15 provinces without a 2010 table; 13 provinces left blank",2010
 Thailand,THA,Bangkok,,4.6,382385.0,census/register,"Thailand National Statistical Office — 2010 Population and Housing Census, provincial tables ""Population by religion"" (49 provinces); 2000 census for 15 provinces without a 2010 table; 13 provinces left blank",2010

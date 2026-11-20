@@ -159,7 +159,7 @@ body.spec-on .lg-title::after { content: ' · speculative'; color: #A0521C; font
 .attrib .long { display: none; }
 @media (min-width: 1280px) { .attrib .long { display: inline; } }
 .attrib { position: absolute; right: calc(max(12px, env(safe-area-inset-right, 0px)) + 52px); bottom: calc(10px + env(safe-area-inset-bottom, 0px)); z-index: 5;
-  font: 400 10.5px var(--f-cond); color: var(--ink-2); background: var(--panel); padding: 2px 7px; border-radius: 4px; max-width: 46%; text-align: right; }
+  font: 400 10.5px var(--f-cond); color: var(--ink-2); background: var(--panel); padding: 2px 7px; border-radius: 4px; max-width: calc(100% - 440px); text-align: right; }
 
 /* tooltip and pinned panel */
 .card { position: absolute; z-index: 8; box-sizing: border-box; background: var(--panel-solid); border: 1px solid var(--line); border-radius: 10px;
@@ -176,7 +176,7 @@ body.spec-on .lg-title::after { content: ' · speculative'; color: #A0521C; font
 .card .kv dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
 .card .kv dd span { font-weight: 400; color: var(--ink-2); }
 .badge { align-self: flex-start; font: 600 11px var(--f-cond); letter-spacing: .03em; padding: 2px 8px; border-radius: 999px; border: 1px solid currentColor; }
-.badge.c, .badge.s { color: var(--accent); } .badge.e { color: #3D6C8F; } .badge.n, .badge.p { color: var(--ink-2); }
+.badge.c, .badge.s, .badge.o { color: var(--accent); } .badge.e { color: #3D6C8F; } .badge.n, .badge.p { color: var(--ink-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .badge.e { color: #8DB8D8; } }
 :root[data-theme="dark"] .badge.e { color: #8DB8D8; }
 .card .src { font: 400 11.5px/1.4 var(--f-display); color: var(--ink-2); border-top: 1px solid var(--line); padding-top: 6px; }
@@ -239,7 +239,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
 .dtab .bar { display: inline-block; width: 64px; height: 8px; border-radius: 2px; background: var(--paper); box-shadow: inset 0 0 0 1px var(--line); overflow: hidden; flex: none; }
 .dtab .bar i { display: block; height: 100%; }
 .dtab .bs { font: 600 11px var(--f-cond); letter-spacing: .02em; color: var(--ink-2); white-space: nowrap; }
-.dtab .bs.c, .dtab .bs.s { color: var(--accent); } .dtab .bs.e { color: #3D6C8F; }
+.dtab .bs.c, .dtab .bs.s, .dtab .bs.o { color: var(--accent); } .dtab .bs.e { color: #3D6C8F; }
 .dtab td.mut { color: var(--ink-2); }
 .tb-foot { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 20px calc(12px + env(safe-area-inset-bottom, 0px)); border-top: 1px solid var(--line); }
 .tb-foot .tb-sp { flex: 1; }
@@ -368,7 +368,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
           <label><input type="checkbox" id="tCom" checked> Latin American &amp; Caribbean communities</label>
           <label><input type="checkbox" id="tMet" checked> U.S. metro areas (2020 Religion Census)</label>
         </div>
-        <p class="note">Labels show share and, where known, number of Muslims (“0.5% · 24k”). Every figure is published or simple arithmetic on published figures.
+        <p class="note">Labels show share and, where known, number of Muslims (“0.5% · 24k”). Every figure is published or simple arithmetic on published figures; speculative mode adds survey-based estimates, dotted.
           Point at a colour to highlight it on the map. <button data-about>Sources, methods &amp; credits</button></p>
       </div>
     </aside>
@@ -415,7 +415,7 @@ dialog.dlg-wide[open] { width: min(1040px, calc(100vw - 24px)); height: calc(100
 (() => {
 'use strict';
 const FILES = Object.assign({ w: 'map_w.json', lo: 'map_lo.json', hi: 'map.json', x: 'map_x.json', extra: 'extra.json', csv: 'units.csv' }, window.WMP_FILES || {});
-const UPDATED = '4 November 2026';
+const UPDATED = '20 November 2026';
 const IN_ARTIFACT = !!(window.claude && typeof window.claude.use === 'function');   // inside the claude.ai viewer: no shareable URL, downloads via capability
 
 // ------------------------------------------------------------------ colour classes
@@ -1108,7 +1108,7 @@ function labels(c) {
   }
   ul.sort((a, b) => b.key - a.key);
   for (const { u, x, y, rpx } of ul) {
-    const vl = (u.kind === 'spec' ? '≈ ' : '') + valLine(u.p, u.m), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
+    const vl = (u.kind === 'spec' ? '≈ ' : '') + valLine(u.p, D.X.cntw && D.X.cntw[u.c] ? null : u.m), w1 = Math.max(tw(u.n, F_NAME), tw(vl, F_VAL) * 0.95);
     const px = Math.min(15, 1.35 * rpx / Math.sqrt((w1 / 2) ** 2 + 1.1 ** 2)); if (px < 9) continue;
     const w = w1 * px, b = [x - w / 2 - 1, y - px * 1.05, x + w / 2 + 1, y + px * 1.05];
     if (!free(b)) continue; box.add(b);
@@ -1186,7 +1186,8 @@ function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<'
 function longN(n) { return n == null ? null : Math.round(n).toLocaleString('en-US'); }
 const sw = k => `<span class="sw" style="background:${k >= 0 ? COLORS[k] : NODATA}"></span>`;
 function badge(q, yr) {
-  const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), s: 'Published estimate' + (yr ? ' · ' + yr : ''),
+  const t_ = { c: 'Official census / register' + (yr ? ' · ' + yr : ''), o: 'Official survey' + (yr ? ' · ' + yr : ''),
+               s: 'Published estimate' + (yr ? ' · ' + yr : ''),
                e: 'Census, by ethnicity' + (yr ? ' · ' + yr : ''), n: 'No figure collected', p: 'National estimate · Pew 2020',
                v: 'Speculative estimate · survey ' + (yr || '') }[q];
   return `<span class="badge ${q}">${esc(t_)}</span>`;
@@ -1214,7 +1215,7 @@ function cardHTML(sel, full) {
       : sel.occ ? 'Ukraine · Russian-occupied area' : 'Country';
     const eth = isU && it.q === 'e';
     let kv = '';
-    if (it.m != null) kv += `<dt>${eth ? 'Muslim nationalities' : 'Muslims'}</dt><dd>${longN(it.m)}</dd>`;
+    if (it.m != null) kv += `<dt>${eth ? 'Muslim nationalities' : (isU && X.cntw && X.cntw[it.c]) || 'Muslims'}</dt><dd>${longN(it.m)}</dd>`;
     const notes = [];
     if (isU && it.p == null) { const nl = D.labelOf.get(it.c); notes.push('No figure was collected for ' + (it.n ? 'this area' : 'these areas') + '.' + (nl && nl.p != null ? ` The national figure for ${it.country} is ${fmtP(nl.p)} (Pew 2020).` : '')); }
     if (X.notes[it.c]) notes.push(X.notes[it.c]);
@@ -1226,10 +1227,11 @@ function cardHTML(sel, full) {
     let sum = '';
     if (!isU && D.subIso.has(it.c)) {
       const u = X.usum && X.usum[it.c], ethC = ETHNIC_C.has(it.c), n = D.U.filter(x => x.c === it.c && x.p != null).length;
-      sum = u ? `<div class="sum">The ${n.toLocaleString('en-US')} areas mapped add up to <b>${u.m.toLocaleString('en-US')}</b> ${ethC ? 'people of traditionally Muslim nationalities' : 'Muslims'} (${fmtP(u.p)}) in ${esc(u.y)}. The national figure above is Pew’s 2020 estimate.</div>`
+      sum = u ? `<div class="sum">The ${n.toLocaleString('en-US')} areas mapped add up to <b>${u.m.toLocaleString('en-US')}</b> ${u.w ? esc(u.w) : ethC ? 'people of traditionally Muslim nationalities' : 'Muslims'} (${fmtP(u.p)}) in ${esc(u.y)}. The national figure above is Pew’s 2020 estimate.</div>`
               : `<div class="sum">Zoom in to see provinces and districts; their values come from national sources (${esc(X.years[it.c] || '')}).</div>`;
     }
-    const ofWhat = isU && it.q === 'e' && (it.c === 'RUS' || it.c === 'UAOCC') ? 'of residents who gave a nationality' : 'of residents';
+    const ofWhat = isU && it.q === 'e' && (it.c === 'RUS' || it.c === 'UAOCC') ? 'of residents who gave a nationality'
+      : (isU || it.q === 'o') && X.ofw && X.ofw[it.c] ? X.ofw[it.c] : 'of residents';
     const how = isU && it.p != null ? ((X.how && X.how[it.c]) || 'Published for this area by the official statistics office.') : '';
     return `<div class="eb">${esc(eb)}</div><h2>${esc(name)}</h2>
       ${it.p == null ? '' : `<div class="big">${sw(it.k)}${fmtP(it.p)}<small>${ofWhat}</small></div>`}
@@ -1265,7 +1267,7 @@ function cardHTML(sel, full) {
 function plainText(sel) {
   const it = sel.it;
   if (sel.kind === 'spec') return `${it.n}, ${it.country}: about ${fmtP(it.p)} Muslim (speculative survey estimate, ${fmtP(it.lo)}–${fmtP(it.hi)})`;
-  if (sel.kind === 'unit' || sel.kind === 'country') return `${it.n || it.country}${sel.kind === 'unit' ? ', ' + it.country : ''}: ${fmtP(it.p)} Muslim` + (it.m != null ? `, ${Math.round(it.m).toLocaleString('en-US')} Muslims` : '');
+  if (sel.kind === 'unit' || sel.kind === 'country') return `${it.n || it.country}${sel.kind === 'unit' ? ', ' + it.country : ''}: ${fmtP(it.p)} Muslim` + (it.m != null ? `, ${Math.round(it.m).toLocaleString('en-US')} ${sel.kind === 'unit' && D.X.cntw && D.X.cntw[it.c] ? D.X.cntw[it.c].toLowerCase() : 'Muslims'}` : '');
   if (sel.kind === 'region') return `${it.n}, ${D.countryName(it.c)}`;
   return `${it.full || it.n}: ${it.m ? it.m.toLocaleString('en-US') + ' Muslims' : 'Muslim community'}`;
 }
@@ -1589,7 +1591,11 @@ function aboutHTML() {
     value — they are not rescaled, so each area reflects the year of its own source. <b>Every number on this map is a published figure or simple
     arithmetic on published figures</b> (sums, or a count divided by an official population); nothing is modelled or filled in by judgment.
     Each place’s card says which kind of figure it is:</p>
-    <ul><li><b>Official census / register</b> — counts or shares published by a statistics office.</li>
+    <ul><li><b>Official census / register</b> — counts or shares published by a statistics office. Norway’s counties show members of
+    registered Islamic communities, which leaves out Muslims who are not members.</li>
+    <li><b>Official survey</b> — shares from a statistics office’s sample survey, where no census asks religion: the provinces of the
+    Netherlands (CBS, 2015) and the cantons of Switzerland (FSO structural survey, 2024), both of residents aged 15 and over, and the
+    Caribbean Netherlands (CBS, 2017/18).</li>
     <li><b>Published estimate</b> — figures from a non-official body: the U.S. Religion Census (congregations, ASARB) and Spain’s Muslim community union (UCIDE).</li>
     <li><b>Census, by ethnicity</b> — the censuses of Russia and China do not ask religion, so the share of people of traditionally Muslim nationalities is shown, as Pew and the original map do: every Russian federal subject from the 2010 census (as a share of residents who gave a nationality) and every Chinese province from the 2010 census. The nationalities counted are listed under the sources below. Crimea uses Russia’s 2014 census of the peninsula.</li>
     <li><b>No figure collected</b> — hatched areas inside a country with regional data, where no figure was gathered for this map. Countries without any regional data show their national figure.</li></ul>
@@ -1647,7 +1653,7 @@ function openAbout() {
 // ------------------------------------------------------------------ data table (an accessible, sortable view of every figure)
 const tbl = $('tbl');
 const TB = { lv: 'u', sort: 'p', dir: -1, q: '', view: false, limit: 400, rows: [] };
-const BASIS_SHORT = { c: 'Census', s: 'Estimate', e: 'Ethnicity', n: 'No figure', p: 'Pew 2020', v: 'Speculative' };
+const BASIS_SHORT = { c: 'Census', o: 'Survey', s: 'Estimate', e: 'Ethnicity', n: 'No figure', p: 'Pew 2020', v: 'Speculative' };
 const COLS = {
   u: [['name', 'Area'], ['ct', 'Country', 'c-ct'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']],
   c: [['name', 'Country or territory'], ['p', 'Share Muslim', 'num'], ['m', 'Muslims', 'num'], ['yr', 'Year', 'c-yr'], ['bs', 'Basis', 'c-bs']] };
